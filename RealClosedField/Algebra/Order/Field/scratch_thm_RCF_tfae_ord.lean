@@ -5,6 +5,8 @@ Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Reverse
+import Mathlib.Algebra.Order.AbsoluteValue.Basic
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
