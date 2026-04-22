@@ -5,8 +5,6 @@ Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Reverse
-import Mathlib.Algebra.Order.AbsoluteValue.Basic
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
@@ -36,23 +34,6 @@ def NoNontrivialOrderedAlgExt : Prop :=
 def PolynomialIVP : Prop :=
   ∀ (f : Polynomial R) (a b : R), a ≤ b → f.eval a ≤ 0 → 0 ≤ f.eval b →
     ∃ c ∈ Set.Icc a b, f.IsRoot c
-
-open Polynomial in
-/-- Algebraic bound: For a polynomial `f` of positive natDegree `n` with positive leading
-coefficient, there is a point where `f` is positive. -/
-private lemma exists_eval_pos_of_leadingCoeff_pos {R : Type*} [Field R] [LinearOrder R]
-    [IsStrictOrderedRing R] (f : R[X]) (hdeg : 0 < f.natDegree) (hlead : 0 < f.leadingCoeff) :
-    ∃ x : R, 0 < f.eval x := by
-  -- Induction on natDegree
-  -- Key idea: take M = 1 + (sum of |coeffs|) / leadingCoeff, then eval at M is positive
-  sorry
-
-open Polynomial in
-/-- For odd-degree polynomials, sign changes occur. -/
-private lemma exists_eval_neg_and_pos_of_odd {R : Type*} [Field R] [LinearOrder R]
-    [IsStrictOrderedRing R] (f : R[X]) (hodd : Odd f.natDegree) :
-    ∃ a b : R, f.eval a ≤ 0 ∧ 0 ≤ f.eval b := by
-  sorry
 
 /-- For an ordered field `R`, the following are equivalent:
 1. `R` is real closed.
