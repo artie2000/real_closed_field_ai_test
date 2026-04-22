@@ -6,7 +6,6 @@ Authors: Artie Khovanov
 import RealClosedField.Algebra.Ring.IsSemireal
 import RealClosedField.Algebra.Order.Ring.Ordering.Adjoin
 import RealClosedField.Algebra.Order.Ring.Ordering.Order
-import RealClosedField.PrimitiveElement.Quadratic
 
 variable {F : Type*} [Field F]
 
@@ -77,23 +76,3 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
   · by_cases hx : 0 ≤ x
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
-
-noncomputable def Rat.unique_isStrictOrderedRing :
-    Unique {l : LinearOrder ℚ // @IsStrictOrderedRing ℚ _ (l.toPartialOrder)} where
-  default := ⟨inferInstance, inferInstance⟩
-  uniq := by
-    suffices ∃! l : LinearOrder ℚ, @IsStrictOrderedRing ℚ _ (l.toPartialOrder) from fun ⟨l, hl⟩ ↦
-      Subtype.ext <| this.unique hl inferInstance
-    rw [IsStrictOrderedRing.unique_isStrictOrderedRing_iff]
-    intro x hx
-    rw [show x = ∑ i ∈ Finset.range (x.num.toNat * x.den), (1 / (x.den : ℚ)) ^ 2 by
-      simp; field_simp; simp; norm_cast; simpa]
-    simp
-
-open Polynomial in
-theorem IsSemireal.of_forall_adjoinRoot_i_isSquare {K : Type*} [Field K] [Algebra F K]
-    (hK : IsAdjoinRootMonic' K (X ^ 2 + 1 : F[X]))
-    (h : ∀ x : K, IsSquare x) : IsSemireal F :=
-  .of_not_isSumSq_neg_one fun hc ↦ by
-    have hK' : IsIntegralGenSqrt _ (-1 : F) := ⟨by simpa using hK.pe⟩
-    exact hK'.not_isSquare <| isSquare_of_isSumSq_of_forall_adjoinRoot_i_isSquare hK h hc
