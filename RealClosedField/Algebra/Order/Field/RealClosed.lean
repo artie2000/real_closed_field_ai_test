@@ -6,9 +6,10 @@ Authors: Artie Khovanov
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.RingTheory.Algebraic.Defs
-import Mathlib.FieldTheory.Adjoin
-import Mathlib.FieldTheory.Finite.Basic
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
+import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
 
