@@ -12,8 +12,6 @@ import RealClosedField.Algebra.Order.Ring.Ordering.Basic
 
 * `Field.isOrderingLinearOrderEquiv`: equivalence between orderings on a field `F` and
 linearly ordered field structures on `F`.
-* `Ring.isOrderingLinearOrderEquiv`: equivalence between orderings `O` on a ring `R` and
-linearly ordered field structures on the domain `R ⧸ O.support`.
 
 -/
 
@@ -22,6 +20,7 @@ namespace Field
 variable {F : Type*} [Field F]
 
 variable (F) in
+set_option backward.isDefEq.respectTransparency false in
 open Classical in
 /-- Equivalence between orderings on a field `F` and linearly ordered field structures on `F`. -/
 noncomputable def isOrderingLinearOrderEquiv :
@@ -52,5 +51,3 @@ theorem isOrderingLinearOrderEquiv_symm_apply_val
   simp [isOrderingLinearOrderEquiv]
 
 end Field
-
--- TODO : `Ring.isOrderingLinearOrderEquiv` from unfinished part of `Algebra.Order.Cone.Order`

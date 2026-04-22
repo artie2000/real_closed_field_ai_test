@@ -99,7 +99,7 @@ theorem IsPreordering.of_isSpanning_of_isPointed [Nontrivial R]
 variable {P} in
 instance IsOrdering.of_isSpanning_of_isPointed [IsDomain R]
     (hP₁ : P.IsSpanning) (hP₂ : P.IsPointed) : P.IsOrdering := .mk' hP₁ <| by
-  simpa [*] using Ideal.bot_prime
+  simpa [*] using Ideal.isPrime_bot
 
 variable {P} in
 theorem IsPreordering.of_isPointed [Nontrivial R]
@@ -179,7 +179,7 @@ theorem isPointed : P.IsPointed := fun {x} _ _ ↦ by
 
 instance : P.HasIdealSupport := (IsPreordering.isPointed P).hasIdealSupport
 
-instance : P.support.IsPrime := by simpa [IsPreordering.isPointed P] using Ideal.bot_prime
+instance : P.support.IsPrime := by simpa [IsPreordering.isPointed P] using Ideal.isPrime_bot
 
 end IsPreordering
 

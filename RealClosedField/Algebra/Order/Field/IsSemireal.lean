@@ -7,6 +7,23 @@ import Mathlib.Algebra.Ring.Semireal.Defs
 import RealClosedField.Algebra.Order.Ring.Ordering.Adjoin
 import RealClosedField.Algebra.Order.Ring.Ordering.Order
 
+section CommRing
+
+variable {R : Type*} [CommRing R]
+
+instance [IsSemireal R] : (Subsemiring.sumSq R).IsPreordering where
+  neg_one_notMem := by simpa using IsSemireal.not_isSumSq_neg_one R
+
+theorem isSemireal_ofIsPreordering (P : Subsemiring R) [P.IsPreordering] : IsSemireal R :=
+  .of_not_isSumSq_neg_one (P.neg_one_notMem <| P.mem_of_isSumSq ·)
+
+theorem exists_isPreordering_iff_isSemireal :
+    (∃ P : Subsemiring R, P.IsPreordering) ↔ IsSemireal R where
+  mp | ⟨P, _⟩ => isSemireal_ofIsPreordering P
+  mpr _ := ⟨Subsemiring.sumSq R, inferInstance⟩
+
+end CommRing
+
 variable {F : Type*} [Field F]
 
 open Classical in
@@ -21,7 +38,7 @@ theorem Field.exists_isStrictOrderedRing_iff_isSemireal :
             ⟨choose exO, inferInstance⟩⟩
 
 variable (F) in
-noncomputable def LinearOrder.ofIsSemireal [IsSemireal F] : LinearOrder F :=
+noncomputable abbrev LinearOrder.ofIsSemireal [IsSemireal F] : LinearOrder F :=
   (Field.exists_isStrictOrderedRing_iff_isSemireal.mpr inferInstance).choose
 
 variable (F) in
@@ -30,11 +47,12 @@ instance IsStrictOrderedRing.ofIsSemireal [IsSemireal F] :
     IsStrictOrderedRing F :=
   (Field.exists_isStrictOrderedRing_iff_isSemireal.mpr inferInstance).choose_spec
 
-noncomputable def IsSemireal.unique_isStrictOrderedRing [IsSemireal F]
+set_option backward.isDefEq.respectTransparency false in
+noncomputable abbrev IsSemireal.unique_isStrictOrderedRing [IsSemireal F]
     (h : ∀ x : F, IsSumSq x ∨ IsSumSq (-x)) :
     Unique {l : LinearOrder F // IsStrictOrderedRing F} where
   default := Field.isOrderingLinearOrderEquiv F
-    ⟨Subsemiring.sumSq F, .mk' (by simpa using h) inferInstance⟩
+    ⟨Subsemiring.sumSq F, .mk' (by aesop) inferInstance⟩
   uniq l' := by
     rcases l' with ⟨l', hl'⟩
     generalize_proofs

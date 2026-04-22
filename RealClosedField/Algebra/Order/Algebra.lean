@@ -6,6 +6,15 @@ Authors: Artie Khovanov
 import RealClosedField.Algebra.Order.Ring.Ordering.Adjoin
 import RealClosedField.Algebra.Order.Ring.Ordering.Order
 import Mathlib.Algebra.Order.Algebra
+import Mathlib.Algebra.Order.Hom.Monoid
+
+@[aesop 70%]
+theorem mem_sup_of_mem_left {R : Type*} [Semiring R] {a b : Subsemiring R} {x : R} :
+    x ∈ a → x ∈ a ⊔ b := by gcongr; exact le_sup_left
+
+@[aesop 70%]
+theorem mem_sup_of_mem_right {R : Type*} [Semiring R] {a b : Subsemiring R} {x : R} :
+    x ∈ b → x ∈ a ⊔ b := by gcongr; exact le_sup_right
 
 variable {F K : Type*} [Field F] [LinearOrder F] [IsStrictOrderedRing F] [Field K] [Algebra F K]
 
@@ -14,6 +23,7 @@ namespace Field
 variable (F K) in
 open Classical in
 open scoped algebraMap in
+set_option backward.isDefEq.respectTransparency false in
 noncomputable def isOrderingOrderedAlgebraEquiv :
     Equiv {O : Subsemiring K // O.IsOrdering ∧ (Subsemiring.nonneg F).map (algebraMap F K) ≤ O}
           {l : LinearOrder K // IsStrictOrderedRing K ∧ IsOrderedModule F K} where
@@ -50,6 +60,7 @@ theorem isOrderingOrderedAlgebraEquiv_symm_apply_coe
     (isOrderingLinearOrderEquiv K).symm ⟨l, hl⟩ := rfl
 
 open Classical Subsemiring in
+set_option backward.isDefEq.respectTransparency false in
 theorem exists_isOrderedAlgebra_iff_neg_one_notMem_sup :
     (∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule F K) ↔
     -1 ∉ ((Subsemiring.nonneg F).map (algebraMap F K) ⊔ Subsemiring.sumSq K) := by
