@@ -7,15 +7,9 @@ import RealClosedField.Algebra.Order.Ring.Ordering.Adjoin
 import RealClosedField.Algebra.Order.Ring.Ordering.Order
 import Mathlib.Algebra.Order.Algebra
 
-attribute [-simp] AdjoinRoot.algebraMap_eq
-
 variable {F K : Type*} [Field F] [LinearOrder F] [IsStrictOrderedRing F] [Field K] [Algebra F K]
 
 namespace Field
-
--- TODO : generalise to ordered extensions of rings :
---        correspondence between `Subalgebra (.nonneg R) S` (with `IsPointed`)
---        and `IsOrderedModule R S`
 
 variable (F K) in
 open Classical in
