@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2025.12.29)  29 DEC 2025 16:16
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2025.12.29)  23 APR 2026 00:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -625,8 +625,7 @@ t line 194.
 (C:\Users\Artie\AppData\Local\Programs\MiKTeX\tex/latex/unicode-math\unicode-ma
 th-table.tex))) (macros/common.tex
 \c@theorem=\count330
-) (macros/print.tex)
-(C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\print\print.aux)
+) (macros/print.tex) (print.aux)
 \openout1 = `print.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 30.
@@ -714,8 +713,7 @@ Package color Info: Driver file: xetex.def on input line 149.
 (C:\Users\Artie\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
 )
 Package hyperref Info: Link coloring ON on input line 30.
- (C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\print\print.out)
-(C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\print\print.out)
+ (print.out) (print.out)
 \@outlinefile=\write3
 \openout3 = `print.out'.
 
@@ -948,32 +946,28 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 
 [4]
 
-[5]
+[5] (print.bbl
 
-[6]
+[6]))
 
-[7] (C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\print\print.bbl
+[7
 
-[8]))
-
-[9
-
-] (C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\print\print.aux)
+] (print.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-07-20>
  ***********
 Package rerunfilecheck Info: File `print.out' has not changed.
-(rerunfilecheck)             Checksum: D1123FCC007A9D1A4D61040122A81144;553.
+(rerunfilecheck)             Checksum: F3C1DA2E4D983C6330A6A6D7CE23F7DC;259.
  ) 
 Here is how much of TeX's memory you used:
- 16747 strings out of 403249
- 303217 string characters out of 5460866
- 924603 words of memory out of 5000000
+ 16744 strings out of 403249
+ 302853 string characters out of 5460866
+ 924609 words of memory out of 5000000
  45011 multiletter control sequences out of 15000+600000
- 632204 words of font info for 90 fonts, out of 8000000 for 9000
+ 632188 words of font info for 88 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 90i,6n,107p,809b,485s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,6n,107p,609b,439s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on C:/Users\Artie\Documents\Lean\real_closed_field\blueprint\pri
-nt\print.pdf (10 pages).
+Output written on C:/Users\Artie\Documents\Lean\real_closed_field_ai_test\bluep
+rint\print\print.pdf (8 pages).

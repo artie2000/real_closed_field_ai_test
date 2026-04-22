@@ -1,4 +1,4 @@
-leanok% In this file you should put the actual content of the blueprint.
+% In this file you should put the actual content of the blueprint.
 % It will be used both by the web and the print version.
 % It should *not* include the \begin{document}
 %
@@ -28,9 +28,9 @@ We can also characterise algebraically whether a field $F$ has a unique ordering
 
 \begin{lemma}
   \label{lem:unique_ord_cond}
-  \lean{IsSemireal.existsUnique_isStrictOrderedRing_iff}
+  \lean{IsSemireal.existsUnique_isStrictOrderedRing_iff, IsSemireal.unique_isStrictOrderedRing}
   \leanok
-  Let $F$ be a real field. There is a unique ordering on $F$ if and only if, for each $a\in F$, either $a$ or $-a$ is a sum of squares. In this ordering, the non-negative elements are precisely the squares in $F$.
+  Let $F$ be a real field. There is a unique ordering on $F$ if and only if, for each $a\in F$, either $a$ or $-a$ is a sum of squares. In this ordering, the non-negative elements are precisely the sums of squares in $F$.
 \end{lemma}
 \begin{proof}
   \leanok
@@ -119,6 +119,8 @@ Intuitively, $X$ is infinitesimally close to $a$. When $a=0$, we often write $R(
 
 \begin{definition}
   \label{def:RCF}
+  \lean{IsRealClosed}
+  \mathlibok
   A real closed field $F$ is a real field such that
   \begin{enumerate}
     \item for all $x$ in $F$, either $x$ or $-x$ is a square in $F$, and
@@ -129,6 +131,8 @@ Intuitively, $X$ is infinitesimally close to $a$. When $a=0$, we often write $R(
 \begin{lemma}
   \label{lem:RCF_ord_ax}
   \uses{def:RCF}
+  \lean{IsRealClosed.of_linearOrderedField}
+  \mathlibok
   An ordered field is real closed if
   \begin{enumerate}
     \item every non-negative element is a square, and
@@ -136,6 +140,7 @@ Intuitively, $X$ is infinitesimally close to $a$. When $a=0$, we often write $R(
   \end{enumerate}
 \end{lemma}
 \begin{proof}
+  \mathlibok
   Squares in an ordered field are non-negative.
 \end{proof}
 
@@ -153,10 +158,13 @@ Fix a real closed field $R$.
 \begin{lemma}
   \label{lem:RCF_ord_unique}
   \uses{def:RCF}
+  \lean{IsSemireal.existsUnique_isStrictOrderedRing_iff, IsRealClosed.nonneg_iff_isSquare}
+  \mathlibok
   $R$ has a unique ordering making it an ordered field. In this ordering, the non-negative elements are exactly the squares.
 \end{lemma}
 \begin{proof}
   \uses{lem:unique_ord_cond,lem:RCF_sumsq_is_sq}
+  \mathlibok
   Follows directly from Lemmas \ref{lem:unique_ord_cond} and \ref{lem:RCF_sumsq_is_sq}.
 \end{proof}
 
