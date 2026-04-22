@@ -1,0 +1,2 @@
+* aesop intro on inequalities (unsafe, high)
+* surjective power map lemmas for IsAlgClosed, IsRealClosed

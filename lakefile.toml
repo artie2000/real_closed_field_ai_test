@@ -1,0 +1,22 @@
+name = "real-closed-field"
+description = "Formalisation of the theory of real closed fields in Lean 4."
+keywords = ["math","algebra"]
+homepage = "https://artie2000.github.io/real_closed_field/"
+reservoir = true
+license = "Apache-2.0"
+defaultTargets = ["RealClosedField"]
+
+[leanOptions]
+pp.unicode.fun = true
+autoImplicit = false
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+
+[[require]]
+name = "checkdecls"
+git = "https://github.com/PatrickMassot/checkdecls.git"
+
+[[lean_lib]]
+name = "RealClosedField"
