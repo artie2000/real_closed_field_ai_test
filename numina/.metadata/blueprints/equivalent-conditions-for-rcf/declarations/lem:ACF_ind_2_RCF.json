@@ -1,0 +1,12 @@
+{
+  "label": "lem:ACF_ind_2_RCF",
+  "kind": "lemma",
+  "title": "lem:ACF_ind_2_RCF",
+  "leanDeclaration": "",
+  "leanFile": "",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "An algebraically closed field of characteristic 0 has an index-2 real closed subfield.",
+  "proof": "Let $C$ be an algebraically closed field of characteristic 0. Observe that the prime subfield $\\Q$ can be ordered. Further, given an ordered subfield $F$ with $\\bar{F}\\neq C$, we can use Lemma \\ref{lem:order_fun_field} to adjoin an element transcendental over $F$, obtaining a strictly bigger ordered subfield.\n  \n  Apply Zorn's lemma to obtain a maximal ordered subfield $R\\subseteq C$; then $\\bar{R}=C$. By Theorem \\ref{thm:ord_max_imp_RCF}, $R$ must be real closed. By Corollary \\ref{cor:RCF_ac}, $C\\cong R(i)$, and so $[C:R]=2$."
+}

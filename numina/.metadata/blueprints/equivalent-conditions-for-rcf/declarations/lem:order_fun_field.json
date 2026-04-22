@@ -1,0 +1,10 @@
+{
+  "label": "lem:order_fun_field",
+  "kind": "lemma",
+  "title": "lem:order_fun_field",
+  "leanDeclaration": "",
+  "leanFile": "",
+  "uses": [],
+  "statement": "Let $F$ be an ordered field, and let $a\\in F$. Then there is a unique ordering on the function field $F(X)$ making $F(X)/F$ ordered such that $X>a$ but $b>X$ for $b>a$, and a unique one such that $X<a$ but $b<X$ for $b<a$.",
+  "proof": null
+}

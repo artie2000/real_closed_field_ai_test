@@ -1,0 +1,12 @@
+{
+  "label": "lem:ext_deg_2",
+  "kind": "lemma",
+  "title": "lem:ext_deg_2",
+  "leanDeclaration": "",
+  "leanFile": "",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "The field $R(i)$ is the unique quadratic extension of $R$.",
+  "proof": "Let $K/R$ be a quadratic extension. Since $\\ch R\\neq2$, we have $K\\cong R(\\sqrt{a})$ for some $a\\in R$. Since $a$ cannot be a square in $R$, we know $-a$ must be one. Rescaling by $\\sqrt{-a}$, we get $R(\\sqrt{a})\\cong R(i)$."
+}

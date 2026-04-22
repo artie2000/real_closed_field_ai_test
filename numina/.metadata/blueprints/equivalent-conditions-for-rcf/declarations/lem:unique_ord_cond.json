@@ -1,0 +1,10 @@
+{
+  "label": "lem:unique_ord_cond",
+  "kind": "lemma",
+  "title": "lem:unique_ord_cond",
+  "leanDeclaration": "IsSemireal.existsUnique_isStrictOrderedRing_iff, IsSemireal.unique_isStrictOrderedRing",
+  "leanFile": "",
+  "uses": [],
+  "statement": "Let $F$ be a real field. There is a unique ordering on $F$ if and only if, for each $a\\in F$, either $a$ or $-a$ is a sum of squares. In this ordering, the non-negative elements are precisely the sums of squares in $F$.",
+  "proof": "\\leanok"
+}

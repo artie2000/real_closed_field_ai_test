@@ -1,0 +1,12 @@
+{
+  "label": "cor:RCF_ac",
+  "kind": "corollary",
+  "title": "cor:RCF_ac",
+  "leanDeclaration": "",
+  "leanFile": "",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "$\\bar{R}=R(i)$.",
+  "proof": ""
+}

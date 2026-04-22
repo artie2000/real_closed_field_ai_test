@@ -3,5 +3,166 @@
   "branch": "numina/equivalent-conditions-for-rcf",
   "source_type": "latex",
   "notes": "",
-  "entries": []
+  "entries": [
+    {
+      "label": "thm:ord_iff_real",
+      "kind": "theorem",
+      "title": "thm:ord_iff_real"
+    },
+    {
+      "label": "lem:unique_ord_cond",
+      "kind": "lemma",
+      "title": "lem:unique_ord_cond"
+    },
+    {
+      "label": "cor:unique_ord_cond_ordered",
+      "kind": "corollary",
+      "title": "cor:unique_ord_cond_ordered"
+    },
+    {
+      "label": "cor:unique_ord_Q",
+      "kind": "corollary",
+      "title": "cor:unique_ord_Q"
+    },
+    {
+      "label": "thm:ext_ord_cond",
+      "kind": "theorem",
+      "title": "thm:ext_ord_cond"
+    },
+    {
+      "label": "lem:ext_ord_functional_suff",
+      "kind": "lemma",
+      "title": "lem:ext_ord_functional_suff"
+    },
+    {
+      "label": "cor:ext_ord_to_adj_sqrt",
+      "kind": "corollary",
+      "title": "cor:ext_ord_to_adj_sqrt"
+    },
+    {
+      "label": "lem:ext_ord_odd_deg",
+      "kind": "lemma",
+      "title": "lem:ext_ord_odd_deg"
+    },
+    {
+      "label": "lem:order_fun_field",
+      "kind": "lemma",
+      "title": "lem:order_fun_field"
+    },
+    {
+      "label": "def:RCF",
+      "kind": "definition",
+      "title": "def:RCF"
+    },
+    {
+      "label": "lem:RCF_ord_ax",
+      "kind": "lemma",
+      "title": "lem:RCF_ord_ax"
+    },
+    {
+      "label": "lem:RCF_sumsq_is_sq",
+      "kind": "lemma",
+      "title": "lem:RCF_sumsq_is_sq"
+    },
+    {
+      "label": "lem:RCF_ord_unique",
+      "kind": "lemma",
+      "title": "lem:RCF_ord_unique"
+    },
+    {
+      "label": "lem:alg_ext_odd_deg",
+      "kind": "lemma",
+      "title": "lem:alg_ext_odd_deg"
+    },
+    {
+      "label": "lem:ext_deg_2",
+      "kind": "lemma",
+      "title": "lem:ext_deg_2"
+    },
+    {
+      "label": "lem:Ri_ext_deg_2",
+      "kind": "lemma",
+      "title": "lem:Ri_ext_deg_2"
+    },
+    {
+      "label": "thm:FTAlg",
+      "kind": "theorem",
+      "title": "thm:FTAlg"
+    },
+    {
+      "label": "cor:FTAlg_alg",
+      "kind": "corollary",
+      "title": "cor:FTAlg_alg"
+    },
+    {
+      "label": "cor:RCF_ac",
+      "kind": "corollary",
+      "title": "cor:RCF_ac"
+    },
+    {
+      "label": "lem:sumsq_is_sq",
+      "kind": "lemma",
+      "title": "lem:sumsq_is_sq"
+    },
+    {
+      "label": "lem:FTAlg_converse",
+      "kind": "lemma",
+      "title": "lem:FTAlg_converse"
+    },
+    {
+      "label": "lem:FTAlg_converse_alg_closure",
+      "kind": "corollary",
+      "title": "lem:FTAlg_converse_alg_closure"
+    },
+    {
+      "label": "lem:RCF_max",
+      "kind": "lemma",
+      "title": "lem:RCF_max"
+    },
+    {
+      "label": "lem:RCF_max_ord",
+      "kind": "corollary",
+      "title": "lem:RCF_max_ord"
+    },
+    {
+      "label": "lem:irreds_class",
+      "kind": "lemma",
+      "title": "lem:irreds_class"
+    },
+    {
+      "label": "lem:IVP_poly",
+      "kind": "lemma",
+      "title": "lem:IVP_poly"
+    },
+    {
+      "label": "thm:IVP_poly_imp_RCF",
+      "kind": "theorem",
+      "title": "thm:IVP_poly_imp_RCF"
+    },
+    {
+      "label": "thm:ord_max_imp_RCF",
+      "kind": "theorem",
+      "title": "thm:ord_max_imp_RCF"
+    },
+    {
+      "label": "cor:real_max_imp_RCF",
+      "kind": "corollary",
+      "title": "cor:real_max_imp_RCF"
+    },
+    {
+      "label": "lem:ACF_ind_2_RCF",
+      "kind": "lemma",
+      "title": "lem:ACF_ind_2_RCF"
+    },
+    {
+      "label": "thm:RCF_tfae",
+      "kind": "theorem",
+      "title": "thm:RCF_tfae"
+    },
+    {
+      "label": "thm:RCF_tfae_ord",
+      "kind": "theorem",
+      "title": "thm:RCF_tfae_ord"
+    }
+  ]
 }
