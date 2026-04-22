@@ -4,6 +4,7 @@
   "title": "lem:RCF_max",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "EASY",
   "uses": [
     "def:RCF"
   ],

@@ -4,6 +4,7 @@
   "title": "lem:RCF_sumsq_is_sq",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "EASY",
   "uses": [
     "def:RCF"
   ],

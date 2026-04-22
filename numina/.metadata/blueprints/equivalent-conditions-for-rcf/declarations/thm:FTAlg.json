@@ -4,6 +4,7 @@
   "title": "thm:FTAlg",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF"
   ],

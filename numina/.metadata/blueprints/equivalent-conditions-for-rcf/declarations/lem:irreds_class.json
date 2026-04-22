@@ -4,6 +4,7 @@
   "title": "lem:irreds_class",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF"
   ],

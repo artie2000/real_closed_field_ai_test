@@ -4,6 +4,7 @@
   "title": "thm:IVP_poly_imp_RCF",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF"
   ],

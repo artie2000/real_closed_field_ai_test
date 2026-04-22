@@ -4,6 +4,7 @@
   "title": "cor:FTAlg_alg",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "EASY",
   "uses": [
     "def:RCF"
   ],

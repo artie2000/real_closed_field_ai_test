@@ -4,6 +4,7 @@
   "title": "lem:ext_deg_2",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF"
   ],

@@ -4,6 +4,7 @@
   "title": "thm:ord_max_imp_RCF",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF"
   ],

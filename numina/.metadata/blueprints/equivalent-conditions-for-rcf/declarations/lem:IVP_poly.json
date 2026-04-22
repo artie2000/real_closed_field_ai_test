@@ -4,6 +4,7 @@
   "title": "lem:IVP_poly",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "HARD",
   "uses": [
     "def:RCF",
     "lem:RCF_ord_unique"

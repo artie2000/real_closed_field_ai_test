@@ -4,6 +4,7 @@
   "title": "lem:alg_ext_odd_deg",
   "leanDeclaration": "",
   "leanFile": "",
+  "assessment": "EASY",
   "uses": [
     "def:RCF"
   ],
