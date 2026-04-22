@@ -3,7 +3,7 @@ Copyright (c) 2025 Artie Khovanov. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Artie Khovanov
 -/
-import Mathlib.Algebra.Order.Ring.RealClosed
+import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.Tactic.TFAE
@@ -26,7 +26,7 @@ variable (R : Type*) [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 algebraic extension of `R` and admits a linear order making it a strictly ordered ring
 with `R → K` monotone, the structure map `R → K` is surjective. -/
 def NoNontrivialOrderedAlgExt : Prop :=
-  ∀ (K : Type _) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K],
+  ∀ (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K],
     (∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule R K) →
     Function.Surjective (algebraMap R K)
 

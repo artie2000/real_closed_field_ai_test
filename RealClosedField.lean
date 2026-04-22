@@ -2,3 +2,4 @@
 -- Import modules here that should be built as part of the library.
 import RealClosedField.Algebra.Order.Field.IsSemireal
 import RealClosedField.Algebra.Order.Algebra
+import RealClosedField.Algebra.Order.Field.RealClosed
