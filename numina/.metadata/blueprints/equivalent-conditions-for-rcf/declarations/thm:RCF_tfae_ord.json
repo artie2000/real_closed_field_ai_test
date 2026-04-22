@@ -9,5 +9,6 @@
   ],
   "statement": "Let $R$ be an ordered field. TFAE:\n  \\begin{enumerate}\n    \\item $R$ is real closed.\n    \\item $R$ is maximal with respect to ordered algebraic extensions.\n    \\item Polynomials over $R$ satisfy the intermediate value property.\n  \\end{enumerate}",
   "proof": "",
-  "assessment": "HARD"
+  "assessment": "HARD",
+  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/equivalent-conditions-for-rcf/RealClosedField/Algebra/Order/Field/scratch_thm_tfae_of_linearOrderedField.lean"
 }
