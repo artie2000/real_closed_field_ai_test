@@ -336,60 +336,38 @@ theorem isSquare_of_finrank_base_eq_two
       rcases isSquare_or_isSquare_neg ((r + a) / 2) with hsq | hsq
       · exact ⟨r, hr_sq, hsq⟩
       · refine ⟨-r, ?_, ?_⟩
-        · rw [neg_pow, hr_sq]; ring
+        · linear_combination hr_sq
         · -- Need (a-r)/2 is a square
           -- hsq : IsSquare (-((r+a)/2))
           obtain ⟨α, hα⟩ := hsq
           -- hα : -((r+a)/2) = α * α
-          by_cases hα0 : α = 0
+          have hα0_or : α = 0 ∨ α ≠ 0 := em _
+          rcases hα0_or with hα0 | hα_ne
           · -- Then -(r+a)/2 = 0, so r = -a, then r² = a², a² + b² = a², b² = 0, b = 0, contra
             exfalso
-            rw [hα0, mul_zero] at hα
+            rw [hα0] at hα
+            -- hα : -((r+a)/2) = 0 * 0
             have hra : r + a = 0 := by linear_combination -2 * hα
-            have hr_eq : r = -a := by linear_combination hra
-            have h1 : r^2 = a^2 := by rw [hr_eq]; ring
-            have h2 : a^2 = a^2 + b^2 := by linear_combination -hr_sq + h1
-            have h3 : b^2 = 0 := by linear_combination -h2
-            have h4 : b = 0 := by
-              by_contra hbne
-              exact hbne ((pow_eq_zero_iff two_ne_zero).mp h3)
-            exact hb0 h4
+            have h1 : r^2 = a^2 := by linear_combination (r - a) * hra
+            have h3 : b^2 = 0 := by linear_combination -hr_sq + h1
+            apply hb0
+            exact (pow_eq_zero_iff two_ne_zero).mp h3
           · -- Set β := b / (2α); claim (a - r)/2 = β²
             refine ⟨b / (2 * α), ?_⟩
-            -- (a + -r)/2 = (a - r)/2 = β² = b² / (4α²) = b² / (-2(r+a)) after multiplying
-            -- Key: (r+a)(r-a) = r² - a² = b², so (r-a) = b² / (r+a) = b² / (-2α²)
-            -- So (a-r) = -b² / (-2α²) = b² / (2α²)
-            -- Hence (a + -r)/2 = (a-r)/2 = b² / (4α²) = (b/(2α))²
-            have hrpa : r + a = -(2 * α^2) := by
-              have : -(r + a) = 2 * α^2 := by
-                have := hα
-                have hsq : α * α = α^2 := (sq α).symm
-                linear_combination 2 * hα
-              linear_combination -this
-            have hra_ne : r + a ≠ 0 := by
-              rw [hrpa]
-              intro heq
-              have : α^2 = 0 := by linear_combination -1/2 * heq
-              exact hα0 ((pow_eq_zero_iff two_ne_zero).mp this)
-            have hα_ne : α ≠ 0 := hα0
             have h2α_ne : (2 : R) * α ≠ 0 := mul_ne_zero two_ne_zero hα_ne
-            have hα2_ne : α^2 ≠ 0 := pow_ne_zero _ hα_ne
-            -- (r+a)*(r-a) = b²
-            have hprod : (r + a) * (r - a) = b^2 := by linear_combination hr_sq
-            -- r - a = b² / (r + a)
-            have hrma : r - a = b^2 / (r + a) := by
-              field_simp
-              linear_combination hprod
-            -- a - r = -b² / (r + a) = b² / (2α²)
-            have har : a - r = b^2 / (2 * α^2) := by
-              have h1 : a - r = -(b^2 / (r + a)) := by linear_combination -hrma
-              rw [h1, hrpa]
-              field_simp
-            show (-r + a) / 2 = b / (2 * α) * (b / (2 * α))
-            have : (-r + a) / 2 = (a - r) / 2 := by ring
-            rw [this, har]
-            field_simp
-            ring
+            -- Goal: (-r + a) / 2 = b / (2 * α) * (b / (2 * α))
+            -- Derive: -(r+a) = 2α², so (r+a) = -2α²
+            -- (r+a)(r-a) = b², so r - a = b²/(r+a) = b²/(-2α²) = -b²/(2α²)
+            -- Then a - r = b²/(2α²), so (a - r)/2 = b²/(4α²) = (b/(2α))²
+            -- Use field_simp: (-r + a) / 2 * (2α)^2 = b * b, i.e., (a-r)/2 * 4α² = b²
+            -- But (a - r) * 2α² = b² (using hα and hr_sq)
+            -- From hα: -((r+a)/2) = α * α, i.e., r + a = -2α²
+            -- From hr_sq: r² = a² + b², i.e., b² = r² - a²
+            -- Want: (a - r) * 2α² = b², i.e., (a-r)(-(r+a)) = (a-r)*(-(r+a)) = -(a-r)(r+a) = -(ar+a²-r²-ra) = r² - a² = b²
+            -- So: (a-r)*2α² = (a-r)*(-(r+a)) = -ar - a² + r² + ra = r² - a² = b²
+            rw [div_mul_div_comm, eq_div_iff (mul_ne_zero h2α_ne h2α_ne)]
+            linear_combination ((a - r) / 2) * (2 * hα) + (-1 : R) * hr_sq
+
     obtain ⟨s, hs_sq, hcsq⟩ := hexists_sign
     obtain ⟨c, hc⟩ := hcsq
     -- hc : (s + a) / 2 = c * c
