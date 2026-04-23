@@ -135,9 +135,10 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     rintro ⟨r, hr⟩
     apply hx
     refine ⟨r - a / 2, ?_⟩
+    -- hr : (algebraMap R L) r = y = x + (algebraMap R L) (a / 2)
+    have hr' : (algebraMap R L) r = x + (algebraMap R L) (a / 2) := hr
     rw [map_sub]
-    have hy_eq : x + (algebraMap R L) (a / 2) = (algebraMap R L) r := hr
-    linear_combination hy_eq
+    linear_combination hr'
   -- Step 5: c is not a square in R.
   have hc_ni : ¬ IsSquare c := by
     rintro ⟨s, hs⟩
@@ -172,7 +173,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     rw [← map_pow, ← map_neg]
     congr 1
     -- `hs : -c = s * s`; show `s ^ 2 = -c`.
-    rw [sq, ← hs]
+    rw [pow_two, ← hs]
   set α : L := y * sL⁻¹ with hα_def
   have hcL_ne : (algebraMap R L) c ≠ 0 := by
     intro hc0
@@ -229,7 +230,6 @@ theorem nonempty_algEquiv_of_finrank_eq_two
   have hli : LinearIndependent R ![(1 : L), α] := by
     rw [LinearIndependent.pair_iff]
     intro r t hrt
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] at hrt
     -- hrt : r • 1 + t • α = 0.
     by_cases ht : t = 0
     · subst ht
