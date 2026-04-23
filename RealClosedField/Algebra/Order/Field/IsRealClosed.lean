@@ -51,9 +51,8 @@ theorem of_ivp
     have hb : 0 ≤ (X ^ 2 - C x).eval (x + 1) := by
       simp only [eval_sub, eval_pow, eval_X, eval_C]; nlinarith [sq_nonneg x]
     obtain ⟨c, _, hc⟩ := h (X ^ 2 - C x) 0 (x + 1) (by linarith) ha hb
-    have hcsq : c ^ 2 = x := by
-      have := hc; simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C] at this; linarith
-    exact ⟨c, by rw [← hcsq, sq]⟩
+    simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C] at hc
+    exact ⟨c, by linarith [sq c]⟩
   · -- every odd-natDegree polynomial has a root
     intro f hodd
     have hn : 1 ≤ f.natDegree := hodd.pos
