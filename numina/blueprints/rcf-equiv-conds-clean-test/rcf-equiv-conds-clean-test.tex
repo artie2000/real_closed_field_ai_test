@@ -407,10 +407,13 @@ In fact, the converses to Lemmas \ref{lem:RCF_max} and \ref{lem:IVP_poly} also h
 \begin{corollary}
   \label{cor:real_max_imp_RCF}
   \uses{def:RCF}
+  \lean{IsRealClosed.of_bijective_algebraMap_of_isSemireal}
+  \leanok
   Let $R$ be a real field with no nontrivial real algebraic extensions. Then $R$ is real closed.
 \end{corollary}
 \begin{proof}
   \uses{thm:ord_iff_real,thm:ord_max_imp_RCF}
+  \leanok
   Since $R$ can be ordered and ordered fields are real, we are done by Theorem \ref{thm:ord_max_imp_RCF}.
 \end{proof}
 

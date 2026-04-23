@@ -6,5 +6,7 @@
     "def:RCF"
   ],
   "statement": "Let $R$ be a real field with no nontrivial real algebraic extensions. Then $R$ is real closed.",
-  "proof": "Since $R$ can be ordered and ordered fields are real, we are done by Theorem \\ref{thm:ord_max_imp_RCF}."
+  "proof": "\\leanok\n  Since $R$ can be ordered and ordered fields are real, we are done by Theorem \\ref{thm:ord_max_imp_RCF}.",
+  "leanDeclaration": "IsRealClosed.of_bijective_algebraMap_of_isSemireal",
+  "status": "proved"
 }
