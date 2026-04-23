@@ -89,7 +89,7 @@ theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
     have hdeg_sum : f.natDegree = g.natDegree + h.natDegree := by
       rw [hfgh]; exact natDegree_mul hg_ne hhne
     -- Case analysis on the shape of g
-    rcases monic_irreducible_classification hg_monic hg_irr with
+    rcases monic_irreducible_classification R hg_monic hg_irr with
       ⟨c, hgeq⟩ | ⟨α, β, hβ, hgeq⟩
     · -- Linear case: g = X - C c
       have hg_natDeg : g.natDegree = 1 := by rw [hgeq, natDegree_X_sub_C]
