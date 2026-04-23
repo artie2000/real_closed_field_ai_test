@@ -258,7 +258,7 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
       have hlc' : 0 < (-f).leadingCoeff := by
         rw [Polynomial.leadingCoeff_neg]; linarith
       obtain ⟨M, hMpos, hMneg_eval, hMpos_eval⟩ :=
-        polynomialIVP_aux.exists_sign_change (R := R) (-f) hndeg.symm hn1 hodd hlc'
+        polynomialIVP_aux.exists_sign_change (R := R) (-f) hndeg hn1 hodd hlc'
       -- (-f).eval (-M) < 0 so f.eval (-M) > 0; (-f).eval M > 0 so f.eval M < 0.
       rw [Polynomial.eval_neg] at hMneg_eval hMpos_eval
       obtain ⟨c, hc_mem, hc_root⟩ :=
