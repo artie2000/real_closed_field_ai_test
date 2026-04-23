@@ -650,9 +650,89 @@ theorem finite_of_isAlgebraic
   · rw [h] at hL_lt; omega
   · rw [h] at hL_lt; omega
 
-/-- **S9** (for IVP use). Every monic irreducible polynomial over an RCF is either
-linear or is everywhere positive. -/
-theorem natDegree_eq_one_or_forall_eval_pos_of_irreducible
+/-- **S9'.** Every monic irreducible polynomial over an RCF is either linear `X - C c`
+for some `c : R`, or of the form `(X - C a) ^ 2 + C (b ^ 2)` for some `a b : R` with `b ≠ 0`.
+This realises the blueprint lemma `lem:irreds_class`. -/
+theorem eq_linear_or_eq_sq_add_sq_of_irreducible
+    {g : R[X]} (hmonic : g.Monic) (hirred : Irreducible g) :
+    (∃ c : R, g = X - C c) ∨
+    (∃ a b : R, b ≠ 0 ∧ g = (X - C a) ^ 2 + C (b ^ 2)) := by
+  have hne : g ≠ 0 := hirred.ne_zero
+  have hdeg_ne : g.degree ≠ 0 := by
+    intro h
+    have : g.natDegree = 0 := natDegree_eq_zero_iff_degree_le_zero.mpr (by rw [h])
+    have : g = 1 := Polynomial.eq_one_of_monic_natDegree_zero hmonic this
+    exact hirred.not_isUnit (by rw [this]; exact isUnit_one)
+  haveI : Fact (Irreducible g) := ⟨hirred⟩
+  haveI : Nontrivial (AdjoinRoot g) := AdjoinRoot.nontrivial g hdeg_ne
+  haveI : Module.Finite R (AdjoinRoot g) :=
+    Module.Finite.of_basis (AdjoinRoot.powerBasis hne).basis
+  have hfinrank : Module.finrank R (AdjoinRoot g) = g.natDegree := by
+    have := (AdjoinRoot.powerBasis hne).finrank
+    rw [AdjoinRoot.powerBasis_dim hne] at this
+    exact this
+  rcases finrank_eq_one_or_two_of_finite (R := R) (AdjoinRoot g) with h1 | h2
+  · left
+    rw [hfinrank] at h1
+    have hg_eq : g = X + C (g.coeff 0) := hmonic.eq_X_add_C h1
+    refine ⟨-g.coeff 0, ?_⟩
+    rw [hg_eq, map_neg, sub_neg_eq_add]
+  · right
+    rw [hfinrank] at h2
+    set a : R := g.coeff 1
+    set b : R := g.coeff 0
+    have hcoeff2 : g.coeff 2 = 1 := by
+      have := hmonic.coeff_natDegree
+      rw [h2] at this
+      exact this
+    have hab : g = X ^ 2 + C a * X + C b := by
+      apply Polynomial.ext
+      intro n
+      rw [coeff_add, coeff_add, coeff_X_pow, coeff_C_mul, coeff_C, coeff_X]
+      rcases lt_trichotomy n 2 with hn | rfl | hn
+      · interval_cases n
+        · show b = _; simp
+        · show a = _; simp
+      · show g.coeff 2 = _; rw [hcoeff2]; simp
+      · have hn_gt : n > g.natDegree := by rw [h2]; exact hn
+        rw [coeff_eq_zero_of_natDegree_lt hn_gt]
+        have hn2 : n ≠ 2 := Nat.ne_of_gt hn
+        have hn1 : (1 : ℕ) ≠ n := by omega
+        have hn0 : n ≠ 0 := by omega
+        simp [hn2, hn1, hn0]
+    set δ : R := (a / 2) ^ 2 - b with hδdef
+    have hdelta_neg : δ < 0 := by
+      by_contra hnn
+      obtain ⟨c, hc⟩ :=
+        (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp (not_lt.mp hnn)
+      set r : R := -a/2 + c with hrdef
+      have hroot : g.IsRoot r := by
+        simp only [IsRoot, hab, eval_add, eval_pow, eval_X, eval_mul, eval_C]
+        have hcc : c * c = (a/2)^2 - b := hc.symm
+        show r ^ 2 + a * r + b = 0
+        rw [hrdef]
+        linear_combination hcc
+      have hdeg1 : g.degree = 1 :=
+        Polynomial.degree_eq_one_of_irreducible_of_root hirred hroot
+      have hnatdeg1 : g.natDegree = 1 := natDegree_eq_of_degree_eq_some hdeg1
+      rw [h2] at hnatdeg1
+      exact absurd hnatdeg1 (by norm_num)
+    have hnegδ_pos : 0 < -δ := by linarith
+    obtain ⟨b', hb'⟩ :=
+      (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -δ)).mp hnegδ_pos.le
+    set a' : R := -a/2 with ha'def
+    have hb'_ne : b' ≠ 0 := by
+      intro h0
+      rw [h0] at hb'
+      have : -δ = 0 := by rw [← hb']; ring
+      linarith
+    refine ⟨a', b', hb'_ne, ?_⟩
+    rw [hab]
+    have hbeq : b = (a/2)^2 + b'^2 := by
+      have : b'^2 = -δ := by rw [← hb']; ring
+      rw [this, hδdef]; ring
+    rw [hbeq, ha'def, map_neg, map_div₀, map_ofNat]
+    ring
     {g : R[X]} (hmonic : g.Monic) (hirred : Irreducible g) :
     g.natDegree = 1 ∨ ∀ x : R, 0 < g.eval x := by
   have hne : g ≠ 0 := hirred.ne_zero
