@@ -133,8 +133,8 @@ private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
     · -- i = 0
       rw [LinearMap.map_add hm.coeff]
       rw [hm.coeff_algebraMap]
-      show (Pi.single 0 (hm.coeff x 0) : ℕ → R) 0 + hm.coeff (algebraMap R K (hm.coeff x 1)
-            * hm.root) 0 = hm.coeff x 0
+      show hm.coeff x 0 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 0
+          + hm.coeff (algebraMap R K (hm.coeff x 1) * hm.root) 0
       rw [hcoeff_aM_mul_root]
       simp
     · -- i = 1
@@ -160,9 +160,9 @@ private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
       rw [e1, hroot_sq]
       have hmid : (2 : K) * algebraMap R K u * (algebraMap R K v * hm.root)
               = algebraMap R K (2 * u * v) * hm.root := by
-        rw [show (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v
-              from by rw [map_mul, map_mul]; simp]
-        ring
+        have h : (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v := by
+          rw [map_mul, map_mul, map_ofNat]
+        rw [h]; ring
       rw [hmid]
       have h1 : (algebraMap R K u)^2 = algebraMap R K (u^2) := (map_pow _ _ _).symm
       have h2 : (algebraMap R K v)^2 * algebraMap R K a = algebraMap R K (v^2 * a) := by
