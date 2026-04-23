@@ -615,30 +615,23 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         rw [hh_deg_val]
         rcases hg_odd with ⟨k, hk⟩
         rw [hk]
-        -- 2*d - (2*k + 1) is odd since 2*d > 2*k + 1 means 2*d ≥ 2*k + 2, then 2*d - 2*k - 1 is odd
         have h1 : 2 * k + 1 < 2 * d := by
-          rw [← hk]
-          rcases hg_odd with ⟨k', hk'⟩
           have hge := hP_deg_ge
-          rw [hP_natDeg] at hge
+          rw [hP_natDeg, hk] at hge
           omega
-        obtain ⟨m, hm⟩ := Nat.even_or_odd (2 * d - (2 * k + 1))
-        rcases hm with heven | hodd
-        · exfalso
-          -- 2*d - (2k+1) is even means 2*d = (2k+1) + even, but 2*d - (2k+1) + (2k+1) = 2*d
-          -- So (2k+1) + even = 2*d, but lhs is odd and rhs is even. Contradiction.
-          obtain ⟨m, rfl⟩ := heven
-          omega
-        · exact hodd
+        -- 2*d - (2*k+1) = 2*d - 2*k - 1 = 2*(d - k) - 1; since d > k, d - k ≥ 1,
+        -- so 2*(d-k) - 1 = 2*(d-k-1) + 1 which is odd.
+        have hdk : k < d := by omega
+        refine ⟨d - k - 1, ?_⟩
+        omega
       -- Extract odd irreducible factor g' of h
       obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
         exists_odd_irreducible_factor hh_deg_odd hh_deg_pos
       -- g'.natDegree ≤ h.natDegree < g.natDegree, so IH applies.
       have hg'_lt : g'.natDegree < g.natDegree := by
-        have hdvd := hg'_dvd
-        obtain ⟨q, hq⟩ := hdvd
+        obtain ⟨q, hq⟩ := hg'_dvd
         have hq_ne : q ≠ 0 := fun hz => by
-          rw [hq, hz, mul_zero] at *; exact hh_ne hq
+          apply hh_ne; rw [hq, hz, mul_zero]
         have : h.natDegree = g'.natDegree + q.natDegree := by
           rw [hq, Polynomial.natDegree_mul hg'_irred.ne_zero hq_ne]
         omega
@@ -654,7 +647,7 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         have hsum : AdjoinRoot.mk g' ((∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1) = 0 := by
           rw [← hP_def]; exact hmk'_P
         rw [map_add, map_one] at hsum
-        linarith_or_polyrith
+        linear_combination hsum
       sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
