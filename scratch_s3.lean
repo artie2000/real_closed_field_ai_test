@@ -66,25 +66,17 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
   -- Compute β^2 = algebraMap R K δ where δ = (a/2)^2 - b
   set δ : R := (a / 2) ^ 2 - b with hδdef
   have hβsq : β ^ 2 = algebraMap R K δ := by
-    have h2 : (2 : R) ≠ 0 := by norm_num
-    rw [hβdef, hδdef]
-    rw [show (α + algebraMap R K (a / 2)) ^ 2
-        = α ^ 2 + algebraMap R K a * α + algebraMap R K ((a/2)^2) from by
-      rw [map_div₀, map_pow]; ring]
-    have hb_eq : algebraMap R K b = -(α ^ 2 + algebraMap R K a * α) := by linarith [haeval]
-    rw [show algebraMap R K ((a/2)^2 - b) = algebraMap R K ((a/2)^2) - algebraMap R K b from by
-      rw [map_sub]]
-    rw [hb_eq]; ring
+    have haK : algebraMap R K δ = algebraMap R K (a/2) ^ 2 - algebraMap R K b := by
+      rw [hδdef, map_sub, map_pow]
+    have ha_eq : algebraMap R K a = 2 * algebraMap R K (a/2) := by
+      rw [show a = 2 * (a/2) from by ring, map_mul, map_ofNat]
+    rw [haK, hβdef]
+    have hb_eq : algebraMap R K b = -(α ^ 2 + algebraMap R K a * α) := by
+      have := haeval; linarith
+    rw [hb_eq, ha_eq]; ring
   -- Show δ < 0 : if δ ≥ 0, δ is a square, so β = ±sqrt(δ) ∈ image R, so α ∈ image R,
   -- contradicting finrank = 2.
   have hdelta_neg : δ < 0 := by
-    by_contra hnn
-    push_neg at hnn
-    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp hnn
-    -- hc : δ = c * c, so β^2 = (algebraMap c)^2, so (β - c)(β + c) = 0
-    have hβsq' : β ^ 2 = (algebraMap R K c) ^ 2 := by
-      rw [hβsq]; rw [show δ = c * c from hc]; rw [sq]; rw [map_mul]
-    have hprod : (β - algebraMap R K c) * (β + algebraMap R K c) = 0 := by ring_nf; linarith [hβsq']
     sorry
   sorry
 
