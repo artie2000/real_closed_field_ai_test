@@ -88,10 +88,8 @@ theorem of_ivp
       -- Key inequality: aₙ * M - B ≥ 1
       have hkey : aₙ * M - B ≥ 1 := by
         rw [hM]
-        have : aₙ * ((B + 1) / aₙ + 1) = (B + 1) + aₙ := by
-          field_simp
-      -- aux bound: for |x| ≤ M with |x| ≥ 1, x^i ≤ x^(n-1) for i < n
-        linarith [hlc]
+        have heq : aₙ * ((B + 1) / aₙ + 1) = (B + 1) + aₙ := by field_simp
+        linarith [heq, hlc]
       -- Tail bound: for x ≥ 1, |∑ i ∈ range n, g.coeff i * x^i| ≤ x^(n-1) * B
       have tail_bound : ∀ x : R, 1 ≤ x → |∑ i ∈ Finset.range n, g.coeff i * x^i| ≤ x^(n-1) * B := by
         intro x hx
