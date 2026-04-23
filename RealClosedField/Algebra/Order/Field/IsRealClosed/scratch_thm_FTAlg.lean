@@ -79,28 +79,18 @@ private theorem finrank_pow_two_of_galois
   -- Tower law: finrank R M * finrank M L = finrank R L
   have htower : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
     Module.finrank_mul_finrank R M L
+  have h2pos : (0 : ℕ) < 2 ^ k := Nat.pos_of_ne_zero (pow_ne_zero k (by decide))
+  have hq_pos : 0 < q := by
+    rw [hqdef]
+    have h1 : 2^k ∣ n := Nat.ordProj_dvd n 2
+    exact Nat.div_pos (Nat.le_of_dvd hn_pos h1) h2pos
   have hM_finrank : Module.finrank R M = q := by
     rw [hM_finrank_L] at htower
     rw [← hn_eq, hn_split] at htower
-    have h2pos : (0 : ℕ) < 2 ^ k := Nat.pos_pow_of_pos k (by decide)
-    have := Nat.eq_of_mul_eq_mul_right h2pos (by linarith [htower] : Module.finrank R M * 2^k = q * 2^k)
-    exact this
+    have h : Module.finrank R M * 2^k = q * 2^k := by rw [mul_comm q]; linarith [htower]
+    exact Nat.eq_of_mul_eq_mul_right h2pos h
   -- M is finite-dim over R
-  haveI : FiniteDimensional R M := by
-    apply Module.Finite.of_finrank_pos
-    rw [hM_finrank]
-    -- q positive: q ≥ 1 since n > 0 and 2^k divides n
-    have : q ≠ 0 := by
-      intro hq0
-      rw [hqdef] at hq0
-      have : n = 0 := by
-        have h1 : 2^k ∣ n := Nat.ordProj_dvd n 2
-        rw [Nat.div_eq_zero_iff (Nat.pos_pow_of_pos k (by decide))] at hq0
-        -- Actually, if n/2^k = 0 and 2^k ∣ n, then n = 0 would follow only if 2^k > n.
-        -- Wait, if 2^k ∣ n and n / 2^k = 0 and n > 0 then n < 2^k which is impossible.
-        sorry
-      exact hn_ne this
-    exact Nat.pos_of_ne_zero this
+  haveI : FiniteDimensional R M := inferInstance
   -- Apply S2
   have hq_1 : q = 1 := by
     have hOdd : Odd q := by
