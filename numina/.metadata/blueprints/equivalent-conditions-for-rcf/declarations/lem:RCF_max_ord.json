@@ -10,5 +10,6 @@
     "lem:RCF_ord_unique"
   ],
   "statement": "$R$ has no nontrivial ordered algebraic extensions (with respect to the unique order).",
-  "proof": "Since ordered fields are real, we are done by Lemma \\ref{lem:RCF_max}."
+  "proof": "Since ordered fields are real, we are done by Lemma \\ref{lem:RCF_max}.",
+  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/equivalent-conditions-for-rcf/RealClosedField/Algebra/Order/Field/scratch_lem_RCF_max_ord.lean"
 }
