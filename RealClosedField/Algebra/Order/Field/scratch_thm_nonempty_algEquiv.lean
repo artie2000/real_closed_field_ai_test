@@ -12,7 +12,9 @@ import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.RingTheory.PowerBasis
+import Mathlib.LinearAlgebra.LinearIndependent.Lemmas
 import Mathlib.Tactic.TFAE
+import Mathlib.Tactic.FinCases
 import RealClosedField.Algebra.Order.Algebra
 
 /-!
@@ -72,9 +74,8 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     have hTop : (⊥ : Subalgebra R L) = ⊤ := by
       rw [eq_top_iff]
       rintro x -
-      rw [Algebra.mem_bot]
       obtain ⟨r, hr⟩ := h x
-      exact ⟨r, hr⟩
+      exact Algebra.mem_bot.mpr ⟨r, hr⟩
     -- Contradiction: finrank R L = 2 but finrank R ⊥ = 1.
     have heq : Module.finrank R (⊥ : Subalgebra R L) = Module.finrank R L := by
       rw [hTop]; exact Subalgebra.topEquiv.toLinearEquiv.finrank_eq
@@ -253,11 +254,11 @@ theorem nonempty_algEquiv_of_finrank_eq_two
   let basis2 : Basis (Fin 2) R L := basisOfLinearIndependentOfCardEqFinrank hli hcard
   have hbasis_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
     intro i
+    have key : basisOfLinearIndependentOfCardEqFinrank hli hcard i = ![(1 : L), α] i := by
+      rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
     show basisOfLinearIndependentOfCardEqFinrank hli hcard i = α ^ (i : ℕ)
-    rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
-    match i with
-    | ⟨0, _⟩ => simp
-    | ⟨1, _⟩ => simp
+    rw [key]
+    fin_cases i <;> simp
   refine ⟨{ gen := α, dim := 2, basis := basis2, basis_eq_pow := hbasis_eq }, ?_⟩
   exact hmin
 

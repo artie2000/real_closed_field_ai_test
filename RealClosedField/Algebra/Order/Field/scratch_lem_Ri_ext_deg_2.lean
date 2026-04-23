@@ -90,7 +90,15 @@ theorem nonempty_algEquiv_of_finrank_eq_two
 extension `K` of `R` is a square in `K`. -/
 theorem isSquare_of_finrank_base_eq_two
     (K : Type*) [Field K] [Algebra R K]
-    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := sorry
+    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := by
+  haveI : FiniteDimensional R K := Module.finite_of_finrank_eq_succ hK
+  -- Get a primitive element α with minpoly of degree 2.
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  have hint : IsIntegral R α := .of_finite R α
+  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  have hdeg : (minpoly R α).natDegree = 2 := by
+    rw [(Field.primitive_element_iff_minpoly_natDegree_eq R α).mp hα, hK]
+  sorry
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
 of `R` are `R` itself and the quadratic extension `R(i)`. -/
