@@ -3,3 +3,4 @@
 import RealClosedField.Algebra.Order.Field.IsSemireal
 import RealClosedField.Algebra.Order.Algebra
 import RealClosedField.Algebra.Order.Field.IsRealClosed
+import RealClosedField.Algebra.Order.Field.IsRealClosed.Closure
