@@ -734,13 +734,19 @@ theorem eq_linear_or_eq_sq_add_sq_of_irreducible
       rw [hb'_sq, hδdef]; ring
     rw [hab, hbeq]
     have hCadd : (C ((a/2)^2 + b'^2) : R[X]) = C ((a/2)^2) + C (b'^2) := map_add C _ _
-    have hCsq : (C ((a/2)^2) : R[X]) = (C (a/2))^2 := (map_pow C _ _).symm
-    have hCdiv : (C (a/2) : R[X]) = C a / 2 := by rw [map_div₀, map_ofNat]
-    have hCa' : (C a' : R[X]) = -(C a / 2) := by
-      show C (-a/2) = -(C a / 2)
-      rw [show (-a/2 : R) = -(a/2) from by ring, map_neg, hCdiv]
-    rw [hCa', hCadd, hCsq, hCdiv]
+    have hCsq : (C ((a/2)^2) : R[X]) = (C (a/2))^2 := map_pow C _ _
+    have hCa' : (C a' : R[X]) = -(C (a/2)) := by
+      show C (-a/2) = -(C (a/2))
+      rw [show (-a/2 : R) = -(a/2) from by ring, map_neg]
+    rw [hCa', hCadd, hCsq]
+    have h2C : (C a : R[X]) = 2 * C (a/2) := by
+      rw [show (a : R) = 2 * (a/2) from by ring, map_mul, map_ofNat]
+    rw [h2C]
     ring
+
+/-- **S9** (for IVP use). Every monic irreducible polynomial over an RCF is either
+linear or is everywhere positive. -/
+theorem natDegree_eq_one_or_forall_eval_pos_of_irreducible
     {g : R[X]} (hmonic : g.Monic) (hirred : Irreducible g) :
     g.natDegree = 1 ∨ ∀ x : R, 0 < g.eval x := by
   have hne : g ≠ 0 := hirred.ne_zero
