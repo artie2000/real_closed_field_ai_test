@@ -9,7 +9,9 @@ import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 import Mathlib.RingTheory.Algebraic.Basic
+import Mathlib.RingTheory.PowerBasis
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
 
@@ -45,12 +47,36 @@ theorem surjective_algebraMap_of_odd_finrank
     (hodd : Odd (Module.finrank R K)) :
     Function.Surjective (algebraMap R K) := sorry
 
-/-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
-any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
-theorem nonempty_algEquiv_of_finrank_eq_two
-    (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
-    (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
-    Nonempty (K ≃ₐ[R] K') := sorry
+/-- In a quadratic extension `K` of a real closed field `R`, there exists an element
+`α : K` with `α^2 = -1`. -/
+private theorem exists_sq_eq_neg_one_of_finrank_eq_two
+    (K : Type*) [Field K] [Algebra R K] (hK : Module.finrank R K = 2) :
+    ∃ α : K, α ^ 2 = -1 := by
+  have hFin : FiniteDimensional R K := .of_finrank_eq_succ hK
+  -- Step 1: find an element not in the image of algebraMap R K.
+  have hne : ∃ x : K, x ∉ (algebraMap R K).range := by
+    by_contra h
+    push_neg at h
+    have hTop : (⊥ : Subalgebra R K) = ⊤ := by
+      apply Subalgebra.toSubmodule_injective
+      apply Submodule.eq_top_iff'.mpr
+      intro x
+      obtain ⟨r, hr⟩ := h x
+      rw [← hr]
+      exact Algebra.mem_bot.mpr ⟨r, rfl⟩
+    have : Module.finrank R (⊥ : Subalgebra R K) = Module.finrank R K := by
+      rw [hTop]; exact (Subalgebra.topEquiv.toLinearEquiv.finrank_eq)
+    rw [Subalgebra.finrank_bot] at this
+    omega
+  obtain ⟨x, hx⟩ := hne
+  -- x is integral since K is finite over R.
+  have hxI : IsIntegral R x := .of_finite R x
+  -- minpoly R x has degree 2.
+  have hdeg2 : (minpoly R x).natDegree = 2 := by
+    have h2 : 2 ≤ (minpoly R x).natDegree := (minpoly.two_le_natDegree_iff hxI).mpr hx
+    have hle : (minpoly R x).natDegree ≤ Module.finrank R K := minpoly.natDegree_le x
+    omega
+  sorry
 
 /-- `R(i)` has no quadratic extension: equivalently, every element of any quadratic
 extension `K` of `R` is a square in `K`. -/

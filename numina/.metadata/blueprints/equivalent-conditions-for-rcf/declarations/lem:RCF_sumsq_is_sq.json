@@ -9,5 +9,6 @@
     "def:RCF"
   ],
   "statement": "Every sum of squares in $R$ is a square in $R$.",
-  "proof": "If the negative of a sum of squares is a square, then, dividing through, $-1$ is a sum of squares, contradicting the realness of $R$."
+  "proof": "If the negative of a sum of squares is a square, then, dividing through, $-1$ is a sum of squares, contradicting the realness of $R$.",
+  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/equivalent-conditions-for-rcf/RealClosedField/Algebra/Order/Field/scratch_thm_isSquare_of_isSumSq.lean"
 }

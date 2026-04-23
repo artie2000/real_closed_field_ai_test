@@ -8,7 +8,9 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
+import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
@@ -43,7 +45,34 @@ any finite extension `K/R` with `Module.finrank R K` odd has `R → K` surjectiv
 theorem surjective_algebraMap_of_odd_finrank
     (K : Type*) [Field K] [Algebra R K] [FiniteDimensional R K]
     (hodd : Odd (Module.finrank R K)) :
-    Function.Surjective (algebraMap R K) := sorry
+    Function.Surjective (algebraMap R K) := by
+  -- Primitive element theorem: `K = R⟮α⟯` for some `α`.
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  -- `α` is integral over `R`.
+  have hint : IsIntegral R α := .of_finite R α
+  -- `f := minpoly R α` is irreducible and monic.
+  set f := minpoly R α with hf_def
+  have hirr : Irreducible f := minpoly.irreducible hint
+  -- `f.natDegree = finrank R K` using `R⟮α⟯ = ⊤`.
+  have hdeg : f.natDegree = Module.finrank R K := by
+    have h1 : Module.finrank R (IntermediateField.adjoin R {α}) = f.natDegree :=
+      IntermediateField.adjoin.finrank hint
+    have h2 : Module.finrank R (IntermediateField.adjoin R {α}) = Module.finrank R K := by
+      rw [hα, IntermediateField.finrank_top']
+    omega
+  -- `f.natDegree` is odd, so `f` has a root in `R`.
+  have hodd' : Odd f.natDegree := hdeg ▸ hodd
+  obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd'
+  -- An irreducible polynomial with a root has degree 1.
+  have hdeg1 : f.degree = 1 := Polynomial.degree_eq_one_of_irreducible_of_root hirr hr
+  have hfin1 : Module.finrank R K = 1 := by
+    have : f.natDegree = 1 := Polynomial.natDegree_eq_of_degree_eq_some hdeg1
+    omega
+  -- `finrank R K = 1` means every element of `K` is in the range of `algebraMap R K`.
+  intro x
+  have hbot : (⊥ : Subalgebra R K) = ⊤ := Subalgebra.bot_eq_top_of_finrank_eq_one hfin1
+  have : x ∈ (⊥ : Subalgebra R K) := hbot ▸ Algebra.mem_top
+  exact Algebra.mem_bot.mp this
 
 /-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
 any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
@@ -102,23 +131,7 @@ def PolynomialIVP : Prop :=
 theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := sorry
 
 /-- An ordered field whose polynomials satisfy the intermediate value property is real closed. -/
-theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := by
-  refine IsRealClosed.of_linearOrderedField (R := R) ?_ ?_
-  · -- Every nonneg is a square
-    intro a ha
-    have h0 : (0 : R) ≤ a + 1 := by linarith
-    have heval_0 : (Polynomial.X ^ 2 - Polynomial.C a).eval 0 ≤ 0 := by
-      simp
-      exact ha
-    have heval_1 : 0 ≤ (Polynomial.X ^ 2 - Polynomial.C a).eval (a + 1) := by
-      simp
-      nlinarith
-    obtain ⟨c, hc_mem, hc_root⟩ := h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
-    rw [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
-        Polynomial.eval_C, sub_eq_zero] at hc_root
-    exact ⟨c, by rw [← sq]; exact hc_root.symm⟩
-  · -- Every odd-degree polynomial has a root
-    sorry
+theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := sorry
 
 /-- A real closed ordered field has no nontrivial ordered algebraic extensions. -/
 theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :

@@ -36,7 +36,24 @@ section Algebraic
 variable [IsRealClosed R]
 
 /-- Every sum of squares in a real closed field is a square. -/
-theorem isSquare_of_isSumSq {x : R} (hx : IsSumSq x) : IsSquare x := sorry
+theorem isSquare_of_isSumSq {x : R} (hx : IsSumSq x) : IsSquare x := by
+  rcases isSquare_or_isSquare_neg x with h | h
+  · exact h
+  · by_cases hx0 : x = 0
+    · subst hx0
+      exact IsSquare.zero
+    · exfalso
+      apply IsSemireal.not_isSumSq_neg_one R
+      have hneg1 : (-1 : R) = (-x) * x⁻¹ := by
+        rw [neg_mul, mul_inv_cancel₀ hx0]
+      rw [hneg1]
+      have hinv : IsSumSq (x⁻¹) := by
+        have hxinv2 : IsSumSq (x⁻¹ * x⁻¹) := IsSumSq.mul_self _
+        have heq : x⁻¹ = (x⁻¹ * x⁻¹) * x := by
+          rw [mul_assoc, inv_mul_cancel₀ hx0, mul_one]
+        rw [heq]
+        exact IsSumSq.mul hxinv2 hx
+      exact IsSumSq.mul h.isSumSq hinv
 
 /-- There is no nontrivial odd-degree finite extension of a real closed field `R`:
 any finite extension `K/R` with `Module.finrank R K` odd has `R → K` surjective. -/
