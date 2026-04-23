@@ -231,9 +231,10 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
       nlinarith
     obtain ⟨c, hc_mem, hc_root⟩ :=
       h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
-    rw [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
-        Polynomial.eval_C, sub_eq_zero] at hc_root
-    exact ⟨c, by rw [← sq]; exact hc_root.symm⟩
+    have hc_eval : (Polynomial.X ^ 2 - Polynomial.C a).eval c = 0 := hc_root
+    rw [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_C,
+        sub_eq_zero] at hc_eval
+    exact ⟨c, by rw [← sq]; exact hc_eval.symm⟩
   · -- Every odd-degree polynomial has a root
     intro f hodd
     set n := f.natDegree with hn_def
