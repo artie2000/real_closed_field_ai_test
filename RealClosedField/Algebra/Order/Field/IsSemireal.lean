@@ -143,6 +143,12 @@ theorem IsSquare.of_isSumSq_of_forall_isSquare_adjoinRoot
     have hdeg2 : (X ^ 2 + 1 : F[X]).natDegree = 2 := by
       have heq : (X ^ 2 + 1 : F[X]) = X ^ 2 - C (-1 : F) := by simp [sub_neg_eq_add]
       rw [heq]; exact natDegree_X_pow_sub_C
+    have hXsq_ne : (X ^ 2 + 1 : F[X]) ≠ 0 := hmonic.ne_zero
+    have hXsq_deg_ne : ((X ^ 2 + 1 : F[X]).degree) ≠ 0 := by
+      rw [hmonic.degree_eq_natDegree, hdeg2]
+      decide
+    haveI : Nontrivial (AdjoinRoot (X ^ 2 + 1 : F[X])) :=
+      AdjoinRoot.nontrivial (X ^ 2 + 1 : F[X]) hXsq_deg_ne
     set hm : IsAdjoinRootMonic (AdjoinRoot (X ^ 2 + 1 : F[X])) (X ^ 2 + 1 : F[X]) :=
       AdjoinRoot.isAdjoinRootMonic (X ^ 2 + 1 : F[X]) hmonic
     have hroot_sq : hm.root ^ 2 = -1 := by
