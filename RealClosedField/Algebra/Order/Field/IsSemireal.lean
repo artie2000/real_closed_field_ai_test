@@ -25,8 +25,6 @@ theorem exists_isPreordering_iff_isSemireal :
 
 end CommRing
 
-section Field
-
 variable {F : Type*} [Field F]
 
 open Classical in
@@ -97,8 +95,6 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
   · by_cases hx : 0 ≤ x
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
-
-end Field
 
 theorem Rat.existsUnique_isStrictOrderedRing :
     ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
