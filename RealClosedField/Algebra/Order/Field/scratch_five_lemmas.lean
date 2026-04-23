@@ -979,42 +979,20 @@ private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
   haveI hIsAlg : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
   -- span R {1, α} = ⊤
   have hspan : Submodule.span R {(1 : K), α} = ⊤ := by
-    -- Basis: 1, α. Use PowerBasis from AdjoinRoot.
     have pb := AdjoinRoot.powerBasis hp_ne
     have hpb_dim : pb.dim = 2 := AdjoinRoot.powerBasis_dim hp_ne
     have hpb_gen : pb.gen = α := AdjoinRoot.powerBasis_gen hp_ne
-    -- pb.basis : Basis (Fin 2) R K (after rewriting)
-    -- pb.basis i = α^i.val
-    -- show the range of the basis is {1, α}
-    rw [eq_top_iff]
-    rintro y -
-    -- y = c₀ * 1 + c₁ * α
-    have h_eval : ∃ c₀ c₁ : R, y = algebraMap R K c₀ + algebraMap R K c₁ * α := by
-      -- use that {1, α} are a basis via powerBasis
-      have : ∀ y : K, ∃ c₀ c₁ : R, y = c₀ • (1 : K) + c₁ • α := by
-        intro y
-        have hpb_sum : y = ∑ i : Fin pb.dim, pb.basis.repr y i • pb.gen ^ (i : ℕ) := by
-          conv_lhs => rw [← pb.basis.sum_repr y]
-          refine Finset.sum_congr rfl ?_
-          intro i _
-          rw [pb.basis_eq_pow i]
-        rw [hpb_dim] at hpb_sum
-        rw [Fin.sum_univ_two] at hpb_sum
-        refine ⟨pb.basis.repr y ⟨0, by omega⟩, pb.basis.repr y ⟨1, by omega⟩, ?_⟩
-        rw [hpb_sum, hpb_gen]
-        simp
-      obtain ⟨c₀, c₁, hy⟩ := this y
-      refine ⟨c₀, c₁, ?_⟩
-      rw [hy, Algebra.smul_def, Algebra.smul_def, mul_one]
-    obtain ⟨c₀, c₁, hy⟩ := h_eval
-    rw [hy]
-    have h1 : (1 : K) ∈ ({(1 : K), α} : Set K) := Set.mem_insert _ _
-    have hα : α ∈ ({(1 : K), α} : Set K) := Set.mem_insert_of_mem _ rfl
-    apply Submodule.add_mem
-    · rw [show algebraMap R K c₀ = c₀ • (1 : K) from by rw [Algebra.smul_def, mul_one]]
-      exact Submodule.smul_mem _ _ (Submodule.subset_span h1)
-    · rw [show algebraMap R K c₁ * α = c₁ • α from by rw [Algebra.smul_def]]
-      exact Submodule.smul_mem _ _ (Submodule.subset_span hα)
+    have hbasis_span : Submodule.span R (Set.range pb.basis) = ⊤ := pb.basis.span_eq
+    have hrange : Set.range pb.basis ⊆ ({(1 : K), α} : Set K) := by
+      rintro _ ⟨i, rfl⟩
+      rw [pb.basis_eq_pow i, hpb_gen]
+      rcases (show (i : ℕ) = 0 ∨ (i : ℕ) = 1 by
+        have hi : (i : ℕ) < pb.dim := i.isLt
+        rw [hpb_dim] at hi; omega) with hi0 | hi1
+      · rw [hi0, pow_zero]; exact Set.mem_insert _ _
+      · rw [hi1, pow_one]; exact Set.mem_insert_of_mem _ rfl
+    rw [eq_top_iff, ← hbasis_span]
+    exact Submodule.span_mono hrange
   -- K admits an ordering
   obtain ⟨hl, hSR, hOM⟩ := Field.exists_isOrderedAlgebra_of_adjoin_sqrt (K := K) hx hα_eq hspan
   -- Apply h to deduce algebraMap R K is surjective
