@@ -98,17 +98,18 @@ theorem no_quadratic_ext_Ri
     have hrhs_coeff : (X ^ 2 + C a * X + C b : (Ri R)[X]).coeff n =
         (if n = 2 then 1 else 0) + (if n = 1 then a else 0) + (if n = 0 then b else 0) := by
       simp only [coeff_add, coeff_X_pow, coeff_C_mul, coeff_X, coeff_C, mul_ite, mul_one, mul_zero]
-      congr 1
-      · congr 1
-        split_ifs <;> rfl
-      · split_ifs with h <;> rfl
+      have h1 : (if 1 = n then a else 0) = if n = 1 then a else 0 := by
+        by_cases hn : n = 1 <;> simp [hn, hn.symm]
+      have h0 : (if 0 = n then b else 0) = if n = 0 then b else 0 := by
+        by_cases hn : n = 0 <;> simp [hn, hn.symm]
+      rw [h1, h0]
     rw [hrhs_coeff]
     rcases lt_trichotomy n 2 with hn | rfl | hn
     · interval_cases n
       · simp [b]
       · simp [a]
     · simp [hcoeff2]
-    · have hn_gt : n > f.natDegree := hnatdeg ▸ hn
+    · have hn_gt : n > f.natDegree := by rw [hnatdeg]; exact hn
       rw [coeff_eq_zero_of_natDegree_lt hn_gt]
       have hn2 : n ≠ 2 := Nat.ne_of_gt hn
       have hn1 : n ≠ 1 := by omega
