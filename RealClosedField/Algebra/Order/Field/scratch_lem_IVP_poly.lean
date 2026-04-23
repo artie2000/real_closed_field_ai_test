@@ -18,6 +18,7 @@ import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.RingTheory.PowerBasis
 import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.TFAE
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import RealClosedField.Algebra.Order.Algebra
 
 /-!
