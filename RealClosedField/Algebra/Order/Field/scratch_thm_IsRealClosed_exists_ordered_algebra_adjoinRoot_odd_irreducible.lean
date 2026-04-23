@@ -431,7 +431,7 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         rw [hall_zero y hy]; ring
       have hP1 : P = 1 := by rw [hP_def, hsum0, zero_add]
       rw [hP1] at hhg
-      have : IsUnit g := IsUnit.of_mul_eq_one g h hhg.symm
+      have : IsUnit g := IsUnit.of_mul_eq_one _ hhg.symm
       exact hg_irred.not_isUnit this
     sorry
 
