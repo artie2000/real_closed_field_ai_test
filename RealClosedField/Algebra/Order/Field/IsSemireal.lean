@@ -122,24 +122,4 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  refine ⟨Rat.linearOrder, ?_, ?_⟩
-  · infer_instance
-  intro l' _
-  -- Use key: every nonneg rational is a sum of squares,
-  -- and the fact that any IsStrictOrderedRing instance gives same order
-  ext a b
-  show (a ≤ b) ↔ l'.le a b
-  have haux : ∀ x : ℚ, IsSumSq x ∨ IsSumSq (-x) := by
-    intro x
-    rcases le_total 0 x with hx | hx
-    · exact Or.inl (key x hx)
-    · exact Or.inr (key (-x) (by linarith))
-  constructor
-  · intro hab
-    by_contra hnab
-    have hba : l'.le b a := l'.le_total a b |>.resolve_left hnab
-    have hba_sub : l'.le 0 (a - b) := by
-      have := @sub_nonneg ℚ _ a b (l := l'.toPartialOrder.toPreorder.toLE) |>.mpr hba
-      sorry
-    sorry
-  · sorry
+  exact IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
