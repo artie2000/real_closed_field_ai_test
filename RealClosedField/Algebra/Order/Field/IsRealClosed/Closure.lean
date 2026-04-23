@@ -951,3 +951,79 @@ theorem bijective_algebraMap_of_isOrderedAlgebra'
 end FTA
 
 end IsRealClosed
+
+namespace IsRealClosed
+
+universe u
+
+variable {R : Type u} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+
+/-- **cor:RCF_ac.** If `R` is real closed, then `AdjoinRoot (X^2 + 1)` is algebraically closed. -/
+instance isAlgClosed_adjoinRoot_X_sq_add_one [IsRealClosed R] :
+    IsAlgClosed (AdjoinRoot (X ^ 2 + 1 : R[X])) := by
+  refine IsAlgClosed.of_exists_root _ ?_
+  intro p hmonic hirred
+  -- Set K = AdjoinRoot p; show finrank (Ri R) K = 1 hence p has degree 1
+  have hne : p ≠ 0 := hirred.ne_zero
+  have hdeg_ne : p.degree ≠ 0 := by
+    intro h
+    have h0 : p.natDegree = 0 := natDegree_eq_zero_iff_degree_le_zero.mpr (by rw [h])
+    have hp1 : p = 1 := Polynomial.eq_one_of_monic_natDegree_zero hmonic h0
+    exact hirred.not_isUnit (by rw [hp1]; exact isUnit_one)
+  haveI : Fact (Irreducible p) := ⟨hirred⟩
+  haveI : Nontrivial (AdjoinRoot p) := AdjoinRoot.nontrivial p hdeg_ne
+  set K : Type u := AdjoinRoot p
+  -- K is a finite extension of Ri R
+  haveI : Module.Finite (Ri R) K :=
+    Module.Finite.of_basis (AdjoinRoot.powerBasis hne).basis
+  -- Thus K is a finite extension of R via tower
+  haveI : Module.Finite R K := Module.Finite.trans (Ri R) K
+  -- By S5, finrank R K = 1 or 2
+  rcases finrank_eq_one_or_two_of_finite (R := R) K with h1 | h2
+  · -- finrank R K = 1, and finrank R (Ri R) = 2, so finrank (Ri R) K * 2 = 1: impossible
+    exfalso
+    have htower : Module.finrank R (Ri R) * Module.finrank (Ri R) K =
+        Module.finrank R K := Module.finrank_mul_finrank R (Ri R) K
+    have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
+      have hbasis := AdjoinRoot.powerBasis (irreducible_X_sq_add_one (R := R)).ne_zero
+      have : hbasis.dim = (X ^ 2 + 1 : R[X]).natDegree := by
+        rw [AdjoinRoot.powerBasis_dim]
+      have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
+        have h1 : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by
+          simp [map_neg, map_one, sub_neg_eq_add]
+        rw [h1]; exact natDegree_X_pow_sub_C
+      have := hbasis.finrank
+      rw [this, AdjoinRoot.powerBasis_dim, hdeg]
+    rw [h1, hfinrank_Ri] at htower
+    omega
+  · -- finrank R K = 2, and finrank R (Ri R) = 2, so finrank (Ri R) K = 1
+    have htower : Module.finrank R (Ri R) * Module.finrank (Ri R) K =
+        Module.finrank R K := Module.finrank_mul_finrank R (Ri R) K
+    have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
+      have hbasis := AdjoinRoot.powerBasis (irreducible_X_sq_add_one (R := R)).ne_zero
+      have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
+        have h1 : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by
+          simp [map_neg, map_one, sub_neg_eq_add]
+        rw [h1]; exact natDegree_X_pow_sub_C
+      have := hbasis.finrank
+      rw [this, AdjoinRoot.powerBasis_dim, hdeg]
+    rw [h2, hfinrank_Ri] at htower
+    have hfinrank_K : Module.finrank (Ri R) K = 1 := by omega
+    -- deg p = 1, so p has a root
+    have hfinrank_eq : Module.finrank (Ri R) K = p.natDegree := by
+      have := (AdjoinRoot.powerBasis hne).finrank
+      rw [AdjoinRoot.powerBasis_dim hne] at this
+      exact this
+    rw [hfinrank_eq] at hfinrank_K
+    have hdeg1 : p.degree = 1 := by
+      rw [degree_eq_natDegree hne, hfinrank_K]; rfl
+    exact Polynomial.exists_root_of_degree_eq_one hdeg1
+
+/-- **cor:RCF_ac.** If `R` is real closed, then `AdjoinRoot (X^2 + 1)` is the algebraic
+closure of `R`. -/
+instance isAlgClosure_adjoinRoot_X_sq_add_one [IsRealClosed R] :
+    IsAlgClosure R (AdjoinRoot (X ^ 2 + 1 : R[X])) := by
+  refine IsAlgClosure.mk inferInstance ?_
+  exact Algebra.IsAlgebraic.of_finite R (AdjoinRoot (X ^ 2 + 1 : R[X]))
+
+end IsRealClosed
