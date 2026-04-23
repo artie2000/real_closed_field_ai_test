@@ -121,5 +121,4 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  have := IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
-  convert this
+  exact @IsStrictOrderedRing.unique_isStrictOrderedRing_iff ℚ _ _ _ |>.mpr key
