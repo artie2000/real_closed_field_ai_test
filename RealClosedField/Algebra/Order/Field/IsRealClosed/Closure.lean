@@ -642,7 +642,12 @@ theorem finrank_eq_one_or_two_of_finite
 theorem finite_of_isAlgebraic
     (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] :
     Module.Finite R K := by
-  sorry
+  by_contra hnfd
+  obtain ⟨L, hLfin, hL_lt⟩ :=
+    IntermediateField.exists_lt_finrank_of_infinite_dimensional (F := R) (E := K) hnfd 2
+  rcases finrank_eq_one_or_two_of_finite (R := R) L with h | h
+  · rw [h] at hL_lt; omega
+  · rw [h] at hL_lt; omega
 
 /-- **S9** (for IVP use). Every monic irreducible polynomial over an RCF is either
 linear or is everywhere positive. -/
