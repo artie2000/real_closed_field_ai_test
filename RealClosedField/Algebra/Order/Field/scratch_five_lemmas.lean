@@ -476,8 +476,7 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
   haveI hFin : FiniteDimensional R (AdjoinRoot f) := hf.finite_adjoinRoot
   have hdeg_le : f.natDegree ≤ 2 := by
     have h1 : Module.finrank R (AdjoinRoot f) = f.natDegree := by
-      rw [PowerBasis.finrank (AdjoinRoot.powerBasis hf.ne_zero)]
-      simp
+      rw [(AdjoinRoot.powerBasis hf.ne_zero).finrank, AdjoinRoot.powerBasis_dim]
     rw [← h1]
     exact finrank_le_two_of_finiteDimensional R (AdjoinRoot f)
   have hdeg_pos : 0 < f.natDegree := by
@@ -981,11 +980,10 @@ private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
     simp only [map_sub, map_pow, Polynomial.aeval_X, Polynomial.aeval_C] at h_root
     linear_combination h_root
   -- finrank R K = 2
+  have hp_deg : p.natDegree = 2 := by
+    rw [hp_def, Polynomial.natDegree_X_pow_sub_C]
   have hfinrank : Module.finrank R K = 2 := by
-    have := (AdjoinRoot.powerBasis hp_ne).finrank
-    rw [this, AdjoinRoot.powerBasis_dim hp_ne]
-    show p.natDegree = 2
-    rw [hp_def, Polynomial.natDegree_sub_C, Polynomial.natDegree_pow, Polynomial.natDegree_X]
+    rw [(AdjoinRoot.powerBasis hp_ne).finrank, AdjoinRoot.powerBasis_dim, hp_deg]
   -- K is finite-dim over R, and hence algebraic
   haveI hFin : FiniteDimensional R K := .of_finrank_eq_succ hfinrank
   haveI hIsAlg : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
