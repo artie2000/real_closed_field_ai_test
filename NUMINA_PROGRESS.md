@@ -19,6 +19,20 @@ Of the four helper lemmas:
     `M = (B+1)/a_n + 1` where `B = ∑ |coeff_i|`; bound `|tail| ≤ x^{n-1} B`.
   - Blueprint status: `proved`.
 
+- **[PROVED]** `IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra`
+  (blueprint `thm:ord_max_imp_RCF`)
+  - Does NOT need FTA.
+  - Proof via `IsRealClosed.of_linearOrderedField`:
+    - Squares: adjoin `√a` for nonsquare nonneg `a ≥ 0`, project via
+      `hm.coeff _ 0`, compute `π((u + v√a)²) = u² + av² ≥ 0`.
+      Uses `Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare`.
+    - Odd degree: strong induction on the natDegree of an odd irreducible
+      factor (Artin-Schreier). If `-1 ∈ span_{R≥0} {squares}` in `AdjoinRoot g`,
+      lift to `R[X]` as `(∑ cᵢ pᵢ²) + 1 = h · g`, show the LHS has `natDegree = 2d`
+      via leading-coeff analysis, so `h.natDegree = 2d - g.natDegree` is odd and
+      smaller, then descend to an irreducible factor of `h`, contradicting IH.
+  - Blueprint status: `proved`.
+
 - **[sorry]** `IsRealClosed.exists_isRoot_of_nonpos_of_nonneg`  (`lem:IVP_poly`)
   - Requires FTA for RCF / classification of irreducibles over an RCF.
   - Not in Mathlib; substantial infrastructure (Sylow + Galois) required.
@@ -26,38 +40,46 @@ Of the four helper lemmas:
 - **[sorry]** `IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra`  (`lem:RCF_max_ord`)
   - Also requires FTA for RCF (via `lem:RCF_max`).
 
-- **[sorry]** `IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra`  (`thm:ord_max_imp_RCF`)
-  - Does NOT need FTA.
-  - Needs blueprint `cor:ext_ord_to_adj_sqrt` and `lem:ext_ord_odd_deg`,
-    neither of which is in the repo yet.
-  - Main tool already present:
-    `Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare`
-    in `RealClosedField/Algebra/Order/Algebra.lean`.
+## Mathlib shortcut check
+
+Mathlib does NOT have FTA for general RCF:
+- `Irreducible.natDegree_le_two` is ℝ-only (uses `IsAlgClosed ℂ`).
+- `Polynomial.IsMonicOfDegree.eq_isMonicOfDegree_two_mul_isMonicOfDegree` has
+  TODO comment "generalize to real closed fields when they are available".
+
+So the two remaining sorries require formalising FTA for RCF from scratch.
 
 ## Plan to resume
 
-Priority order (easiest → hardest):
+The two remaining sorries (`exists_isRoot_of_nonpos_of_nonneg`,
+`bijective_algebraMap_of_isOrderedAlgebra`) both need FTA for RCF. The blueprint
+decomposes this via:
 
-1. **`of_bijective_algebraMap_of_isOrderedAlgebra`** — feasible without FTA.
-   - Implement `cor:ext_ord_to_adj_sqrt`: for `F` ordered, `a ≥ 0` not a square,
-     there's an ordered-algebra structure on `AdjoinRoot (X^2 - C a)`.
-     Use the projection `π : F(√a) → F`, `π(u + v√a) = u`, noting
-     `π((u + v√a)^2) = u^2 + a v^2 ≥ 0`. Combine with
-     `Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare`.
-   - Implement `lem:ext_ord_odd_deg`: for `K/F` odd-degree, there's an ordered
-     extension. Proof proceeds by strong induction on degree of the minimal
-     polynomial; uses the primitive element theorem (`Field.exists_primitive_element`
-     in char 0) and manipulates `∑ aᵢ gᵢ^2 ≡ -1 mod f` in `F[X]`.
-   - Wire these up to prove the helper via `IsRealClosed.of_linearOrderedField`.
+- `lem:RCF_sumsq_is_sq` — in an RCF every sum of squares is a square
+- `lem:alg_ext_odd_deg` — no odd-degree algebraic extensions of an RCF
+- `lem:ext_deg_2` — classification of degree-2 extensions
+- `lem:Ri_ext_deg_2` — `R[i]` is degree 2 over `R`
+- `thm:FTAlg` — FTA for RCF: `R[i]` is algebraically closed
+- `cor:FTAlg_alg` — irreducibles over `R` have degree 1 or 2
+- `lem:RCF_max` — RCF has no nontrivial algebraic extensions (ordered)
+- `lem:irreds_class` — classification by signs of the constant term
 
-2. **`exists_isRoot_of_nonpos_of_nonneg`** and
-   **`bijective_algebraMap_of_isOrderedAlgebra`** — both need FTA for RCF.
-   Blueprint decomposes this via `lem:RCF_sumsq_is_sq`, `lem:ext_deg_2`,
-   `lem:Ri_ext_deg_2`, `thm:FTAlg`. Significant formalisation effort.
+This is a multi-day formalisation effort requiring Sylow + Galois theory
+chaining. Confirm with user whether to attempt.
 
 ## Files touched this session
 
-- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean` — created; `of_ivp` proved.
+- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean`
+  — `of_ivp` + `of_bijective_algebraMap_of_isOrderedAlgebra` proved.
+  Helper lemmas: `irreducible_X_sq_sub_C_of_not_isSquare`,
+  `algebraMap_not_bijective_of_irreducible_natDegree_pos`,
+  `not_exists_ordered_algebra_of_bijective`, `exists_odd_irreducible_factor`,
+  `exists_ordered_algebra_adjoinRoot_odd_irreducible`,
+  `exists_ordered_algebra_adjoinRoot_sq_sub_C`.
 - `RealClosedField.lean` — added import for new file.
-- `numina/blueprints/rcf-equiv-conds-clean-test/rcf-equiv-conds-clean-test.tex` — populated blueprint content and `\lean{}` tags.
-- `numina/.metadata/blueprints/rcf-equiv-conds-clean-test/declarations/thm:IVP_poly_imp_RCF.json` — status `proved`.
+- `numina/blueprints/rcf-equiv-conds-clean-test/rcf-equiv-conds-clean-test.tex`
+  — populated blueprint content and `\lean{}` tags.
+- `numina/.metadata/blueprints/rcf-equiv-conds-clean-test/declarations/thm:IVP_poly_imp_RCF.json`
+  — status `proved`.
+- `numina/.metadata/blueprints/rcf-equiv-conds-clean-test/declarations/thm:ord_max_imp_RCF.json`
+  — status `proved`.
