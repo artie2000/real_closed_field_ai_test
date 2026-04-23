@@ -527,7 +527,8 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
           -- Recompute using y₀ as the distinguished term.
           have hd0 : d = 0 := hy₁_eq.symm
           have hpy0_deg : (p y₀).natDegree = 0 := by
-            have : (p y₀).natDegree ≤ d := Finset.le_sup hy₀
+            have : (p y₀).natDegree ≤ d :=
+              Finset.le_sup (f := fun y => (p y).natDegree) hy₀
             omega
           have hc0_pos : 0 < (c y₀ : R) := by
             have hne : c y₀ ≠ 0 := Finsupp.mem_support_iff.mp hy₀
