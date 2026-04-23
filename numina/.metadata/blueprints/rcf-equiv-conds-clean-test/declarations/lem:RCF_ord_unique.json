@@ -7,5 +7,6 @@
   ],
   "statement": "\\mathlibok\n  $R$ has a unique ordering making it an ordered field. In this ordering, the non-negative elements are exactly the squares.",
   "proof": "\\mathlibok\n  Follows directly from Lemmas \\ref{lem:unique_ord_cond} and \\ref{lem:RCF_sumsq_is_sq}.",
-  "leanDeclaration": "IsSemireal.existsUnique_isStrictOrderedRing_iff, IsRealClosed.nonneg_iff_isSquare"
+  "leanDeclaration": "IsSemireal.existsUnique_isStrictOrderedRing_iff, IsRealClosed.nonneg_iff_isSquare",
+  "status": "proved"
 }

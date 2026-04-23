@@ -8,5 +8,6 @@
   ],
   "statement": "$R$ has no nontrivial ordered algebraic extensions (with respect to the unique order).",
   "proof": "Since ordered fields are real, we are done by Lemma \\ref{lem:RCF_max}.",
-  "leanDeclaration": "IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra"
+  "leanDeclaration": "IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra",
+  "status": "proved"
 }

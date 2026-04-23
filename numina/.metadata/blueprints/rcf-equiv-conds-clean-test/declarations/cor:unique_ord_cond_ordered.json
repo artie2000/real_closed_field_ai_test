@@ -5,5 +5,6 @@
   "uses": [],
   "statement": "Let $F$ be an ordered field. Then $F$ has a unique field ordering if and only if every non-negative element is a sum of squares.",
   "proof": "\\leanok",
-  "leanDeclaration": "IsStrictOrderedRing.unique_isStrictOrderedRing_iff"
+  "leanDeclaration": "IsStrictOrderedRing.unique_isStrictOrderedRing_iff",
+  "status": "proved"
 }
