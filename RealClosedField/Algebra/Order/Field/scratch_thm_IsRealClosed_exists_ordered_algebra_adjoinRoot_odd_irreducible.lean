@@ -385,6 +385,65 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         Polynomial.natDegree_add_le _ _
       simp [Polynomial.natDegree_one] at this
       omega
+    -- P ≠ 0 because P has constant term 1 (+1 in the definition).
+    have hP_ne : P ≠ 0 := by
+      intro hP0
+      -- If P = 0, then coeff 0 of P = 0.
+      have h1 : P.coeff 0 = 0 := by rw [hP0, Polynomial.coeff_zero]
+      -- But coeff 0 of P ≥ 1 because P = (sum of squares with ≥0 coeff) + 1 has coeff 0 ≥ 1.
+      have h2 : P.coeff 0 = (∑ y ∈ c.support, (c y : R) * ((p y).coeff 0)^2) + 1 := by
+        rw [hP_def]
+        simp only [Polynomial.coeff_add, Polynomial.coeff_one_zero, Polynomial.finset_sum_coeff]
+        congr 1
+        refine Finset.sum_congr rfl fun y _ => ?_
+        rw [Polynomial.coeff_C_mul, Polynomial.coeff_pow, Finset.sum_eq_single (⟨0, by decide⟩ : Fin 2)]
+        · simp
+        · intro b _ hb
+          have : b = ⟨0, by decide⟩ ∨ b = ⟨1, by decide⟩ := by
+            rcases b with ⟨b, hb'⟩; interval_cases b <;> aesop
+          rcases this with hb0 | hb1
+          · exact absurd hb0 hb
+          · rw [hb1]; simp
+        · intro hh; exfalso; apply hh; simp
+      have h3 : (0 : R) ≤ ∑ y ∈ c.support, (c y : R) * ((p y).coeff 0)^2 := by
+        apply Finset.sum_nonneg
+        intro y _
+        have := (c y).2
+        positivity
+      linarith
+    -- P = g * h, extract h.
+    have hh_ne : h ≠ 0 := by
+      intro hh0; apply hP_ne; rw [hhg, hh0, mul_zero]
+    -- Compute h.natDegree.
+    have hh_deg : h.natDegree = P.natDegree - g.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne]; omega
+    -- Now show h.natDegree is odd.
+    -- First argue P.natDegree ≥ g.natDegree (since h*g = P, h ≠ 0).
+    have hP_deg_ge : g.natDegree ≤ P.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne]; omega
+    -- Now P = ∑ + 1. Look at the leading term more carefully.
+    -- Key: P = (sumSq) + 1 where sumSq has even degree when non-constant.
+    -- Alternative approach: since g.natDegree is odd ≥ 3, g.natDegree is ≥ 3.
+    -- h.natDegree < g.natDegree because P.natDegree < 2 * g.natDegree means
+    -- h.natDegree + g.natDegree < 2 * g.natDegree, so h.natDegree < g.natDegree.
+    have hh_deg_lt : h.natDegree < g.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne] at hP_deg_lt
+      omega
+    -- Now we need to show h.natDegree is odd, i.e., not 0 mod 2.
+    -- Strategy: show P.natDegree is even. This follows from analyzing the leading coefficient.
+    -- Let d := max natDegree of p y in support (taking only those with p y ≠ 0 and c y > 0).
+    -- First consider the case where ∑ C (c y) * (p y)^2 = 0.
+    have hcase := Classical.em (∀ y ∈ c.support, p y = 0)
+    rcases hcase with hall_zero | hnot_all_zero
+    · -- All p y = 0, so sum is 0, so P = 1, so h * g = 1. But g is not a unit. Contradiction.
+      have hsum0 : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) = 0 := by
+        apply Finset.sum_eq_zero
+        intro y hy
+        rw [hall_zero y hy]; ring
+      have hP1 : P = 1 := by rw [hP_def, hsum0, zero_add]
+      rw [hP1] at hhg
+      have : IsUnit g := isUnit_of_mul_eq_one g h hhg.symm
+      exact hg_irred.not_isUnit this
     sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
