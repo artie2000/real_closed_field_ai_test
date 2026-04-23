@@ -17,6 +17,7 @@ import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.RingTheory.PowerBasis
 import Mathlib.LinearAlgebra.LinearIndependent.Lemmas
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic.TFAE
 import Mathlib.Tactic.FinCases
 import RealClosedField.Algebra.Order.Algebra
@@ -309,11 +310,11 @@ theorem isSquare_of_finrank_base_eq_two
   have hB0 : B 0 = 1 := by
     show basisOfLinearIndependentOfCardEqFinrank hli hcard 0 = 1
     rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
-    rfl
+    simp
   have hB1 : B 1 = j := by
     show basisOfLinearIndependentOfCardEqFinrank hli hcard 1 = j
     rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
-    rfl
+    simp
   set a : R := B.repr x 0 with ha_def
   set b : R := B.repr x 1 with hb_def
   have hx_decomp : x = algebraMap R K a + algebraMap R K b * j := by
