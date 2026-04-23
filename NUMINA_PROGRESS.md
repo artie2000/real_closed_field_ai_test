@@ -3,83 +3,123 @@
 Blueprint: `numina/blueprints/rcf-equiv-conds-clean-test/rcf-equiv-conds-clean-test.tex`
 Target: `thm:RCF_tfae_ord` — characterisation of real closed fields among ordered fields.
 
-Main Lean file: `RealClosedField/Algebra/Order/Field/IsRealClosed.lean`.
+## Overall state
 
-## State
+`IsRealClosed.tfae_ord` compiles sorry-free at the tactic-script level against
+four helper lemmas:
 
-`IsRealClosed.tfae_ord` compiles sorry-free (at the tactic-script level) against
-four helper lemmas. The TFAE proof wires together (1↔2) and (1↔3).
+- **[PROVED]** `IsRealClosed.of_ivp` (`thm:IVP_poly_imp_RCF`)
+- **[PROVED]** `IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra` (`thm:ord_max_imp_RCF`)
+- **[sorry]** `IsRealClosed.exists_isRoot_of_nonpos_of_nonneg` (`lem:IVP_poly`)
+- **[sorry]** `IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra` (`lem:RCF_max_ord`)
 
-Of the four helper lemmas:
+Both sorries require FTA for RCF. Mathlib does NOT provide this (confirmed: only
+ℂ-specific FTA exists; `Irreducible.natDegree_le_two` and
+`Polynomial.IsMonicOfDegree.eq_isMonicOfDegree_two_mul_isMonicOfDegree` are
+both ℝ-only with TODOs to generalise to RCF).
 
-- **[PROVED]** `IsRealClosed.of_ivp`  (blueprint `thm:IVP_poly_imp_RCF`)
-  - Uses `IsRealClosed.of_linearOrderedField`.
-  - Non-negatives are squares via IVP on `X^2 - C a` on `[0, a+1]`.
-  - Odd-degree polynomials get a root via IVP at `±M` for
-    `M = (B+1)/a_n + 1` where `B = ∑ |coeff_i|`; bound `|tail| ≤ x^{n-1} B`.
-  - Blueprint status: `proved`.
+## Session 3 progress: FTA-for-RCF scaffold
 
-- **[PROVED]** `IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra`
-  (blueprint `thm:ord_max_imp_RCF`)
-  - Does NOT need FTA.
-  - Proof via `IsRealClosed.of_linearOrderedField`:
-    - Squares: adjoin `√a` for nonsquare nonneg `a ≥ 0`, project via
-      `hm.coeff _ 0`, compute `π((u + v√a)²) = u² + av² ≥ 0`.
-      Uses `Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare`.
-    - Odd degree: strong induction on the natDegree of an odd irreducible
-      factor (Artin-Schreier). If `-1 ∈ span_{R≥0} {squares}` in `AdjoinRoot g`,
-      lift to `R[X]` as `(∑ cᵢ pᵢ²) + 1 = h · g`, show the LHS has `natDegree = 2d`
-      via leading-coeff analysis, so `h.natDegree = 2d - g.natDegree` is odd and
-      smaller, then descend to an irreducible factor of `h`, contradicting IH.
-  - Blueprint status: `proved`.
+Created new file `RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean`.
+Import added to `RealClosedField.lean`.
 
-- **[sorry]** `IsRealClosed.exists_isRoot_of_nonpos_of_nonneg`  (`lem:IVP_poly`)
-  - Requires FTA for RCF / classification of irreducibles over an RCF.
-  - Not in Mathlib; substantial infrastructure (Sylow + Galois) required.
+Compiles cleanly with remaining sorries. The file defines:
 
-- **[sorry]** `IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra`  (`lem:RCF_max_ord`)
-  - Also requires FTA for RCF (via `lem:RCF_max`).
+```
+private abbrev Ri (R : Type u) ... : Type u := AdjoinRoot (X^2 + 1 : R[X])
+```
 
-## Mathlib shortcut check
+plus local `Fact (Irreducible (X^2+1))` and `Module.Finite R (Ri R)` instances.
 
-Mathlib does NOT have FTA for general RCF:
-- `Irreducible.natDegree_le_two` is ℝ-only (uses `IsAlgClosed ℂ`).
-- `Polynomial.IsMonicOfDegree.eq_isMonicOfDegree_two_mul_isMonicOfDegree` has
-  TODO comment "generalize to real closed fields when they are available".
+### Sub-lemmas in Closure.lean (plan S1–S10, S7 folded into S8)
 
-So the two remaining sorries require formalising FTA for RCF from scratch.
+| Code | Name | Status |
+|------|------|--------|
+| S1 | `isSquare_of_isSumSq` | **[PROVED]** (2-line inline) |
+| S2 | `finrank_eq_one_of_odd_finrank` | **[PROVED]** (prover subagent) |
+| S3 | `nonempty_algEquiv_Ri_of_finrank_eq_two` | sorry |
+| S4 | `Ri_isSquare` | sorry |
+| — | `no_quadratic_ext_Ri` | sorry |
+| S5 | `finrank_eq_one_or_two_of_finite` | sorry |
+| S6 | `finite_of_isAlgebraic` | sorry |
+| S9 | `natDegree_eq_one_or_forall_eval_pos_of_irreducible` | sorry |
+| S10 | `ivp_poly` | sorry |
+| S8 | `bijective_algebraMap_of_isOrderedAlgebra'` | sorry |
+
+### Dependency order
+
+```
+S1 ──────────┐
+             ↓
+S2 ─────→ S5 (keystone) ──┬─→ S6 ──┐
+             ↑            │         │
+S3 ──────────┤            │         │
+             │            ├─→ S9 ──→ S10  (⇒ fills main sorry #1)
+S4 → no_q_R  ┘            │
+                          └─→ S8   (⇒ fills main sorry #2)
+                              (uses S3, S5, S6)
+```
+
+### Lemmas used in S2 (reference for subsequent proofs)
+
+- `Field.exists_primitive_element` (char-0 separability auto-inferred via `Algebra.IsSeparable.of_integral`)
+- `Algebra.IsIntegral.isIntegral`
+- `IntermediateField.finrank_top'`
+- `IntermediateField.adjoin.finrank`
+- `minpoly.irreducible`
+- `IsRealClosed.exists_isRoot_of_odd_natDegree`
+- `Polynomial.degree_eq_one_of_irreducible_of_root`
+- `Polynomial.natDegree_eq_of_degree_eq_some`
 
 ## Plan to resume
 
-The two remaining sorries (`exists_isRoot_of_nonpos_of_nonneg`,
-`bijective_algebraMap_of_isOrderedAlgebra`) both need FTA for RCF. The blueprint
-decomposes this via:
+Proceed in dependency order:
 
-- `lem:RCF_sumsq_is_sq` — in an RCF every sum of squares is a square
-- `lem:alg_ext_odd_deg` — no odd-degree algebraic extensions of an RCF
-- `lem:ext_deg_2` — classification of degree-2 extensions
-- `lem:Ri_ext_deg_2` — `R[i]` is degree 2 over `R`
-- `thm:FTAlg` — FTA for RCF: `R[i]` is algebraically closed
-- `cor:FTAlg_alg` — irreducibles over `R` have degree 1 or 2
-- `lem:RCF_max` — RCF has no nontrivial algebraic extensions (ordered)
-- `lem:irreds_class` — classification by signs of the constant term
+1. **S4** `Ri_isSquare`: every `z : Ri R` is a square. Computational (~80-150 lines).
+   Explicit formula: `(u+vi)² = z` with `u² = (a + √(a²+b²))/2`, `v = b/(2u)`
+   (case `b ≠ 0`) or handle `b = 0` directly via `isSquare_or_isSquare_neg`.
+   Mimic style of `exists_ordered_algebra_adjoinRoot_sq_sub_C` in the main file
+   (line ~684-785) for the `hrepr` structure using `IsAdjoinRootMonic.coeff`.
+2. **S3** `nonempty_algEquiv_Ri_of_finrank_eq_two`: complete-the-square + explicit
+   `AdjoinRoot.liftHom` to build `K ≃ₐ[R] Ri R`.
+3. **`no_quadratic_ext_Ri`**: follows from S4 (quadratic over `Ri R` splits since
+   discriminant is a square in `Ri R`).
+4. **S5** `finrank_eq_one_or_two_of_finite`: Galois + Sylow. Take Galois closure,
+   use 2-Sylow to extract odd-degree subfield (= R by S2), deduce finrank is 2^k.
+   Use S3 + `no_quadratic_ext_Ri` to eliminate k > 1.
+5. **S6** `finite_of_isAlgebraic`: short; use
+   `IntermediateField.exists_lt_finrank_of_infinite_dimensional` + S5.
+6. **S9** `natDegree_eq_one_or_forall_eval_pos_of_irreducible`: over a monic
+   irreducible `g`, `AdjoinRoot g` is finite of degree `g.natDegree`; by S5 that's
+   1 or 2. For degree-2, complete the square and show `g.eval x > 0`.
+7. **S10** `ivp_poly`: strong induction on `f.natDegree`, monic irreducible factor,
+   case analysis via S9 on linear vs always-positive.
+8. **S8** `bijective_algebraMap_of_isOrderedAlgebra'`: combine S6 + S5; for `finrank = 2`
+   use S3 to get `K ≃ₐ[R] Ri R`, transport `i` to `K` to get `i²=-1`, contradict
+   `sq_nonneg` in ordered `K`.
+9. **Wire up** in `IsRealClosed.lean`: replace the two sorry bodies with thin
+   proxies `exact ivp_poly hab ha hb` and
+   `exact bijective_algebraMap_of_isOrderedAlgebra' K`.
+10. Update blueprint statuses for the intermediate lemmas and final theorem.
 
-This is a multi-day formalisation effort requiring Sylow + Galois theory
-chaining. Confirm with user whether to attempt.
+## Known Mathlib path issues
 
-## Files touched this session
+- `Mathlib.FieldTheory.Adjoin` has been renamed/split. Use
+  `Mathlib.FieldTheory.IntermediateField.Adjoin.Basic` and
+  `Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra` (both already in the
+  imports of Closure.lean).
 
-- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean`
-  — `of_ivp` + `of_bijective_algebraMap_of_isOrderedAlgebra` proved.
-  Helper lemmas: `irreducible_X_sq_sub_C_of_not_isSquare`,
-  `algebraMap_not_bijective_of_irreducible_natDegree_pos`,
-  `not_exists_ordered_algebra_of_bijective`, `exists_odd_irreducible_factor`,
-  `exists_ordered_algebra_adjoinRoot_odd_irreducible`,
-  `exists_ordered_algebra_adjoinRoot_sq_sub_C`.
-- `RealClosedField.lean` — added import for new file.
-- `numina/blueprints/rcf-equiv-conds-clean-test/rcf-equiv-conds-clean-test.tex`
-  — populated blueprint content and `\lean{}` tags.
-- `numina/.metadata/blueprints/rcf-equiv-conds-clean-test/declarations/thm:IVP_poly_imp_RCF.json`
-  — status `proved`.
-- `numina/.metadata/blueprints/rcf-equiv-conds-clean-test/declarations/thm:ord_max_imp_RCF.json`
-  — status `proved`.
+## Files touched
+
+- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean` — untouched this session.
+  Still has the two sorries at lines 38 and 161.
+- `RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean` — NEW.
+  Skeleton + S1 + S2 proved.
+- `RealClosedField.lean` — added import for Closure.lean.
+
+## Resume prompt
+
+To resume: re-read `NUMINA_PROGRESS.md` and `Closure.lean`. Next subagent task
+is S4 (`Ri_isSquare`), the computational keystone. Detailed spec for S4 was
+drafted this session; search prior context or re-derive from the explicit
+formula above.
