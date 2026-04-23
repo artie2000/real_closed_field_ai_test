@@ -213,7 +213,7 @@ private theorem finrank_one_or_two_of_galois
     Module.finrank R L = 1 ∨ Module.finrank R L = 2 := by
   have h : Module.finrank R L ≤ 2 := finrank_le_two_of_galois (R := R) L
   have hpos : 0 < Module.finrank R L := Module.finrank_pos
-  interval_cases (Module.finrank R L) <;> simp_all <;> omega
+  interval_cases (Module.finrank R L) <;> simp_all
 
 theorem finrank_eq_one_or_two_of_finite
     (K : Type u) [Field K] [Algebra R K] [Module.Finite R K] [Nontrivial K] :
