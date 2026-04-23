@@ -96,6 +96,10 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
 
+example : (Rat.semiring : Semiring ℚ) = Field.toSemifield.toDivisionSemiring.toSemiring := rfl
+example : (Rat.instPartialOrder : PartialOrder ℚ) =
+    instDistribLatticeOfLinearOrder.toSemilatticeInf.toPartialOrder := rfl
+
 theorem Rat.existsUnique_isStrictOrderedRing :
     ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
   have aux : ∀ (n : ℕ) (y : ℚ), IsSumSq (n * y^2) := by
@@ -122,6 +126,4 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  have := IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
-  convert this using 0
-  rfl
+  exact IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
