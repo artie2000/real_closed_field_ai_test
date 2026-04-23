@@ -272,35 +272,23 @@ theorem isSquare_of_finrank_base_eq_two
     simp only [map_add, map_pow, Polynomial.aeval_X, Polynomial.aeval_C, map_one] at haev
     linear_combination haev
   set j : K := pb.gen with hj_def
-  -- Decompose x via pb.basis
-  -- pb.basis is Basis (Fin pb.dim) R K
-  -- We have pb.basis 0 = pb.gen ^ 0 = 1, pb.basis 1 = pb.gen ^ 1 = j
-  set a : R := pb.basis.repr x ⟨0, by rw [hpb_dim]; omega⟩ with ha_def
-  set b : R := pb.basis.repr x ⟨1, by rw [hpb_dim]; omega⟩ with hb_def
-  have hx_decomp : x = algebraMap R K a + algebraMap R K b * j := by
-    have hsum : ∑ i, pb.basis.repr x i • pb.basis i = x := pb.basis.sum_repr x
-    have hbasis0 : pb.basis ⟨0, by rw [hpb_dim]; omega⟩ = 1 := by
-      rw [pb.basis_eq_pow]
-      simp
-    have hbasis1 : pb.basis ⟨1, by rw [hpb_dim]; omega⟩ = j := by
-      rw [pb.basis_eq_pow]
-      simp [hj_def]
-    -- Rewrite sum over Fin pb.dim = Fin 2
-    have hsum2 : pb.basis.repr x ⟨0, by rw [hpb_dim]; omega⟩ • pb.basis ⟨0, by rw [hpb_dim]; omega⟩ +
-                 pb.basis.repr x ⟨1, by rw [hpb_dim]; omega⟩ • pb.basis ⟨1, by rw [hpb_dim]; omega⟩ = x := by
-      rw [← hsum]
-      have : (Finset.univ : Finset (Fin pb.dim)) =
-        {⟨0, by rw [hpb_dim]; omega⟩, ⟨1, by rw [hpb_dim]; omega⟩} := by
-        ext ⟨i, hi⟩
-        simp only [Finset.mem_univ, Finset.mem_insert, Finset.mem_singleton, true_iff]
-        rw [hpb_dim] at hi
-        interval_cases i
-        · left; rfl
-        · right; rfl
-      rw [this, Finset.sum_insert (by simp), Finset.sum_singleton]
-    rw [hbasis0, hbasis1] at hsum2
-    rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hsum2
-    linear_combination -hsum2
+  -- Build a basis of K indexed by Fin 2 from the power basis
+  have hcard : Fintype.card (Fin 2) = pb.dim := by rw [Fintype.card_fin, hpb_dim]
+  let B : Basis (Fin 2) R K :=
+    pb.basis.reindex (Fintype.equivFinOfCardEq hcard).symm
+  -- B 0 = 1, B 1 = j
+  have hB0 : B 0 = 1 := by
+    show pb.basis _ = 1
+    rw [pb.basis_eq_pow]
+    show pb.gen ^ _ = 1
+    have : ((Fintype.equivFinOfCardEq hcard).symm 0 : Fin pb.dim).val = 0 := by
+      have h : ((Fintype.equivFinOfCardEq hcard).symm 0 : Fin pb.dim).val < pb.dim :=
+        ((Fintype.equivFinOfCardEq hcard).symm 0).isLt
+      -- Actually: (equivFinOfCardEq hcard).symm : Fin 2 → Fin pb.dim
+      -- We need to know its value at 0
+      sorry
+    sorry
+  sorry
   -- Goal: IsSquare x, where x = algebraMap a + algebraMap b * j
   by_cases hb0 : b = 0
   · -- Case b = 0: x = algebraMap a; split by isSquare_or_isSquare_neg a
