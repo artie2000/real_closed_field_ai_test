@@ -38,7 +38,7 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
     (hspan : Submodule.span F {(1 : K), α} = ⊤) :
     ∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule F K := by
   by_cases hα_range : ∃ c : F, algebraMap F K c = α
-  · -- Degenerate case: algebraMap is surjective, use its inverse.
+  · -- Degenerate case: algebraMap is surjective, use its inverse as π.
     obtain ⟨c, hc⟩ := hα_range
     have hsurj : Function.Surjective (algebraMap F K) := by
       intro x
@@ -50,11 +50,11 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
     have hbij : Function.Bijective (algebraMap F K) :=
       ⟨(algebraMap F K).injective, hsurj⟩
     let e : F ≃ₗ[F] K := LinearEquiv.ofBijective (Algebra.linearMap F K) hbij
-    have he_apply : ∀ r : F, e r = algebraMap F K r := fun r => rfl
+    have he_apply : ∀ r : F, e r = algebraMap F K r := fun _ => rfl
     refine exists_isOrderedAlgebra_of_linearProj_nonneg_sq e.symm.toLinearMap ?_ ?_
     · show e.symm 1 = 1
-      have : e 1 = 1 := by rw [he_apply]; exact map_one _
-      rw [← this, e.symm_apply_apply]
+      have h1 : e 1 = 1 := by rw [he_apply]; exact map_one _
+      rw [← h1, e.symm_apply_apply]
     · intro x
       show 0 ≤ e.symm (x^2)
       set r := e.symm x with hr
@@ -63,9 +63,9 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
         rw [he_apply] at this
         exact this.symm
       have hx2 : x^2 = algebraMap F K (r^2) := by rw [hxr, ← map_pow]
-      have : e.symm (x^2) = r^2 := by
+      have hesx : e.symm (x^2) = r^2 := by
         rw [hx2, ← he_apply, e.symm_apply_apply]
-      rw [this]
+      rw [hesx]
       exact sq_nonneg _
   · -- Non-degenerate case: {1, α} is linearly independent, forms a basis.
     push_neg at hα_range
@@ -82,11 +82,11 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
     let b : Basis (Fin 2) F K := Basis.mk hv hsp
     have hb0 : b 0 = 1 := by simp [b]
     have hb1 : b 1 = α := by simp [b]
-    -- Key coordinate lemmas
     have hcoord00 : b.coord 0 (b 0) = 1 := by
       rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_eq_same]
     have hcoord01 : b.coord 0 (b 1) = 0 := by
-      rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_eq_of_ne (by decide : (0 : Fin 2) ≠ 1)]
+      rw [Basis.coord_apply, Basis.repr_self,
+          Finsupp.single_eq_of_ne (show (0 : Fin 2) ≠ 1 by decide)]
     refine exists_isOrderedAlgebra_of_linearProj_nonneg_sq (b.coord 0) ?_ ?_
     · show b.coord 0 1 = 1
       rw [← hb0]; exact hcoord00
@@ -98,11 +98,35 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       have hx_eq : x = c • (1 : K) + d • α := by
         have hsum : ∑ i, b.repr x i • b i = x := Basis.sum_repr b x
         rw [Fin.sum_univ_two, hb0, hb1] at hsum
-        -- Now: b.repr x 0 • 1 + b.repr x 1 • α = x
-        -- b.coord i x = b.repr x i by definition
-        have : c • (1 : K) + d • α = x := hsum
-        linarith_or_exact (this.symm)
-      sorry
+        -- Now `hsum : b.repr x 0 • 1 + b.repr x 1 • α = x`
+        -- and c = b.coord 0 x = b.repr x 0, d = b.coord 1 x = b.repr x 1 (by Basis.coord_apply)
+        exact hsum.symm
+      -- Compute x^2.
+      have hx_sq : x^2 = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by
+        have h_sm : ∀ (t : F) (y : K), t • y = algebraMap F K t * y :=
+          fun t y ↦ Algebra.smul_def t y
+        have h_am : algebraMap F K a = a • (1 : K) := Algebra.algebraMap_eq_smul_one a
+        have expand : (c • (1 : K) + d • α)^2
+            = c^2 • (1 : K) + (2 * c * d) • α + d^2 • α^2 := by
+          simp_rw [h_sm]
+          ring
+        calc x^2
+            = (c • (1 : K) + d • α)^2 := by rw [hx_eq]
+          _ = c^2 • (1 : K) + (2 * c * d) • α + d^2 • α^2 := expand
+          _ = c^2 • (1 : K) + (2 * c * d) • α + d^2 • (a • (1 : K)) := by rw [hα, h_am]
+          _ = c^2 • (1 : K) + (2 * c * d) • α + (d^2 * a) • (1 : K) := by rw [smul_smul]
+          _ = c^2 • (1 : K) + (d^2 * a) • (1 : K) + (2 * c * d) • α := by ring
+          _ = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by rw [← add_smul]
+      -- Compute π(x^2).
+      have hπ_x_sq : b.coord 0 (x^2) = c^2 + d^2 * a := by
+        rw [hx_sq, map_add, map_smul, map_smul]
+        rw [show (1 : K) = b 0 from hb0.symm, show α = b 1 from hb1.symm]
+        rw [hcoord00, hcoord01]
+        simp [smul_eq_mul]
+      rw [hπ_x_sq]
+      have h1 : 0 ≤ c^2 := sq_nonneg c
+      have h2 : 0 ≤ d^2 * a := mul_nonneg (sq_nonneg d) ha
+      linarith
 
 theorem exists_isOrderedAlgebra_of_odd_finrank
     [FiniteDimensional F K] (hodd : Odd (Module.finrank F K)) :
