@@ -64,22 +64,18 @@ theorem finrank_eq_one_or_two_of_finite
     Module.finrank R K = 1 ∨ Module.finrank R K = 2 := by
   haveI : CharZero R := IsStrictOrderedRing.toCharZero
   haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
-  -- Step 1: embed K into an algebraic closure of R, then into its normal closure
+  -- Step 1: embed K into an algebraic closure of R
   let AR : Type u := AlgebraicClosure R
   let φ : K →ₐ[R] AR := IsAlgClosed.lift
   have hφ_inj : Function.Injective φ := φ.toRingHom.injective
   -- L = normalClosure of K over R inside AR
-  let L : IntermediateField R AR := normalClosure R K AR
-  haveI : FiniteDimensional R L := normalClosure.is_finiteDimensional R K AR
-  haveI : IsGalois R L := by
+  let L : IntermediateField R AR := IntermediateField.normalClosure R K AR
+  haveI hfin_L : FiniteDimensional R L := normalClosure.is_finiteDimensional R K AR
+  haveI hgal_L : IsGalois R L := by
     haveI : Algebra.IsSeparable R K := Algebra.IsAlgebraic.isSeparable_of_perfectField
     exact IsGalois.normalClosure R K AR
   -- The image of K under φ lies inside L
-  have hrange_le : φ.fieldRange ≤ L := by
-    intro x hx
-    rcases hx with ⟨y, rfl⟩
-    refine IntermediateField.mem_iSup_of_mem φ ?_
-    exact ⟨y, rfl⟩
+  have hrange_le : φ.fieldRange ≤ L := AlgHom.fieldRange_le_normalClosure φ
   -- Define ψ : K →ₐ[R] L (Algebra K L via φ and inclusion)
   let ψ : K →ₐ[R] L :=
     { toFun := fun x => ⟨φ x, hrange_le ⟨x, rfl⟩⟩
@@ -89,34 +85,29 @@ theorem finrank_eq_one_or_two_of_finite
       map_mul' := fun _ _ => by ext; simp
       commutes' := fun r => by
         apply Subtype.ext
-        show φ (algebraMap R K r) = _
+        change φ (algebraMap R K r) = algebraMap R L r
         rw [AlgHom.commutes]; rfl }
   have hψ_inj : Function.Injective ψ := by
     intro a b h
-    have : φ a = φ b := by
-      apply Subtype.ext_iff.mp
-      exact congrArg Subtype.val (congrArg ψ.toFun (by exact h))
-    exact hφ_inj this
-  -- φ.fieldRange as intermediate field of L
-  -- Let K' = range of ψ in L: K' ≃ₐ[R] K via `AlgEquiv.ofInjectiveField`.
-  -- Then finrank R K = finrank R K'. And K' is a subfield of L, so its finrank divides finrank R L.
-  -- Build the AlgEquiv and transfer finrank
-  let eq : K ≃ₐ[R] (ψ : K →ₐ[R] L).range := AlgEquiv.ofInjectiveField ψ
+    have h1 : (ψ a : AR) = (ψ b : AR) := by rw [h]
+    exact hφ_inj h1
+  -- ψ.range ⊆ L as subalgebra
   -- finrank R K = finrank R ψ.range
+  let eq : K ≃ₐ[R] ψ.range := AlgEquiv.ofInjectiveField ψ
   have hK_eq_range : Module.finrank R K = Module.finrank R ψ.range :=
     LinearEquiv.finrank_eq eq.toLinearEquiv
-  -- ψ.range is a subalgebra of L with Algebra structure, finrank | finrank R L
+  -- ψ.range is a subalgebra of L. L is finite-dim over R, hence free, so we can apply tower law
+  -- via Subalgebra.finrank_left_dvd_finrank_sup_of_free or similar; easier: use ψ.range has Algebra to L
   have hdvd : Module.finrank R K ∣ Module.finrank R L := by
     rw [hK_eq_range]
-    have ht := Module.finrank_mul_finrank R ψ.range L
-    exact ⟨_, ht.symm⟩
+    -- We need to use that K embeds as subalgebra of L, L is a module over ψ.range
+    refine ⟨Module.finrank ψ.range L, ?_⟩
+    exact (Module.finrank_mul_finrank R ψ.range L).symm
   -- Now use finrank_one_or_two_of_galois
   rcases finrank_one_or_two_of_galois L with hL1 | hL2
   · rw [hL1] at hdvd
-    have : Module.finrank R K = 1 := Nat.dvd_one.mp hdvd
-    left; exact this
+    left; exact Nat.dvd_one.mp hdvd
   · rw [hL2] at hdvd
-    have hfin_pos : 0 < Module.finrank R K := Module.finrank_pos
     rcases (Nat.dvd_prime Nat.prime_two).mp hdvd with h | h
     · left; exact h
     · right; exact h
