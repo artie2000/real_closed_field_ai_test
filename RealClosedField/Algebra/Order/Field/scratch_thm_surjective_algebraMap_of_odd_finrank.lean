@@ -68,7 +68,7 @@ theorem surjective_algebraMap_of_odd_finrank
   have hfin1 : Module.finrank R K = 1 := by omega
   intro x
   have hbot : (⊥ : Subalgebra R K) = ⊤ := Subalgebra.bot_eq_top_of_finrank_eq_one hfin1
-  have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; trivial
+  have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; exact Algebra.mem_top
   exact Algebra.mem_bot.mp hx
 
 /-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):

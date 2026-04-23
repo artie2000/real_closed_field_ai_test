@@ -228,11 +228,10 @@ theorem nonempty_algEquiv_of_finrank_eq_two
           apply (minpoly.two_le_natDegree_iff hαI).mpr hα_ni
         have hαle : (minpoly R α).natDegree ≤ Module.finrank R K := minpoly.natDegree_le α
         omega
-      apply minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot
+      refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
       have hgdeg : g.natDegree = 2 := by
-        unfold_let g
-        rw [Polynomial.natDegree_add_C]
-        exact Polynomial.natDegree_X_pow 2
+        show (Polynomial.X ^ 2 + Polynomial.C (1 : R)).natDegree = 2
+        exact Polynomial.natDegree_X_pow_add_C
       rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
           Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
     -- Now construct PowerBasis using {1, α} as a basis.
