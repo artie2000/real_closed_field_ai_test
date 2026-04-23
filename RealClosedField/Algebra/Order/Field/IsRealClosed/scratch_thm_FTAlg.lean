@@ -141,8 +141,10 @@ private theorem finrank_le_two_of_galois
     Module.finrank_mul_finrank R M L
   have hM_finrank : Module.finrank R M = 2 := by
     rw [hML_finrank, hkeq] at htower_M
-    have h2k : k = 1 + (k - 1) := by omega
-    rw [h2k, pow_add, pow_one] at htower_M
+    have h2k : (2:ℕ) ^ k = 2 * 2 ^ (k - 1) := by
+      conv_lhs => rw [show k = 1 + (k - 1) from by omega]
+      rw [pow_add, pow_one]
+    rw [h2k] at htower_M
     have h2posp : (0 : ℕ) < 2 ^ (k - 1) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
     exact Nat.eq_of_mul_eq_mul_right h2posp htower_M
   haveI hM_fd : FiniteDimensional R M := inferInstance
@@ -174,11 +176,12 @@ private theorem finrank_le_two_of_galois
     Module.finrank_mul_finrank R N L
   have hN_finrank : Module.finrank R N = 4 := by
     rw [hNL_finrank, hkeq] at htower_N
-    have h2k : k = 2 + (k - 2) := by omega
-    rw [h2k, pow_add] at htower_N
+    have h2k : (2:ℕ) ^ k = 4 * 2 ^ (k - 2) := by
+      conv_lhs => rw [show k = 2 + (k - 2) from by omega]
+      rw [pow_add]; ring
+    rw [h2k] at htower_N
     have h2posp : (0 : ℕ) < 2 ^ (k - 2) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
-    have := Nat.eq_of_mul_eq_mul_right h2posp htower_N
-    rw [this]; decide
+    exact Nat.eq_of_mul_eq_mul_right h2posp htower_N
   -- relfinrank M N = 2
   have hrel_MN : IntermediateField.relfinrank M N = 2 := by
     have := IntermediateField.finrank_bot_mul_relfinrank hM_le_N
