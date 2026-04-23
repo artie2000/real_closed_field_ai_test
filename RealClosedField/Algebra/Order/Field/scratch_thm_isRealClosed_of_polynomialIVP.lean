@@ -102,21 +102,169 @@ def PolynomialIVP : Prop :=
 /-- Polynomials over a real closed ordered field satisfy the intermediate value property. -/
 theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := sorry
 
-namespace isRealClosed_of_polynomialIVP_aux
+namespace _root_.IsRealClosed.polynomialIVP_aux
 
-/-- Helper: for a polynomial `f` with positive leading coefficient and `natDegree n ≥ 1`,
-there exists `M > 0` with `M ≥ 1` such that `f.eval M ≥ M^(n-1) * f.leadingCoeff > 0`
-and `f.eval (-M) ≤ -(M^(n-1) * f.leadingCoeff) < 0` when `n` is odd. -/
-private lemma exists_large_of_leadingCoeff_pos
+open Polynomial Finset
+
+/-- For any `M ≥ 1` in an ordered ring, and any polynomial `f` with `f.natDegree = n`,
+the tail sum `∑_{i < n} f.coeff i * x^i` evaluated at `x = M` has absolute value
+bounded by `(∑_{i < n} |f.coeff i|) * M^(n-1)`, provided `n ≥ 1`. -/
+private lemma tail_abs_le
     {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
-    (f : Polynomial R) (n : ℕ) (hn : f.natDegree = n) (hn1 : 1 ≤ n)
-    (hlc : 0 < f.leadingCoeff) :
-    ∃ M : R, 1 ≤ M ∧ M ^ (n - 1) * f.leadingCoeff ≤ f.eval M ∧
-      f.eval (-M) ≤ -(M ^ (n - 1) * f.leadingCoeff) ∧ Odd n →
-      (f.eval (-M) < 0 ∧ 0 < f.eval M) := by
-  sorry
+    (f : Polynomial R) (n : ℕ) (hn : 1 ≤ n) {M : R} (hM : 1 ≤ M) :
+    |∑ i ∈ Finset.range n, f.coeff i * M ^ i|
+      ≤ (∑ i ∈ Finset.range n, |f.coeff i|) * M ^ (n - 1) := by
+  have hM0 : (0 : R) ≤ M := le_trans zero_le_one hM
+  -- Each term |f.coeff i * M^i| ≤ |f.coeff i| * M^{n-1}
+  calc
+    |∑ i ∈ Finset.range n, f.coeff i * M ^ i|
+        ≤ ∑ i ∈ Finset.range n, |f.coeff i * M ^ i| := Finset.abs_sum_le_sum_abs _ _
+    _ = ∑ i ∈ Finset.range n, |f.coeff i| * M ^ i := by
+          apply Finset.sum_congr rfl
+          intro i _
+          rw [abs_mul, abs_of_nonneg (pow_nonneg hM0 i)]
+    _ ≤ ∑ i ∈ Finset.range n, |f.coeff i| * M ^ (n - 1) := by
+          apply Finset.sum_le_sum
+          intro i hi
+          rw [Finset.mem_range] at hi
+          apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+          apply pow_le_pow_right₀ hM
+          omega
+    _ = (∑ i ∈ Finset.range n, |f.coeff i|) * M ^ (n - 1) := by
+          rw [← Finset.sum_mul]
 
-end isRealClosed_of_polynomialIVP_aux
+/-- Key computation: for polynomial `f` with positive leading coefficient and `natDegree = n ≥ 1`,
+taking `M := 1 + B / f.leadingCoeff` (where `B = ∑_{i<n} |f.coeff i|`), we have
+`f.eval M ≥ f.leadingCoeff * M^(n-1) > 0`. -/
+private lemma eval_pos_at_large
+    {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+    (f : Polynomial R) {n : ℕ} (hn : f.natDegree = n) (hn1 : 1 ≤ n)
+    (hlc : 0 < f.leadingCoeff) :
+    ∃ M : R, 1 ≤ M ∧ 0 < f.eval M := by
+  set B := ∑ i ∈ Finset.range n, |f.coeff i| with hB_def
+  have hB : 0 ≤ B := Finset.sum_nonneg (fun _ _ ↦ abs_nonneg _)
+  set M : R := 1 + B / f.leadingCoeff with hM_def
+  have hMpos : 0 < M := by
+    have : 0 ≤ B / f.leadingCoeff := div_nonneg hB hlc.le
+    linarith
+  have hM1 : 1 ≤ M := by
+    have : 0 ≤ B / f.leadingCoeff := div_nonneg hB hlc.le
+    linarith
+  -- Key: a_n * M - B = a_n (since M = 1 + B/a_n)
+  have hkey : f.leadingCoeff * M - B = f.leadingCoeff := by
+    field_simp [hM_def]
+    ring
+  refine ⟨M, hM1, ?_⟩
+  -- Express f.eval M = f.leadingCoeff * M^n + (tail)
+  have heval : f.eval M =
+      f.leadingCoeff * M ^ n + ∑ i ∈ Finset.range n, f.coeff i * M ^ i := by
+    rw [eval_eq_sum_range, hn, Finset.sum_range_succ]
+    congr 1
+    · rw [add_comm]
+    · rw [Polynomial.coeff_natDegree, hn]
+  -- Bound the tail
+  have htail := tail_abs_le (R := R) f n hn1 hM1
+  -- Combine: f.eval M ≥ a_n * M^n - B * M^{n-1} = M^{n-1} * (a_n * M - B) = a_n * M^{n-1}
+  have hM0 : (0 : R) ≤ M := hMpos.le
+  have hMpow : (0 : R) < M ^ (n - 1) := pow_pos hMpos _
+  have hMpow_ge : (1 : R) ≤ M ^ (n - 1) := one_le_pow₀ hM1
+  -- Split M^n as M * M^{n-1}
+  have hn_split : n = (n - 1) + 1 := by omega
+  have hMn : M ^ n = M ^ (n - 1) * M := by
+    rw [hn_split, pow_succ]
+  rw [heval, hMn]
+  have habs : ∑ i ∈ Finset.range n, f.coeff i * M ^ i ≥
+      -(B * M ^ (n - 1)) := by
+    have := htail
+    rw [abs_le] at this
+    linarith
+  have : f.leadingCoeff * (M ^ (n - 1) * M) +
+      ∑ i ∈ Finset.range n, f.coeff i * M ^ i
+      ≥ f.leadingCoeff * (M ^ (n - 1) * M) - B * M ^ (n - 1) := by linarith
+  have hrhs : f.leadingCoeff * (M ^ (n - 1) * M) - B * M ^ (n - 1)
+      = M ^ (n - 1) * (f.leadingCoeff * M - B) := by ring
+  rw [hrhs, hkey] at this
+  have : M ^ (n - 1) * f.leadingCoeff ≤
+      f.leadingCoeff * (M ^ (n - 1) * M) + ∑ i ∈ Finset.range n, f.coeff i * M ^ i := this
+  have hpos : 0 < M ^ (n - 1) * f.leadingCoeff := mul_pos hMpow hlc
+  linarith
+
+/-- Key computation (negative side): for polynomial `f` with positive leading coefficient,
+odd `natDegree = n ≥ 1`, and `M` as above, `f.eval (-M) < 0`. -/
+private lemma eval_neg_at_neg_large
+    {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+    (f : Polynomial R) {n : ℕ} (hn : f.natDegree = n) (hn1 : 1 ≤ n) (hodd : Odd n)
+    (hlc : 0 < f.leadingCoeff) :
+    ∃ M : R, 1 ≤ M ∧ f.eval (-M) < 0 := by
+  set B := ∑ i ∈ Finset.range n, |f.coeff i| with hB_def
+  have hB : 0 ≤ B := Finset.sum_nonneg (fun _ _ ↦ abs_nonneg _)
+  set M : R := 1 + B / f.leadingCoeff with hM_def
+  have hMpos : 0 < M := by
+    have : 0 ≤ B / f.leadingCoeff := div_nonneg hB hlc.le
+    linarith
+  have hM1 : 1 ≤ M := by
+    have : 0 ≤ B / f.leadingCoeff := div_nonneg hB hlc.le
+    linarith
+  have hkey : f.leadingCoeff * M - B = f.leadingCoeff := by
+    field_simp [hM_def]
+    ring
+  refine ⟨M, hM1, ?_⟩
+  -- Express f.eval (-M) = f.leadingCoeff * (-M)^n + tail at (-M).
+  have heval : f.eval (-M) =
+      f.leadingCoeff * (-M) ^ n + ∑ i ∈ Finset.range n, f.coeff i * (-M) ^ i := by
+    rw [eval_eq_sum_range, hn, Finset.sum_range_succ]
+    congr 1
+    · rw [add_comm]
+    · rw [Polynomial.coeff_natDegree, hn]
+  -- Since n is odd, (-M)^n = -M^n.
+  have hnegn : (-M) ^ n = -M ^ n := Odd.neg_pow hodd M
+  -- Bound |tail| using tail_abs_le applied with -M in place of M? No, the lemma uses M.
+  -- Instead bound the sum directly.
+  have hMneg0 : (0 : R) ≤ M := hMpos.le
+  -- Compute the sum at -M.
+  -- ∑ f.coeff i * (-M)^i ≤ ∑ |f.coeff i| * M^i ≤ B * M^{n-1}
+  have htail_upper : ∑ i ∈ Finset.range n, f.coeff i * (-M) ^ i ≤ B * M ^ (n - 1) := by
+    calc ∑ i ∈ Finset.range n, f.coeff i * (-M) ^ i
+        ≤ |∑ i ∈ Finset.range n, f.coeff i * (-M) ^ i| := le_abs_self _
+      _ ≤ ∑ i ∈ Finset.range n, |f.coeff i * (-M) ^ i| := Finset.abs_sum_le_sum_abs _ _
+      _ = ∑ i ∈ Finset.range n, |f.coeff i| * M ^ i := by
+            apply Finset.sum_congr rfl
+            intro i _
+            rw [abs_mul, abs_pow, abs_neg, abs_of_nonneg hMneg0]
+      _ ≤ ∑ i ∈ Finset.range n, |f.coeff i| * M ^ (n - 1) := by
+            apply Finset.sum_le_sum
+            intro i hi
+            rw [Finset.mem_range] at hi
+            apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+            apply pow_le_pow_right₀ hM1
+            omega
+      _ = B * M ^ (n - 1) := by rw [← Finset.sum_mul]
+  -- Split M^n
+  have hn_split : n = (n - 1) + 1 := by omega
+  have hMn : M ^ n = M ^ (n - 1) * M := by
+    rw [hn_split, pow_succ]
+  have hMpow : (0 : R) < M ^ (n - 1) := pow_pos hMpos _
+  rw [heval, hnegn, hMn]
+  -- Now goal: f.leadingCoeff * -(M^{n-1} * M) + tail < 0
+  -- tail ≤ B * M^{n-1}
+  -- f.leadingCoeff * -(M^{n-1} * M) = -(f.leadingCoeff * M * M^{n-1})
+  -- So LHS ≤ -a_n * M * M^{n-1} + B * M^{n-1} = M^{n-1} * (B - a_n * M) = -a_n * M^{n-1}
+  have hgoal : f.leadingCoeff * -(M ^ (n - 1) * M) + B * M ^ (n - 1)
+             = -(M ^ (n - 1) * f.leadingCoeff) := by
+    have : f.leadingCoeff * -(M ^ (n - 1) * M) + B * M ^ (n - 1) =
+      -M ^ (n - 1) * (f.leadingCoeff * M - B) := by ring
+    rw [this, hkey]
+    ring
+  have : f.leadingCoeff * -(M ^ (n - 1) * M) +
+      ∑ i ∈ Finset.range n, f.coeff i * (-M) ^ i ≤
+      f.leadingCoeff * -(M ^ (n - 1) * M) + B * M ^ (n - 1) := by
+    linarith
+  have hneg : -(M ^ (n - 1) * f.leadingCoeff) < 0 := by
+    have : 0 < M ^ (n - 1) * f.leadingCoeff := mul_pos hMpow hlc
+    linarith
+  linarith [hgoal]
+
+end _root_.IsRealClosed.polynomialIVP_aux
 
 /-- An ordered field whose polynomials satisfy the intermediate value property is real closed. -/
 theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := by
@@ -136,7 +284,38 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
         Polynomial.eval_C, sub_eq_zero] at hc_root
     exact ⟨c, by rw [← sq]; exact hc_root.symm⟩
   · -- Every odd-degree polynomial has a root
-    sorry
+    intro f hodd
+    -- natDegree is odd so ≥ 1
+    set n := f.natDegree with hn_def
+    have hn1 : 1 ≤ n := by
+      rcases hodd with ⟨k, hk⟩
+      omega
+    -- f ≠ 0
+    have hf_ne : f ≠ 0 := by
+      intro hf
+      rw [hf, Polynomial.natDegree_zero] at hn_def
+      omega
+    -- Case on sign of leading coefficient
+    by_cases hlc_pos : 0 < f.leadingCoeff
+    · -- Positive leading coefficient
+      obtain ⟨M, hM1, hMpos⟩ :=
+        _root_.IsRealClosed.polynomialIVP_aux.eval_pos_at_large f rfl hn1 hlc_pos
+      obtain ⟨_, hM1', hMneg⟩ :=
+        _root_.IsRealClosed.polynomialIVP_aux.eval_neg_at_neg_large f rfl hn1 hodd hlc_pos
+      -- Find root between -M and M. But for eval_pos_at_large and eval_neg_at_neg_large
+      -- we produced the same M (they're defined the same), but we need same M.
+      -- Let's redo: use same definition.
+      sorry
+    · -- Negative (or zero, but not zero) leading coefficient
+      push_neg at hlc_pos
+      have hlc_ne : f.leadingCoeff ≠ 0 := by
+        rwa [Ne, Polynomial.leadingCoeff_eq_zero]
+      have hlc_neg : f.leadingCoeff < 0 := lt_of_le_of_ne hlc_pos hlc_ne
+      -- Consider -f
+      have hndeg_neg : (-f).natDegree = n := by rw [Polynomial.natDegree_neg, hn_def]
+      have hlc_neg_f : 0 < (-f).leadingCoeff := by
+        rw [Polynomial.leadingCoeff_neg]; linarith
+      sorry
 
 /-- A real closed ordered field has no nontrivial ordered algebraic extensions. -/
 theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :
