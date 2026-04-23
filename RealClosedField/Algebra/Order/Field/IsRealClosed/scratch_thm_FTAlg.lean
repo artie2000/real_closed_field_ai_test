@@ -93,7 +93,7 @@ theorem finrank_eq_one_or_two_of_finite
     exact ⟨_, htower.symm⟩
   -- Combine
   rw [hKK']
-  rcases finrank_one_or_two_of_galois L with hL1 | hL2
+  rcases finrank_one_or_two_of_galois (R := R) L with hL1 | hL2
   · rw [hL1] at hdvd
     left; exact Nat.dvd_one.mp hdvd
   · rw [hL2] at hdvd
