@@ -517,20 +517,16 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
     set c : R := a₀ - a₁^2 / 4 with hc_def
     have h2ne : (2 : R) ≠ 0 := two_ne_zero
     have h4ne : (4 : R) ≠ 0 := by norm_num
-    -- Key scalar identity
-    have hkey : Polynomial.C a₀ = Polynomial.C c + Polynomial.C (-(a₁/2)) ^ 2 ∧
-                Polynomial.C a₁ = - (2 * Polynomial.C (-(a₁/2))) := by
-      refine ⟨?_, ?_⟩
-      · rw [← Polynomial.C_pow, ← Polynomial.C_add]
-        congr 1
-        rw [hc_def]; field_simp; ring
-      · rw [show (2 : Polynomial R) = Polynomial.C 2 from by
-              simp [Polynomial.C_eq_natCast]]
-        rw [← Polynomial.C_mul, ← Polynomial.C_neg]
-        congr 1
-        field_simp
+    -- Key scalar identities
+    have hkey_a0 : Polynomial.C a₀ = Polynomial.C c + Polynomial.C (-(a₁/2)) ^ 2 := by
+      rw [← Polynomial.C_pow, ← Polynomial.C_add]
+      congr 1
+      rw [hc_def]; field_simp; ring
+    have hkey_a1 : Polynomial.C a₁ = Polynomial.C (-2) * Polynomial.C (-(a₁/2)) := by
+      rw [← Polynomial.C_mul]
+      congr 1; field_simp
     have hf_square : f = (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 + Polynomial.C c := by
-      rw [hfexp, hkey.1, hkey.2]
+      rw [hfexp, hkey_a0, hkey_a1]
       ring
     -- Show c is a square with nonzero root
     have hc_sq : IsSquare c := by
@@ -626,9 +622,9 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
     refine ⟨-(a₁/2), β, hβ_ne, ?_⟩
     rw [hf_square]
     congr 1
-    rw [← hβ]
     congr 1
     rw [sq]
+    exact hβ
 
 end Algebraic
 
