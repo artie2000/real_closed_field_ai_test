@@ -373,14 +373,13 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
           have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
         have := hp_deg_lt y; omega
       have hsum_deg : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree < 2 * g.natDegree := by
-        by_cases hsupp : c.support.Nonempty
-        · have := Polynomial.natDegree_sum_le c.support (fun y => C ((c y : R)) * (p y)^2)
+        have h1 := Polynomial.natDegree_sum_le c.support (fun y => C ((c y : R)) * (p y)^2)
+        have h2 : Finset.fold max 0 (Polynomial.natDegree ∘ (fun y => C ((c y : R)) * (p y)^2))
+                    c.support < 2 * g.natDegree := by
           rw [Finset.fold_max_lt]
           refine ⟨?_, fun y _ => hbound y⟩
           linarith [hg_odd.pos]
-        · rw [Finset.not_nonempty_iff_eq_empty] at hsupp
-          simp [hsupp]
-          linarith [hg_odd.pos]
+        exact lt_of_le_of_lt h1 h2
       have : P.natDegree ≤
           max (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree (1 : R[X]).natDegree :=
         Polynomial.natDegree_add_le _ _
