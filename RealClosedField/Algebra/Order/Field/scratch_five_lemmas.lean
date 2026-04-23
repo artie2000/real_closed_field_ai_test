@@ -493,8 +493,7 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
     have hfexp : f = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀ := by
       have hfeq : f = ∑ i ∈ Finset.range 3, Polynomial.C (f.coeff i) * Polynomial.X ^ i := by
         have h3 : f.natDegree + 1 = 3 := by omega
-        conv_lhs => rw [f.as_sum_range_C_mul_X_pow]
-        rw [h3]
+        conv_lhs => rw [f.as_sum_range_C_mul_X_pow, h3]
       rw [hfeq]
       simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add]
       have hcoeff2 : f.coeff 2 = 1 := by
