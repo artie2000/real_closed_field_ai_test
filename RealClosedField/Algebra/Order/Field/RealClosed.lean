@@ -234,7 +234,6 @@ private theorem exists_powerBasis_of_finrank_eq_two_aux
     refine (minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_).symm
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
-    exact le_refl _
   have hli : LinearIndependent R ![(1 : L), α] := by
     rw [LinearIndependent.pair_iff]
     intro r t hrt
@@ -408,9 +407,7 @@ theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
           rw [hfgh, Polynomial.eval_mul]
           have : h.eval c' = 0 := hc'_root
           rw [this, mul_zero]
-        · have hbc : b < c := by
-            have := hcab hac
-            exact lt_of_not_ge this
+        · have hbc : b < c := hcab hac
           have hga_neg : g.eval a < 0 := by rw [hga]; linarith
           have hgb_neg : g.eval b < 0 := by rw [hgb]; linarith
           have hfa_eq : f.eval a = g.eval a * h.eval a := by rw [hfgh, Polynomial.eval_mul]
