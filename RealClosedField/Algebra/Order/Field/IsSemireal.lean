@@ -121,6 +121,6 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  have h := IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
-  obtain ⟨l, hl, hu⟩ := h
-  exact ⟨l, inferInstance, fun l' _ => hu l' hl⟩
+  have h : ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ :=
+    IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  exact h
