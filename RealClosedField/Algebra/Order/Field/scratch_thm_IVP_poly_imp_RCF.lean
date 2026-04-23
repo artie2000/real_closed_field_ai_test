@@ -70,7 +70,106 @@ theorem of_ivp
     have key : ∀ (g : R[X]), g.natDegree = f.natDegree → 0 < g.leadingCoeff →
         ∃ c, g.IsRoot c := by
       intro g hgdeg hlc
-      sorry
+      set n := f.natDegree
+      have hgn : g.natDegree = n := hgdeg
+      -- Define B = ∑ |coeff_i| for i < n
+      set B : R := ∑ i ∈ Finset.range n, |g.coeff i| with hB
+      have hB_nonneg : 0 ≤ B := Finset.sum_nonneg (fun i _ => abs_nonneg _)
+      -- Define M = (B+1)/aₙ + 1
+      set aₙ := g.leadingCoeff with haₙ
+      set M : R := (B + 1) / aₙ + 1 with hM
+      have hM_pos : (0 : R) < M := by
+        have h1 : 0 < B + 1 := by linarith
+        have : 0 < (B + 1) / aₙ := div_pos h1 hlc
+        linarith
+      have hM_ge : (1 : R) ≤ M := by
+        have : 0 ≤ (B + 1) / aₙ := le_of_lt (div_pos (by linarith) hlc)
+        linarith
+      -- Key inequality: aₙ * M - B ≥ 1
+      have hkey : aₙ * M - B ≥ 1 := by
+        rw [hM]
+        have : aₙ * ((B + 1) / aₙ + 1) = (B + 1) + aₙ := by
+          field_simp
+      -- aux bound: for |x| ≤ M with |x| ≥ 1, x^i ≤ x^(n-1) for i < n
+        linarith [hlc]
+      -- Tail bound: for x ≥ 1, |∑ i ∈ range n, g.coeff i * x^i| ≤ x^(n-1) * B
+      have tail_bound : ∀ x : R, 1 ≤ x → |∑ i ∈ Finset.range n, g.coeff i * x^i| ≤ x^(n-1) * B := by
+        intro x hx
+        calc |∑ i ∈ Finset.range n, g.coeff i * x^i|
+            ≤ ∑ i ∈ Finset.range n, |g.coeff i * x^i| := Finset.abs_sum_le_sum_abs _ _
+          _ = ∑ i ∈ Finset.range n, |g.coeff i| * x^i := by
+              refine Finset.sum_congr rfl fun i _ => ?_
+              rw [abs_mul, abs_of_nonneg (pow_nonneg (by linarith : (0 : R) ≤ x) i)]
+          _ ≤ ∑ i ∈ Finset.range n, |g.coeff i| * x^(n-1) := by
+              refine Finset.sum_le_sum fun i hi => ?_
+              have hx0 : (0 : R) ≤ x := by linarith
+              refine mul_le_mul_of_nonneg_left ?_ (abs_nonneg _)
+              exact pow_le_pow_right₀ hx (Nat.le_sub_one_of_lt (Finset.mem_range.mp hi))
+          _ = x^(n-1) * B := by rw [← Finset.sum_mul]; ring
+      -- Tail bound for negative x: for x ≥ 1, |∑ i ∈ range n, g.coeff i * (-x)^i| ≤ x^(n-1) * B
+      have tail_bound_neg : ∀ x : R, 1 ≤ x → |∑ i ∈ Finset.range n, g.coeff i * (-x)^i| ≤ x^(n-1) * B := by
+        intro x hx
+        calc |∑ i ∈ Finset.range n, g.coeff i * (-x)^i|
+            ≤ ∑ i ∈ Finset.range n, |g.coeff i * (-x)^i| := Finset.abs_sum_le_sum_abs _ _
+          _ = ∑ i ∈ Finset.range n, |g.coeff i| * x^i := by
+              refine Finset.sum_congr rfl fun i _ => ?_
+              rw [abs_mul, abs_pow, abs_neg, abs_of_nonneg (by linarith : (0 : R) ≤ x)]
+          _ ≤ ∑ i ∈ Finset.range n, |g.coeff i| * x^(n-1) := by
+              refine Finset.sum_le_sum fun i hi => ?_
+              refine mul_le_mul_of_nonneg_left ?_ (abs_nonneg _)
+              exact pow_le_pow_right₀ hx (Nat.le_sub_one_of_lt (Finset.mem_range.mp hi))
+          _ = x^(n-1) * B := by rw [← Finset.sum_mul]; ring
+      -- Now: g.eval M > 0
+      have hg_pos : 0 < g.eval M := by
+        have hexp : g.eval M = aₙ * M^n + ∑ i ∈ Finset.range n, g.coeff i * M^i := by
+          have := eval_eq_sum_range (p := g) M
+          rw [hgn] at this
+          rw [this, Finset.sum_range_succ]
+          rw [show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgn]]
+          ring
+        rw [hexp]
+        have htb := tail_bound M hM_ge
+        have hMn_pos : 0 < M^(n-1) := pow_pos hM_pos _
+        -- aₙ * M^n = aₙ * M * M^(n-1)
+        have hn_pos : 1 ≤ n := hn
+        have hpow : M^n = M * M^(n-1) := by
+          conv_lhs => rw [show n = (n-1) + 1 from by omega, pow_succ]
+          ring
+        rw [hpow]
+        have : ∑ i ∈ Finset.range n, g.coeff i * M^i ≥ -(M^(n-1) * B) := by
+          have := abs_le.mp htb
+          linarith [this.1]
+        have : aₙ * (M * M^(n-1)) + ∑ i ∈ Finset.range n, g.coeff i * M^i
+             ≥ M^(n-1) * (aₙ * M - B) := by nlinarith [this]
+        have hpos : 0 < M^(n-1) * (aₙ * M - B) := by positivity
+        linarith
+      -- g.eval (-M) < 0
+      have hg_neg : g.eval (-M) < 0 := by
+        have hexp : g.eval (-M) = aₙ * (-M)^n + ∑ i ∈ Finset.range n, g.coeff i * (-M)^i := by
+          have := eval_eq_sum_range (p := g) (-M)
+          rw [hgn] at this
+          rw [this, Finset.sum_range_succ]
+          rw [show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgn]]
+          ring
+        rw [hexp]
+        have hnegM : (-M)^n = -M^n := Odd.neg_pow (hgdeg ▸ hodd : Odd n) M
+        rw [hnegM]
+        have htb := tail_bound_neg M hM_ge
+        have hMn_pos : 0 < M^(n-1) := pow_pos hM_pos _
+        have hn_pos : 1 ≤ n := hn
+        have hpow : M^n = M * M^(n-1) := by
+          conv_lhs => rw [show n = (n-1) + 1 from by omega, pow_succ]
+          ring
+        rw [hpow]
+        have : ∑ i ∈ Finset.range n, g.coeff i * (-M)^i ≤ M^(n-1) * B := by
+          have := abs_le.mp htb
+          linarith [this.2]
+        have hpos : 0 < M^(n-1) * (aₙ * M - B) := by positivity
+        nlinarith
+      -- Apply IVP
+      have hle : -M ≤ M := by linarith
+      obtain ⟨c, _, hc⟩ := h g (-M) M hle hg_neg.le hg_pos.le
+      exact ⟨c, hc⟩
     by_cases hlc : 0 < f.leadingCoeff
     · exact key f rfl hlc
     · have hlc' : 0 < (-f).leadingCoeff := by
