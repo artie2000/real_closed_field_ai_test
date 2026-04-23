@@ -801,24 +801,12 @@ theorem monic_irreducible_classification
       linarith
     refine ⟨-a₁/2, β, hβ_ne_zero, ?_⟩
     rw [hf_eq]
-    ext n
-    simp only [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
-      Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul]
-    rcases Nat.lt_or_ge n 3 with hn | hn
-    · interval_cases n <;>
-      · simp [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
-          Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
-        ring_nf
-        linarith [hβ_sq]
-    · rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by
-        rw [show ((Polynomial.X - Polynomial.C (-a₁/2))^2 + Polynomial.C (β^2)).natDegree = 2 by
-          rw [Polynomial.natDegree_add_C, Polynomial.natDegree_pow,
-            Polynomial.natDegree_X_sub_C]; ring]
-        omega : ((Polynomial.X - Polynomial.C (-a₁/2))^2 +
-          Polynomial.C (β^2)).natDegree < n)]
-      simp [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
-        Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
-      omega
+    have hconst : β^2 + (-a₁/2)^2 = a₀ := by linarith [hβ_sq]
+    calc Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀
+        = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X +
+            Polynomial.C (β^2 + (-a₁/2)^2) := by rw [hconst]
+      _ = (Polynomial.X - Polynomial.C (-a₁/2))^2 + Polynomial.C (β^2) := by
+          rw [map_add]; ring
 
 end Algebraic
 
