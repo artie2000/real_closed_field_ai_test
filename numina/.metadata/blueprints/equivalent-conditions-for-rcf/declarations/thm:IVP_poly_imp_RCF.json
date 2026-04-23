@@ -2,8 +2,8 @@
   "label": "thm:IVP_poly_imp_RCF",
   "kind": "theorem",
   "title": "thm:IVP_poly_imp_RCF",
-  "leanDeclaration": "",
-  "leanFile": "",
+  "leanDeclaration": "IsRealClosed.isRealClosed_of_polynomialIVP",
+  "leanFile": "RealClosedField/Algebra/Order/Field/RealClosed.lean",
   "assessment": "HARD",
   "uses": [
     "def:RCF"
