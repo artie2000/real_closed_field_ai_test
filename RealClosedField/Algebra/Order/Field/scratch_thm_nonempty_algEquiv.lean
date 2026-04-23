@@ -218,6 +218,8 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
+    -- 2 ≤ 2 in WithBot ℕ
+    exact le_refl _
   -- Step 9: build PowerBasis (gen := α, dim := 2).
   have hli : LinearIndependent R ![(1 : L), α] := by
     rw [LinearIndependent.pair_iff]
