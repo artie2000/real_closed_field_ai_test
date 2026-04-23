@@ -86,6 +86,10 @@ theorem IsSemireal.existsUnique_isStrictOrderedRing_iff [IsSemireal F] :
     rw [← unique_subtype_iff_existsUnique]
     exact .intro <| IsSemireal.unique_isStrictOrderedRing h
 
+example [LinearOrder F] [IsStrictOrderedRing F] :
+    ∃! _ : LinearOrder F, IsStrictOrderedRing F := by
+  set_option pp.all true in sorry
+
 theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsStrictOrderedRing F] :
     (∃! _ : LinearOrder F, IsStrictOrderedRing F) ↔ ∀ x : F, 0 ≤ x → IsSumSq x := by
   rw [IsSemireal.existsUnique_isStrictOrderedRing_iff]
@@ -95,9 +99,6 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
   · by_cases hx : 0 ≤ x
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
-
-example : ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ :=
-  IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr (by sorry)
 
 theorem Rat.existsUnique_isStrictOrderedRing :
     ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
