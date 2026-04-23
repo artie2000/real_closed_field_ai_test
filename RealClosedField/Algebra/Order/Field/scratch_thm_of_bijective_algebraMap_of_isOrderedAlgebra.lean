@@ -91,12 +91,17 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
         AdjoinRoot.eval₂_root _
       simp [aeval_def, eval₂_sub, eval₂_pow, eval₂_X, eval₂_C, sub_eq_zero] at this
       exact this
+    have hbasis_i0 : pb.basis i0 = (1 : K) := by
+      have := AdjoinRoot.powerBasis'_basis hmonic
+      simp [pb, AdjoinRoot.powerBasis', i0]
+      rfl
+    have hbasis_i1 : pb.basis i1 = AdjoinRoot.root (X ^ 2 - C a : R[X]) := by
+      simp [pb, AdjoinRoot.powerBasis', i1]
+      rfl
     -- π(1) = 1
     have hπ_one : π 1 = 1 := by
-      have h1 : (1 : K) = pb.basis i0 := by
-        simp [pb, AdjoinRoot.powerBasis', i0]
-      rw [h1]
-      exact pb.basis.coord_apply_self i0
+      rw [show (1 : K) = pb.basis i0 from hbasis_i0.symm]
+      exact Basis.coord_apply_self pb.basis i0
     -- For any x ∈ K, π(x^2) ≥ 0
     have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
       intro x
