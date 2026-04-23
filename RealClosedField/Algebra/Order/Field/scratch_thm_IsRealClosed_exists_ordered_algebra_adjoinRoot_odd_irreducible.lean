@@ -453,7 +453,6 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         by_cases hpy_ne : p y = 0
         · rw [hpy_ne]
           simp
-          intro hEq; simp [hEq]
         · -- (p y)^2 has natDegree 2 * (p y).natDegree
           have hdp : (p y)^2 = (p y) * (p y) := sq (p y)
           have hdeg_sq : ((p y)^2).natDegree = 2 * (p y).natDegree := by
@@ -467,7 +466,8 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
           · rw [if_neg hdp_eq]
             have hlt : ((p y)^2).natDegree < 2 * d := by
               rw [hdeg_sq]
-              have hle : (p y).natDegree ≤ d := Finset.le_sup ‹y ∈ c.support›
+              have hle : (p y).natDegree ≤ d :=
+                Finset.le_sup (f := fun y => (p y).natDegree) ‹y ∈ c.support›
               omega
             rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt]; ring
       -- The RHS of hsum_coeff_2d: show it's > 0
