@@ -7,6 +7,9 @@ import RealClosedField.Algebra.Order.Algebra
 import RealClosedField.Algebra.Order.Field.IsSemireal
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.RingTheory.Algebraic.Defs
+import Mathlib.RingTheory.AdjoinRoot
+import Mathlib.RingTheory.IsAdjoinRoot
+import Mathlib.Algebra.Polynomial.SpecificDegree
 import Mathlib.Tactic.TFAE
 
 open Polynomial
