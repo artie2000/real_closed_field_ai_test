@@ -1,0 +1,8 @@
+{
+  "label": "cor:unique_ord_Q",
+  "kind": "corollary",
+  "title": "cor:unique_ord_Q",
+  "uses": [],
+  "statement": "There is a unique field ordering on $\\Q$.",
+  "proof": "We use Corollary \\ref{cor:unique_ord_cond_ordered}. Let $x\\in\\Q$ be non-negative. Then $x=p/q$ for some integers $p\\geq0$ and $q>0$, so\n  \\[x=\\underbrace{\\frac{1}{q^2}+\\cdots+\\frac{1}{q^2}}_{pq\\text{ times}}.\\]"
+}

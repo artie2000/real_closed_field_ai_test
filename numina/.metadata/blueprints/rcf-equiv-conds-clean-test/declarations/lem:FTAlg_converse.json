@@ -1,0 +1,10 @@
+{
+  "label": "lem:FTAlg_converse",
+  "kind": "lemma",
+  "title": "lem:FTAlg_converse",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "Suppose $R$ is a field with unique nontrivial finite extension $R(i)$. Then $R$ is real closed.",
+  "proof": "Since $R(i)$ has no quadratic extensions, we can apply Lemma \\ref{lem:sumsq_is_sq}: sums of squares in $R$ are squares in $R$, and $R$ is real.\n\n  Take a non-square $a\\in R$; then $R(\\sqrt{a})\\cong R(i)$. Suppose $i$ maps to $x+y\\sqrt{a}$ for some $x,y\\in R$. Then $-1=x^2+ay^2+2xy\\sqrt{a}$; comparing coefficients, we get $-1=x^2+ay^2$. Since $-1$ is not a square, $y$ must be nonzero, and so $-a=(x/y)^2+(1/y)^2$ is a square.\n\n  Now, fix a nonlinear odd-degree polynomial $f\\in R[X]$. Then $R[X]/(f)$ cannot be a field since $R$ has no nontrivial odd-degree extensions, and so $f$ must be reducible. We are done by induction on the degree."
+}

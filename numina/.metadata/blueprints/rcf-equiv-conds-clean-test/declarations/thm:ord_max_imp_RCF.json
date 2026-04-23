@@ -1,0 +1,11 @@
+{
+  "label": "thm:ord_max_imp_RCF",
+  "kind": "theorem",
+  "title": "thm:ord_max_imp_RCF",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "Let $R$ be an ordered field with no nontrivial ordered algebraic extensions. Then $R$ is real closed.",
+  "proof": "We use Lemma \\ref{lem:RCF_ord_ax}.\n\n  Let $a\\in R$ be non-negative, and suppose $a$ is not a square. By Corollary \\ref{cor:ext_ord_to_adj_sqrt}, there is an ordering making the nontrivial extension $R(\\sqrt{a})/R$ ordered.$_\\#$ Therefore $a$ is a square in $R$.\n\n  By induction on degree, it suffices to show that irreducible odd-degree polynomials over $R$ are all linear. Let $f\\in R[X]$ be such a polynomial, and consider the odd-degree field extension $R_f=R[X]/(f)$. By Lemma \\ref{lem:ext_ord_odd_deg}, there is an ordering making $R_f/R$ an ordered extension. Therefore $\\deg f=[R_f:R]=1$.",
+  "leanDeclaration": "IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra"
+}

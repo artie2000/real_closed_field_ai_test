@@ -1,0 +1,10 @@
+{
+  "label": "lem:RCF_max",
+  "kind": "lemma",
+  "title": "lem:RCF_max",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "$R$ has no nontrivial real algebraic extensions.",
+  "proof": "The field $R(i)$ is not real since $-1$ is a square in it. We are done by Corollary \\ref{cor:FTAlg_alg}."
+}

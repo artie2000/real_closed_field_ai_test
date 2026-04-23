@@ -1,0 +1,10 @@
+{
+  "label": "lem:irreds_class",
+  "kind": "lemma",
+  "title": "lem:irreds_class",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "The monic irreducible polynomials over $R[X]$ have form $X-c$ for some $c\\in R$ or $(X-a)^2+b^2$ for some $a,b\\in R$ with $b\\neq0$.",
+  "proof": "Let $f\\in R[X]$ be monic and irreducible. The field $R_f=R[X]/(f)$ is a finite extension of $R$, so it is classified by Theorem \\ref{thm:FTAlg}. If $R_f\\cong R$, then $\\deg f=1$, so $f=X-c$ for some $c\\in R$. If $R_f\\cong R(i)$, let the isomorphism be $\\varphi$, and suppose $\\varphi(X+(f))=a+bi$ ($a,b\\in R$). Note that $b\\neq0$ since $\\varphi^{-1}$ is constant on $R$. Rearranging, we see that $\\varphi((X-a)^2+b^2+(f))=0$; that is, $(X-a)^2+b^2\\in(f)$. Since this polynomial is monic and has the same degree as $f$, it must in fact be equal to $f$.\n\n  Conversely, linear polynomials over a domain are irreducible by degree, and reducible quadratics have a root. A root of $f=(X-a)^2+b^2$ with $a,b\\in R$ is an element $r\\in R$ satisfying $(r-a)^2=-b^2$. If $b\\neq0$, then dividing through would give a contradiction to the realness of $R$.Therefore $f$ must be irreducible."
+}

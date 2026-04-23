@@ -1,0 +1,10 @@
+{
+  "label": "cor:RCF_ac",
+  "kind": "corollary",
+  "title": "cor:RCF_ac",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "$\\bar{R}=R(i)$.",
+  "proof": ""
+}

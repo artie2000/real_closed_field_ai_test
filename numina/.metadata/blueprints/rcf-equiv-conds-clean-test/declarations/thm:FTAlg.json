@@ -1,0 +1,10 @@
+{
+  "label": "thm:FTAlg",
+  "kind": "theorem",
+  "title": "thm:FTAlg",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "The only finite extensions of $R$ are $R$ itself and $R(i)$.",
+  "proof": "By separability, every finite extension of $R$ is contained in a finite Galois extension. Since $R(i)/R$ has no intermediate fields, it suffices to show the result for finite Galois extensions.\n\n  Let $K/R$ be a nontrivial Galois extension of degree $2^k\\cdot a$, where $k\\geq 0$ and $a\\geq1$ is odd. Applying the Galois correspondence to a Sylow 2-subgroup of $\\Gal(K/R)$ yields an intermediate extension of degree $a$; by Lemma \\ref{lem:alg_ext_odd_deg}, we have $a=1$ (and $k>0$). If $k>1$, iterating the last construction yields intermediate extensions $K/L/M/R$ with $[L:M]=[M:R]=2$. By Lemma \\ref{lem:ext_deg_2}, $M\\cong R(i)$, contradicting Lemma \\ref{lem:Ri_ext_deg_2}.$_\\#$ Therefore $k=1$ and (by Lemma \\ref{lem:ext_deg_2}) $K\\cong R(i)$."
+}

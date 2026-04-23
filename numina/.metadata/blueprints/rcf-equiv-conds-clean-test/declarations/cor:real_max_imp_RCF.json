@@ -1,0 +1,10 @@
+{
+  "label": "cor:real_max_imp_RCF",
+  "kind": "corollary",
+  "title": "cor:real_max_imp_RCF",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "Let $R$ be a real field with no nontrivial real algebraic extensions. Then $R$ is real closed.",
+  "proof": "Since $R$ can be ordered and ordered fields are real, we are done by Theorem \\ref{thm:ord_max_imp_RCF}."
+}

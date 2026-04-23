@@ -1,0 +1,10 @@
+{
+  "label": "lem:alg_ext_odd_deg",
+  "kind": "lemma",
+  "title": "lem:alg_ext_odd_deg",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "There is no nontrivial odd-degree finite extension of $R$.",
+  "proof": "Let $K/R$ be an odd-degree extension of $R$. By the primitive element theorem, $K=R(\\alpha)$ for some $\\alpha\\in K$. Let $f$ be the minimal polynomial of $\\alpha$ over $K$. Then $f$ is irreducible, but $\\deg f=[K:R]$ is odd, so $f$ has a root in $R$. Therefore, $[K:R]=\\deg f=1$; that is, $K\\cong R$."
+}

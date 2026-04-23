@@ -1,0 +1,10 @@
+{
+  "label": "lem:FTAlg_converse_alg_closure",
+  "kind": "corollary",
+  "title": "lem:FTAlg_converse_alg_closure",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "Suppose $R$ is a field with nontrivial algebraic closure $R(i)$. Then $R$ is real closed.",
+  "proof": ""
+}
