@@ -164,9 +164,12 @@ Fix a real closed field $R$.
 \begin{lemma}
   \label{lem:RCF_sumsq_is_sq}
   \uses{def:RCF}
+  \lean{IsRealClosed.isSquare_of_isSumSq}
+  \leanok
   Every sum of squares in $R$ is a square in $R$.
 \end{lemma}
 \begin{proof}
+  \leanok
   If the negative of a sum of squares is a square, then, dividing through, $-1$ is a sum of squares, contradicting the realness of $R$.
 \end{proof}
 
@@ -188,18 +191,24 @@ In what follows, all algebraic extensions are given up to $R$-isomorphism, as is
 \begin{lemma}
   \label{lem:alg_ext_odd_deg}
   \uses{def:RCF}
+  \lean{IsRealClosed.finrank_eq_one_of_odd_finrank}
+  \leanok
   There is no nontrivial odd-degree finite extension of $R$.
 \end{lemma}
 \begin{proof}
+  \leanok
   Let $K/R$ be an odd-degree extension of $R$. By the primitive element theorem, $K=R(\alpha)$ for some $\alpha\in K$. Let $f$ be the minimal polynomial of $\alpha$ over $K$. Then $f$ is irreducible, but $\deg f=[K:R]$ is odd, so $f$ has a root in $R$. Therefore, $[K:R]=\deg f=1$; that is, $K\cong R$.
 \end{proof}
 
 \begin{lemma}
   \label{lem:ext_deg_2}
   \uses{def:RCF}
+  \lean{IsRealClosed.nonempty_algEquiv_Ri_of_finrank_eq_two}
+  \leanok
   The field $R(i)$ is the unique quadratic extension of $R$.
 \end{lemma}
 \begin{proof}
+  \leanok
   Let $K/R$ be a quadratic extension. Since $\ch R\neq2$, we have $K\cong R(\sqrt{a})$ for some $a\in R$. Since $a$ cannot be a square in $R$, we know $-a$ must be one. Rescaling by $\sqrt{-a}$, we get $R(\sqrt{a})\cong R(i)$.
 \end{proof}
 
