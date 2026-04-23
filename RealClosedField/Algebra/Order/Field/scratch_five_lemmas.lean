@@ -446,20 +446,19 @@ theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
   have hx_int : IsIntegral R x := Algebra.IsIntegral.isIntegral x
   haveI hfin : FiniteDimensional R (IntermediateField.adjoin R ({x} : Set K)) :=
     IntermediateField.adjoin.finiteDimensional hx_int
-  set K₀ := IntermediateField.adjoin R ({x} : Set K)
+  set K₀ := IntermediateField.adjoin R ({x} : Set K) with hK₀_def
   have hle : Module.finrank R K₀ ≤ 2 := finrank_le_two_of_finiteDimensional R K₀
   have hpos : 0 < Module.finrank R K₀ := Module.finrank_pos
-  interval_cases hdim : Module.finrank R K₀
+  interval_cases h : Module.finrank R K₀
   · -- finrank = 1
-    have hx_mem : x ∈ K₀ := IntermediateField.mem_adjoin_simple_self R x
-    have hK₀_bot : K₀ = ⊥ := by
-      rw [← IntermediateField.finrank_eq_one_iff]
-      exact hdim
+    have hx_mem : x ∈ K₀ :=
+      IntermediateField.subset_adjoin R ({x} : Set K) (Set.mem_singleton x)
+    have hK₀_bot : K₀ = ⊥ := IntermediateField.finrank_eq_one_iff.mp h
     rw [hK₀_bot, IntermediateField.mem_bot] at hx_mem
     exact hx_mem
   · -- finrank = 2
     exfalso
-    have hsq : IsSquare ((-1 : K₀)) := isSquare_of_finrank_base_eq_two R K₀ hdim (-1)
+    have hsq : IsSquare ((-1 : K₀)) := isSquare_of_finrank_base_eq_two R K₀ h (-1)
     obtain ⟨j, hj⟩ := hsq
     have hjK : (-1 : K) = (j : K) * (j : K) := by
       have h1 : ((-1 : K₀) : K) = -1 := by push_cast; rfl
