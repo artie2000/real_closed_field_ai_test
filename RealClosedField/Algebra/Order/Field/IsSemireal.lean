@@ -94,3 +94,30 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
   · by_cases hx : 0 ≤ x
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
+
+theorem Rat.existsUnique_isStrictOrderedRing :
+    ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
+  rw [show (∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ) ↔ ∀ x : ℚ, 0 ≤ x → IsSumSq x from
+    IsStrictOrderedRing.unique_isStrictOrderedRing_iff]
+  have aux : ∀ (n : ℕ) (y : ℚ), IsSumSq (n * y^2) := by
+    intro n y
+    induction n with
+    | zero => simpa using IsSumSq.zero
+    | succ k ih =>
+        have : ((k + 1 : ℕ) : ℚ) * y^2 = y * y + k * y^2 := by push_cast; ring
+        rw [this]
+        exact IsSumSq.sq_add y ih
+  intro x hx
+  have hnum : x.num ≥ 0 := Rat.num_nonneg.mpr hx
+  set p : ℕ := x.num.toNat with hp
+  set q : ℕ := x.den with hq
+  have hpq : x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
+    have hqpos : (q : ℚ) ≠ 0 := by
+      exact_mod_cast x.den_ne_zero
+    rw [← Rat.num_div_den x]
+    have hnumcast : (x.num : ℚ) = (p : ℚ) := by
+      simp [hp, Int.toNat_of_nonneg hnum]
+    rw [hnumcast]
+    field_simp
+  rw [hpq]
+  exact aux (p * q) (1 / q)
