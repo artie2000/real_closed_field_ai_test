@@ -96,7 +96,7 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
 
-theorem existsUnique_isStrictOrderedRing_Rat :
+theorem Rat.existsUnique_isStrictOrderedRing :
     ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
   have aux : ∀ (n : ℕ) (y : ℚ), IsSumSq (n * y^2) := by
     intro n y
@@ -122,12 +122,24 @@ theorem existsUnique_isStrictOrderedRing_Rat :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
+  refine ⟨Rat.linearOrder, ?_, ?_⟩
+  · infer_instance
+  intro l' _
+  -- Use key: every nonneg rational is a sum of squares,
+  -- and the fact that any IsStrictOrderedRing instance gives same order
+  ext a b
+  show (a ≤ b) ↔ l'.le a b
   have haux : ∀ x : ℚ, IsSumSq x ∨ IsSumSq (-x) := by
     intro x
     rcases le_total 0 x with hx | hx
     · exact Or.inl (key x hx)
     · exact Or.inr (key (-x) (by linarith))
-  have hsemireal : IsSemireal ℚ :=
-    IsStrictOrderedRing.toIsSemireal ℚ
-  rw [← unique_subtype_iff_existsUnique]
-  exact .intro <| IsSemireal.unique_isStrictOrderedRing haux
+  constructor
+  · intro hab
+    by_contra hnab
+    have hba : l'.le b a := l'.le_total a b |>.resolve_left hnab
+    have hba_sub : l'.le 0 (a - b) := by
+      have := @sub_nonneg ℚ _ a b (l := l'.toPartialOrder.toPreorder.toLE) |>.mpr hba
+      sorry
+    sorry
+  · sorry
