@@ -395,21 +395,20 @@ theorem isSquare_of_finrank_base_eq_two
       exact mul_ne_zero two_ne_zero hc2_ne
     have hprod : (s + a) * (s - a) = b^2 := by linear_combination hs_sq
     have hd2 : d^2 = (s - a) / 2 := by
-      have : d^2 = b^2 / (2 * c)^2 := by rw [hd_def]; ring
-      rw [this]
+      have hstep1 : d^2 = b^2 / (2 * c)^2 := by rw [hd_def]; ring
       have h2csq : (2 * c)^2 = 2 * (s + a) := by
-        have : (2 * c)^2 = 4 * c^2 := by ring
-        rw [this, hc2]; ring
-      rw [h2csq]
-      -- b² / (2 * (s+a)) = (s-a) / 2
-      field_simp
-      linear_combination hprod
+        have hex : (2 * c)^2 = 4 * c^2 := by ring
+        rw [hex, hc2]; ring
+      rw [hstep1, h2csq]
+      rw [div_eq_div_iff (mul_ne_zero two_ne_zero hs_ne) two_ne_zero]
+      linear_combination -2 * hprod
     have hcd_eq_a : c^2 - d^2 = a := by
       rw [hc2, hd2]; ring
     -- 2cd = b
     have h2cd : 2 * c * d = b := by
       rw [hd_def]
-      field_simp
+      rw [mul_div_assoc']
+      exact mul_div_cancel_left₀ b h2c_ne
     -- Define y := algebraMap c + algebraMap d * j
     refine ⟨algebraMap R K c + algebraMap R K d * j, ?_⟩
     rw [hx_decomp]
