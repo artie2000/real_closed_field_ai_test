@@ -69,10 +69,12 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
     have haK : algebraMap R K δ = algebraMap R K (a/2) ^ 2 - algebraMap R K b := by
       rw [hδdef, map_sub, map_pow]
     have ha_eq : algebraMap R K a = 2 * algebraMap R K (a/2) := by
-      rw [show a = 2 * (a/2) from by ring, map_mul, map_ofNat]
+      rw [← map_ofNat (algebraMap R K) 2, ← map_mul]
+      congr 1; ring
     rw [haK, hβdef]
     have hb_eq : algebraMap R K b = -(α ^ 2 + algebraMap R K a * α) := by
-      have := haeval; linarith
+      have := haeval
+      linear_combination this
     rw [hb_eq, ha_eq]; ring
   -- Show δ < 0 : if δ ≥ 0, δ is a square, so β = ±sqrt(δ) ∈ image R, so α ∈ image R,
   -- contradicting finrank = 2.
