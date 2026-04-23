@@ -2,8 +2,8 @@
   "label": "thm:RCF_tfae_ord",
   "kind": "theorem",
   "title": "thm:RCF_tfae_ord",
-  "leanDeclaration": "",
-  "leanFile": "",
+  "leanDeclaration": "IsRealClosed.tfae_of_linearOrderedField",
+  "leanFile": "RealClosedField/Algebra/Order/Field/RealClosed.lean",
   "uses": [
     "def:RCF"
   ],
