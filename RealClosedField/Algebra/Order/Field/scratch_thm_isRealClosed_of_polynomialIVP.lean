@@ -129,14 +129,14 @@ private lemma exists_sign_change
   have hn_split : n = (n - 1) + 1 := by omega
   have hMn_eq : M ^ n = M ^ (n - 1) * M := by rw [hn_split, pow_succ]
   -- Express evaluation via eval_eq_sum_range
+  have hlc_eq : f.coeff n = f.leadingCoeff := by rw [← hn]; rfl
   have heval_general : ∀ x : R, f.eval x =
       f.leadingCoeff * x ^ n + ∑ i ∈ Finset.range n, f.coeff i * x ^ i := by
     intro x
     have h1 : f.eval x = ∑ i ∈ Finset.range (f.natDegree + 1), f.coeff i * x ^ i :=
       eval_eq_sum_range x
-    rw [h1, hn, Finset.sum_range_succ]
-    rw [show f.coeff n = f.leadingCoeff by rw [← hn]; rfl]
-    ring
+    rw [h1, hn, Finset.sum_range_succ, hlc_eq]
+    exact add_comm _ _
   have heval_M := heval_general M
   have heval_negM := heval_general (-M)
   -- Bound for the tail sum at M
