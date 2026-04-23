@@ -355,18 +355,11 @@ theorem isSquare_of_finrank_base_eq_two
           · -- Set β := b / (2α); claim (a - r)/2 = β²
             refine ⟨b / (2 * α), ?_⟩
             have h2α_ne : (2 : R) * α ≠ 0 := mul_ne_zero two_ne_zero hα_ne
+            have h2_ne : (2 : R) ≠ 0 := two_ne_zero
             -- Goal: (-r + a) / 2 = b / (2 * α) * (b / (2 * α))
-            -- Derive: -(r+a) = 2α², so (r+a) = -2α²
-            -- (r+a)(r-a) = b², so r - a = b²/(r+a) = b²/(-2α²) = -b²/(2α²)
-            -- Then a - r = b²/(2α²), so (a - r)/2 = b²/(4α²) = (b/(2α))²
-            -- Use field_simp: (-r + a) / 2 * (2α)^2 = b * b, i.e., (a-r)/2 * 4α² = b²
-            -- But (a - r) * 2α² = b² (using hα and hr_sq)
-            -- From hα: -((r+a)/2) = α * α, i.e., r + a = -2α²
-            -- From hr_sq: r² = a² + b², i.e., b² = r² - a²
-            -- Want: (a - r) * 2α² = b², i.e., (a-r)(-(r+a)) = (a-r)*(-(r+a)) = -(a-r)(r+a) = -(ar+a²-r²-ra) = r² - a² = b²
-            -- So: (a-r)*2α² = (a-r)*(-(r+a)) = -ar - a² + r² + ra = r² - a² = b²
-            rw [div_mul_div_comm, eq_div_iff (mul_ne_zero h2α_ne h2α_ne)]
-            linear_combination ((a - r) / 2) * (2 * hα) + (-1 : R) * hr_sq
+            have := mul_ne_zero h2α_ne h2α_ne
+            field_simp
+            linear_combination 4 * (r - a) * hα + 2 * hr_sq
 
     obtain ⟨s, hs_sq, hcsq⟩ := hexists_sign
     obtain ⟨c, hc⟩ := hcsq
