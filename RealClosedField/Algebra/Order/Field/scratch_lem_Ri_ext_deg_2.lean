@@ -448,10 +448,8 @@ theorem isSquare_of_finrank_base_eq_two
     have hmap_a : algebraMap R K a = (algebraMap R K c)^2 - (algebraMap R K d)^2 := by
       rw [← map_pow, ← map_pow, ← map_sub, hcd_eq_a]
     have hmap_b : algebraMap R K b = 2 * algebraMap R K c * algebraMap R K d := by
-      rw [show 2 * algebraMap R K c * algebraMap R K d =
-            algebraMap R K 2 * algebraMap R K c * algebraMap R K d from by
-            rw [map_ofNat]]
-      rw [← map_mul, ← map_mul, ← h2cd]
+      have h1 : (2 : K) = algebraMap R K 2 := (map_ofNat (algebraMap R K) 2).symm
+      rw [h1, ← map_mul, ← map_mul, h2cd]
     rw [hmap_a, hmap_b]
     ring
 
