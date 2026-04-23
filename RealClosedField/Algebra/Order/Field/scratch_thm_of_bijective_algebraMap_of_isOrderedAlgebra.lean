@@ -267,13 +267,25 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
       (by rw [hdeg2]; decide)
       (exists_ordered_algebra_adjoinRoot_sq_sub_C ha hsq)
   · -- PART B: every odd-degree polynomial has a root
-    -- This requires a strong induction showing that for every odd-degree irreducible
-    -- polynomial g, AdjoinRoot g admits a compatible order. The induction goes:
-    --   Base (deg = 1): AdjoinRoot g ≅ R, which is already ordered.
-    --   Step (deg > 1 odd): if -1 ∈ span_squares in AdjoinRoot g, lift back to R[X] to
-    --     get 1 + ∑ cᵢ*pᵢ² = h*g; analyze degrees to find an odd-degree irreducible
-    --     factor of h with smaller degree, giving -1 ∈ span_squares there; apply IH.
-    -- We leave this full argument as a sorry, reporting the precise claim.
-    sorry
+    have hpos : 0 < f.natDegree := hodd.pos
+    obtain ⟨g, hg_monic, hg_irred, hg_dvd, hg_odd⟩ :=
+      exists_odd_irreducible_factor hodd hpos
+    -- Case on g.natDegree.
+    have hg_deg_pos : 0 < g.natDegree := hg_odd.pos
+    by_cases hg_deg_one : g.natDegree = 1
+    · -- natDegree = 1: g has a root in R, which is then a root of f.
+      -- g = aX + b with a ≠ 0 (since monic, a = 1); root is -g.coeff 0.
+      -- More directly: exists_root_of_degree_eq_one
+      have : g.degree = 1 := by rw [degree_eq_natDegree hg_irred.ne_zero, hg_deg_one]; rfl
+      obtain ⟨c, hc⟩ := Polynomial.exists_root_of_degree_eq_one this
+      -- c is a root of g, hence of f (since g ∣ f).
+      refine ⟨c, ?_⟩
+      have hgc : g.eval c = 0 := hc
+      obtain ⟨q, hq⟩ := hg_dvd
+      rw [hq, IsRoot, eval_mul, hgc, zero_mul]
+    · -- natDegree > 1, and odd. AdjoinRoot g must have an ordered structure — this is the
+      -- difficult induction step we do not formalise here.
+      have hg_deg_gt : 1 < g.natDegree := lt_of_le_of_ne hg_deg_pos.nat_succ_le (fun heq => hg_deg_one heq.symm)
+      sorry
 
 end IsRealClosed
