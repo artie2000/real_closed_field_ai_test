@@ -91,7 +91,8 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
     set K := AdjoinRoot (X ^ 2 - C a : R[X])
     haveI : Fact (Irreducible (X ^ 2 - C a : R[X])) := ⟨hirred⟩
     -- Use `IsAdjoinRootMonic` for the projection
-    set hm : IsAdjoinRootMonic K (X ^ 2 - C a : R[X]) := AdjoinRoot.isAdjoinRootMonic hmonic
+    set hm : IsAdjoinRootMonic K (X ^ 2 - C a : R[X]) :=
+      AdjoinRoot.isAdjoinRootMonic (X ^ 2 - C a : R[X]) hmonic
     -- π is the 0-th coefficient.
     let π : K →ₗ[R] R :=
       { toFun := fun x => hm.coeff x 0
