@@ -315,8 +315,154 @@ def PolynomialIVP : Prop :=
   ∀ (f : Polynomial R) (a b : R), a ≤ b → f.eval a ≤ 0 → 0 ≤ f.eval b →
     ∃ c ∈ Set.Icc a b, f.IsRoot c
 
+section PolynomialIVPProof
+
+open Polynomial
+
+/-- For a quadratic monic of the form `(X - α)^2 + β^2` with `β ≠ 0`,
+the evaluation is strictly positive everywhere. -/
+private lemma quadratic_pos {α β : R} (hβ : β ≠ 0) (x : R) :
+    0 < ((X - C α) ^ 2 + C (β ^ 2)).eval x := by
+  simp only [eval_add, eval_pow, eval_sub, eval_X, eval_C]
+  have h1 : 0 ≤ (x - α) ^ 2 := sq_nonneg _
+  have h2 : 0 < β ^ 2 := by positivity
+  linarith
+
+end PolynomialIVPProof
+
 /-- Polynomials over a real closed ordered field satisfy the intermediate value property. -/
-theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := sorry
+theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
+  suffices h : ∀ n : ℕ, ∀ (f : Polynomial R) (a b : R),
+      f.natDegree = n → a ≤ b → f.eval a ≤ 0 → 0 ≤ f.eval b →
+      ∃ c ∈ Set.Icc a b, f.IsRoot c by
+    intro f a b hab hfa hfb
+    exact h f.natDegree f a b rfl hab hfa hfb
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro f a b hn hab hfa hfb
+  by_cases hn0 : n = 0
+  · subst hn0
+    have hfC : f = Polynomial.C (f.coeff 0) := Polynomial.eq_C_of_natDegree_eq_zero hn
+    rw [hfC] at hfa hfb
+    simp only [Polynomial.eval_C] at hfa hfb
+    have hc0 : f.coeff 0 = 0 := le_antisymm hfa hfb
+    refine ⟨a, ⟨le_refl a, hab⟩, ?_⟩
+    show f.eval a = 0
+    rw [hfC, Polynomial.eval_C, hc0]
+  · have hnpos : 0 < n := Nat.pos_of_ne_zero hn0
+    have hfdeg_pos : 0 < f.natDegree := by rw [hn]; exact hnpos
+    have hf_not_unit : ¬ IsUnit f := Polynomial.not_isUnit_of_natDegree_pos f hfdeg_pos
+    obtain ⟨g, hg_monic, hg_irr, hg_dvd⟩ := Polynomial.exists_monic_irreducible_factor f hf_not_unit
+    obtain ⟨h, hfgh⟩ := hg_dvd
+    have hfne : f ≠ 0 := by
+      intro hfz
+      rw [hfz, Polynomial.natDegree_zero] at hn
+      exact hn0 hn.symm
+    have hhne : h ≠ 0 := by
+      intro hhz
+      rw [hhz, mul_zero] at hfgh
+      exact hfne hfgh
+    have hg_ne : g ≠ 0 := hg_monic.ne_zero
+    have hdeg_sum : f.natDegree = g.natDegree + h.natDegree := by
+      rw [hfgh]; exact Polynomial.natDegree_mul hg_ne hhne
+    rcases monic_irreducible_classification R hg_monic hg_irr with
+      ⟨c, hgeq⟩ | ⟨α, β, hβ, hgeq⟩
+    · have hg_natDeg : g.natDegree = 1 := by rw [hgeq, Polynomial.natDegree_X_sub_C]
+      have hh_natDeg : h.natDegree = n - 1 := by
+        rw [hg_natDeg, hn] at hdeg_sum
+        omega
+      have hh_lt : h.natDegree < n := by rw [hh_natDeg]; omega
+      by_cases hcab : a ≤ c ∧ c ≤ b
+      · refine ⟨c, ⟨hcab.1, hcab.2⟩, ?_⟩
+        show f.eval c = 0
+        rw [hfgh, Polynomial.eval_mul, hgeq]
+        simp
+      · have hga : g.eval a = a - c := by rw [hgeq]; simp
+        have hgb : g.eval b = b - c := by rw [hgeq]; simp
+        push_neg at hcab
+        rcases lt_or_ge c a with hca | hac
+        · have hga_pos : 0 < g.eval a := by rw [hga]; linarith
+          have hgb_pos : 0 < g.eval b := by rw [hgb]; linarith
+          have hfa_eq : f.eval a = g.eval a * h.eval a := by rw [hfgh, Polynomial.eval_mul]
+          have hfb_eq : f.eval b = g.eval b * h.eval b := by rw [hfgh, Polynomial.eval_mul]
+          have hha : h.eval a ≤ 0 := by
+            by_contra hha'
+            push_neg at hha'
+            rw [hfa_eq] at hfa
+            exact absurd hfa (not_le.mpr (mul_pos hga_pos hha'))
+          have hhb : 0 ≤ h.eval b := by
+            by_contra hhb'
+            push_neg at hhb'
+            rw [hfb_eq] at hfb
+            exact absurd hfb (not_le.mpr (mul_neg_of_pos_of_neg hgb_pos hhb'))
+          obtain ⟨c', hc'_mem, hc'_root⟩ :=
+            ih h.natDegree hh_lt h a b rfl hab hha hhb
+          refine ⟨c', hc'_mem, ?_⟩
+          show f.eval c' = 0
+          rw [hfgh, Polynomial.eval_mul]
+          have : h.eval c' = 0 := hc'_root
+          rw [this, mul_zero]
+        · have hbc : b < c := by
+            have := hcab hac
+            exact lt_of_not_ge this
+          have hga_neg : g.eval a < 0 := by rw [hga]; linarith
+          have hgb_neg : g.eval b < 0 := by rw [hgb]; linarith
+          have hfa_eq : f.eval a = g.eval a * h.eval a := by rw [hfgh, Polynomial.eval_mul]
+          have hfb_eq : f.eval b = g.eval b * h.eval b := by rw [hfgh, Polynomial.eval_mul]
+          have hha_nonneg : 0 ≤ h.eval a := by
+            by_contra hha'
+            push_neg at hha'
+            rw [hfa_eq] at hfa
+            exact absurd hfa (not_le.mpr (mul_pos_of_neg_of_neg hga_neg hha'))
+          have hhb_nonpos : h.eval b ≤ 0 := by
+            by_contra hhb'
+            push_neg at hhb'
+            rw [hfb_eq] at hfb
+            exact absurd hfb (not_le.mpr (mul_neg_of_neg_of_pos hgb_neg hhb'))
+          have hmh_a : (-h).eval a ≤ 0 := by
+            rw [Polynomial.eval_neg]; linarith
+          have hmh_b : 0 ≤ (-h).eval b := by
+            rw [Polynomial.eval_neg]; linarith
+          have hmh_deg : (-h).natDegree = h.natDegree := Polynomial.natDegree_neg h
+          have hmh_lt : (-h).natDegree < n := by rw [hmh_deg]; exact hh_lt
+          obtain ⟨c', hc'_mem, hc'_root⟩ :=
+            ih (-h).natDegree hmh_lt (-h) a b rfl hab hmh_a hmh_b
+          refine ⟨c', hc'_mem, ?_⟩
+          have hc'_h : h.eval c' = 0 := by
+            have heq : (-h).eval c' = 0 := hc'_root
+            rw [Polynomial.eval_neg, neg_eq_zero] at heq
+            exact heq
+          show f.eval c' = 0
+          rw [hfgh, Polynomial.eval_mul, hc'_h, mul_zero]
+    · have hg_natDeg : g.natDegree = 2 := by
+        rw [hgeq, Polynomial.natDegree_add_C, Polynomial.natDegree_pow,
+          Polynomial.natDegree_X_sub_C]
+      have hh_natDeg : h.natDegree = n - 2 := by
+        rw [hg_natDeg, hn] at hdeg_sum
+        omega
+      have hh_lt : h.natDegree < n := by rw [hh_natDeg]; omega
+      have hga_pos : 0 < g.eval a := by rw [hgeq]; exact quadratic_pos R hβ a
+      have hgb_pos : 0 < g.eval b := by rw [hgeq]; exact quadratic_pos R hβ b
+      have hfa_eq : f.eval a = g.eval a * h.eval a := by rw [hfgh, Polynomial.eval_mul]
+      have hfb_eq : f.eval b = g.eval b * h.eval b := by rw [hfgh, Polynomial.eval_mul]
+      have hha : h.eval a ≤ 0 := by
+        by_contra hha'
+        push_neg at hha'
+        rw [hfa_eq] at hfa
+        exact absurd hfa (not_le.mpr (mul_pos hga_pos hha'))
+      have hhb : 0 ≤ h.eval b := by
+        by_contra hhb'
+        push_neg at hhb'
+        rw [hfb_eq] at hfb
+        exact absurd hfb (not_le.mpr (mul_neg_of_pos_of_neg hgb_pos hhb'))
+      obtain ⟨c', hc'_mem, hc'_root⟩ :=
+        ih h.natDegree hh_lt h a b rfl hab hha hhb
+      refine ⟨c', hc'_mem, ?_⟩
+      show f.eval c' = 0
+      rw [hfgh, Polynomial.eval_mul]
+      have : h.eval c' = 0 := hc'_root
+      rw [this, mul_zero]
 
 namespace polynomialIVP_aux
 
