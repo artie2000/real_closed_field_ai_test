@@ -5,6 +5,7 @@ Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
@@ -101,6 +102,22 @@ def PolynomialIVP : Prop :=
 /-- Polynomials over a real closed ordered field satisfy the intermediate value property. -/
 theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := sorry
 
+namespace isRealClosed_of_polynomialIVP_aux
+
+/-- Helper: for a polynomial `f` with positive leading coefficient and `natDegree n ≥ 1`,
+there exists `M > 0` with `M ≥ 1` such that `f.eval M ≥ M^(n-1) * f.leadingCoeff > 0`
+and `f.eval (-M) ≤ -(M^(n-1) * f.leadingCoeff) < 0` when `n` is odd. -/
+private lemma exists_large_of_leadingCoeff_pos
+    {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+    (f : Polynomial R) (n : ℕ) (hn : f.natDegree = n) (hn1 : 1 ≤ n)
+    (hlc : 0 < f.leadingCoeff) :
+    ∃ M : R, 1 ≤ M ∧ M ^ (n - 1) * f.leadingCoeff ≤ f.eval M ∧
+      f.eval (-M) ≤ -(M ^ (n - 1) * f.leadingCoeff) ∧ Odd n →
+      (f.eval (-M) < 0 ∧ 0 < f.eval M) := by
+  sorry
+
+end isRealClosed_of_polynomialIVP_aux
+
 /-- An ordered field whose polynomials satisfy the intermediate value property is real closed. -/
 theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := by
   refine IsRealClosed.of_linearOrderedField (R := R) ?_ ?_
@@ -113,7 +130,8 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
     have heval_1 : 0 ≤ (Polynomial.X ^ 2 - Polynomial.C a).eval (a + 1) := by
       simp
       nlinarith
-    obtain ⟨c, hc_mem, hc_root⟩ := h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
+    obtain ⟨c, hc_mem, hc_root⟩ :=
+      h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
     rw [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
         Polynomial.eval_C, sub_eq_zero] at hc_root
     exact ⟨c, by rw [← sq]; exact hc_root.symm⟩

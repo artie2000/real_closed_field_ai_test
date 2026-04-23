@@ -50,29 +50,26 @@ theorem surjective_algebraMap_of_odd_finrank
   obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
   -- `α` is integral over `R`.
   have hint : IsIntegral R α := .of_finite R α
-  -- `f := minpoly R α` is irreducible and monic.
-  set f := minpoly R α with hf_def
-  have hirr : Irreducible f := minpoly.irreducible hint
-  -- `f.natDegree = finrank R K` using `R⟮α⟯ = ⊤`.
-  have hdeg : f.natDegree = Module.finrank R K := by
-    have h1 : Module.finrank R (IntermediateField.adjoin R {α}) = f.natDegree :=
-      IntermediateField.adjoin.finrank hint
-    have h2 : Module.finrank R (IntermediateField.adjoin R {α}) = Module.finrank R K := by
-      rw [hα, IntermediateField.finrank_top']
-    omega
-  -- `f.natDegree` is odd, so `f` has a root in `R`.
-  have hodd' : Odd f.natDegree := hdeg ▸ hodd
-  obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd'
+  -- The minimal polynomial of `α` is irreducible.
+  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  -- Its degree equals `finrank R K` because `α` generates `K`.
+  have hdeg : (minpoly R α).natDegree = Module.finrank R K := by
+    have h1 := IntermediateField.adjoin.finrank hint
+    rw [show (IntermediateField.adjoin R {α}) = _ from hα,
+      IntermediateField.finrank_top'] at h1
+    exact h1.symm
+  -- `(minpoly R α).natDegree` is odd, so it has a root in `R`.
+  rw [← hdeg] at hodd
+  obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd
   -- An irreducible polynomial with a root has degree 1.
-  have hdeg1 : f.degree = 1 := Polynomial.degree_eq_one_of_irreducible_of_root hirr hr
-  have hfin1 : Module.finrank R K = 1 := by
-    have : f.natDegree = 1 := Polynomial.natDegree_eq_of_degree_eq_some hdeg1
-    omega
-  -- `finrank R K = 1` means every element of `K` is in the range of `algebraMap R K`.
+  have hdeg1 : (minpoly R α).natDegree = 1 :=
+    Polynomial.natDegree_eq_of_degree_eq_some
+      (Polynomial.degree_eq_one_of_irreducible_of_root hirr hr)
+  -- Hence `finrank R K = 1`, so every element of `K` is in the range of `algebraMap R K`.
+  have hfin1 : Module.finrank R K = 1 := by omega
   intro x
   have hbot : (⊥ : Subalgebra R K) = ⊤ := Subalgebra.bot_eq_top_of_finrank_eq_one hfin1
-  have : x ∈ (⊥ : Subalgebra R K) := hbot ▸ Algebra.mem_top
-  exact Algebra.mem_bot.mp this
+  exact Algebra.mem_bot.mp (hbot ▸ Algebra.mem_top)
 
 /-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
 any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
