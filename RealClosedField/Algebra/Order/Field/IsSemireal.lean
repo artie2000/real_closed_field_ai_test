@@ -122,4 +122,7 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
+  show ∃! _ : LinearOrder ℚ,
+    @IsStrictOrderedRing ℚ Field.toSemifield.toDivisionSemiring.toSemiring
+      instDistribLatticeOfLinearOrder.toSemilatticeInf.toPartialOrder
   exact IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
