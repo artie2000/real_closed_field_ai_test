@@ -95,9 +95,19 @@ theorem isSquare_of_finrank_base_eq_two
   -- Get a primitive element α with minpoly of degree 2.
   obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
   have hint : IsIntegral R α := .of_finite R α
-  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  have halg : IsAlgebraic R α := hint.isAlgebraic
+  have hα' : Algebra.adjoin R ({α} : Set K) = ⊤ := by
+    rw [← (IntermediateField.adjoin_simple_eq_top_iff_of_isAlgebraic halg).mp hα]
+    exact (IntermediateField.adjoin_simple_toSubalgebra_of_isAlgebraic halg).symm
   have hdeg : (minpoly R α).natDegree = 2 := by
     rw [(Field.primitive_element_iff_minpoly_natDegree_eq R α).mp hα, hK]
+  -- Power basis {1, α} for K over R.
+  set PB : PowerBasis R K := PowerBasis.ofAdjoinEqTop hint hα' with hPB
+  have hPBdim : PB.dim = 2 := hdeg
+  -- Write x in the basis {1, α}: x = a + b * α for some a, b : R.
+  have hxrepr : x = PB.basis ⟨0, by omega⟩ * algebraMap R K (PB.basis.repr x ⟨0, by omega⟩) +
+                    PB.basis ⟨1, by omega⟩ * algebraMap R K (PB.basis.repr x ⟨1, by omega⟩) := by
+    sorry
   sorry
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
