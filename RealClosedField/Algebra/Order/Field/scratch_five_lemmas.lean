@@ -479,15 +479,7 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
       rw [(AdjoinRoot.powerBasis hf.ne_zero).finrank, AdjoinRoot.powerBasis_dim]
     rw [← h1]
     exact finrank_le_two_of_finiteDimensional R (AdjoinRoot f)
-  have hdeg_pos : 0 < f.natDegree := by
-    rcases Nat.lt_or_ge 0 f.natDegree with h | h
-    · exact h
-    · exfalso
-      have heq : f.natDegree = 0 := by omega
-      have : IsUnit f := by
-        rw [Polynomial.Monic.natDegree_eq_zero_iff_eq_one hf] at heq
-        rw [heq]; exact isUnit_one
-      exact hf'.not_isUnit this
+  have hdeg_pos : 0 < f.natDegree := hf'.natDegree_pos
   rcases (show f.natDegree = 1 ∨ f.natDegree = 2 by omega) with hdeg | hdeg
   · -- natDegree = 1
     left
