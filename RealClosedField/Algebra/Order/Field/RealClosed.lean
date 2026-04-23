@@ -649,16 +649,45 @@ theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
     (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] [IsSemireal K] :
     Function.Surjective (algebraMap R K) := by
   intro x
-  -- x is algebraic over R, so R[x] is finite-dim with dim = minpoly degree ≤ 2.
   have hx_int : IsIntegral R x := Algebra.IsIntegral.isIntegral x
-  set A : Subalgebra R K := Algebra.adjoin R ({x} : Set K) with hA_def
-  haveI : FiniteDimensional R A :=
-    (Subalgebra.isField_of_algebraic A (fun a ↦ (Algebra.IsAlgebraic.isAlgebraic _)))
-      |>.elim
-      (fun _ ↦ inferInstance)
-    |>.elim
-      (fun _ ↦ inferInstance)
-  sorry
+  let L : IntermediateField R K := IntermediateField.adjoin R ({x} : Set K)
+  haveI : FiniteDimensional R L := IntermediateField.adjoin.finiteDimensional hx_int
+  have hL_deg : Module.finrank R L = (minpoly R x).natDegree :=
+    IntermediateField.adjoin.finrank hx_int
+  have hle : (minpoly R x).natDegree ≤ 2 := by
+    rw [← hL_deg]; exact finrank_le_two_of_finiteDimensional R L
+  have hpos : 0 < (minpoly R x).natDegree := minpoly.natDegree_pos hx_int
+  rcases show (minpoly R x).natDegree = 1 ∨ (minpoly R x).natDegree = 2 from by omega
+    with h1 | h2
+  · -- Degree 1: x is in image of algebraMap.
+    have hmonic := minpoly.monic hx_int
+    have haev : Polynomial.aeval x (minpoly R x) = 0 := minpoly.aeval R x
+    have hlt : (minpoly R x).natDegree < 2 := by omega
+    rw [Polynomial.aeval_eq_sum_range' hlt] at haev
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+      Algebra.smul_def, pow_zero, mul_one, pow_one] at haev
+    have hcoeff1 : (minpoly R x).coeff 1 = 1 := by
+      have hlc : (minpoly R x).leadingCoeff = 1 := hmonic
+      rw [Polynomial.leadingCoeff, h1] at hlc
+      exact hlc
+    rw [hcoeff1, map_one, one_mul] at haev
+    refine ⟨-(minpoly R x).coeff 0, ?_⟩
+    rw [map_neg]
+    linear_combination -haev
+  · -- Degree 2: derive contradiction using IsSemireal.
+    exfalso
+    have hL_deg_2 : Module.finrank R L = 2 := by rw [hL_deg, h2]
+    obtain ⟨j, hj⟩ :=
+      IsRealClosed.isSquare_of_finrank_base_eq_two R L hL_deg_2 (-1 : L)
+    apply IsSemireal.not_isSumSq_neg_one K
+    have h_cast : ((-1 : L) : K) = ((j : K)) * ((j : K)) := by
+      have := congr_arg ((↑) : L → K) hj
+      push_cast at this
+      convert this using 1
+    have hK_eq : ((-1 : L) : K) = (-1 : K) := by push_cast; ring
+    rw [hK_eq] at h_cast
+    rw [h_cast]
+    exact IsSumSq.mul_self (j : K)
 
 end Algebraic
 
