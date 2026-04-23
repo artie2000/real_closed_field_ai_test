@@ -8,5 +8,6 @@
   "statement": "The only algebraic extensions of $R$ are $R$ itself and $R(i)$.",
   "proof": "\\leanok\n  An infinite algebraic extension contains finite subextensions of arbitrarily large degree.",
   "scratchFile": "",
-  "leanDeclaration": "IsRealClosed.finite_of_isAlgebraic, IsRealClosed.finrank_eq_one_or_two_of_finite"
+  "leanDeclaration": "IsRealClosed.finite_of_isAlgebraic, IsRealClosed.finrank_eq_one_or_two_of_finite",
+  "status": "proved"
 }

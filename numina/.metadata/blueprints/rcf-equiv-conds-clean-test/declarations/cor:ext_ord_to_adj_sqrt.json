@@ -5,5 +5,6 @@
   "uses": [],
   "statement": "Let $F$ be a ordered field, and suppose $a\\in F$ is non-negative (and not a square). Then there is a field ordering on $F(\\sqrt{a})$ making $F(\\sqrt{a})/F$ ordered. (In Lean, $F(\\sqrt{a})$ is realised as $\\operatorname{AdjoinRoot}(X^2-a)$.)",
   "proof": "\\leanok\n  Let $\\pi:F(\\sqrt{a})\\to F$ be the projection induced by the $F$-basis $\\{1,\\sqrt{a}\\}$. For $x,y\\in F$, we have $\\pi((x+y\\sqrt{a})^2)=x^2+ay^2\\geq0$. We are done by Lemma \\ref{lem:ext_ord_functional_suff}.",
-  "leanDeclaration": "IsRealClosed.exists_ordered_algebra_adjoinRoot_sq_sub_C"
+  "leanDeclaration": "IsRealClosed.exists_ordered_algebra_adjoinRoot_sq_sub_C",
+  "status": "proved"
 }

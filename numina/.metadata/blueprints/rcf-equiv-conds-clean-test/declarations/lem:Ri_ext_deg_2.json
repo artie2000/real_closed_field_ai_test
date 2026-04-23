@@ -8,5 +8,6 @@
   "statement": "There is no quadratic extension of $R(i)$.",
   "proof": "\\leanok\n  Since $\\operatorname{char}R(i)\\neq 2$, it suffices to show that every element of $R(i)$ is a square. Observe that every $x\\in R$ is a square in $R(i)$: if $x$ is not a square in $R$, then $-x$ is, and so $x=(i\\sqrt{-x})^2$. Now, fix $x=a+bi\\in R(i)$ with $a,b\\in R$. If $b=0$, then $a=x$ is a square in $R(i)$. Otherwise, we have $x=(c+di)^2$, where\n  \\[c=\\sqrt{\\frac{a+\\sqrt{a^2+b^2}}{2}}\\text{ and }d=\\frac{b}{2c}.\\]\n  To see these are well-defined elements of $R(i)$, note that $\\sqrt{a^2+b^2}$ is in $R$ by Lemma \\ref{lem:RCF_sumsq_is_sq} and that $c\\neq0$ because otherwise $-a=\\sqrt{a^2+b^2}$ and so $b=0$.$_\\#$",
   "scratchFile": "",
-  "leanDeclaration": "IsRealClosed.no_quadratic_ext_Ri"
+  "leanDeclaration": "IsRealClosed.no_quadratic_ext_Ri",
+  "status": "proved"
 }
