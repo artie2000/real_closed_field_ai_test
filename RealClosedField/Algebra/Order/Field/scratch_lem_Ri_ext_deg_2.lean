@@ -383,10 +383,8 @@ theorem isSquare_of_finrank_base_eq_two
             -- Multiply both sides by 2 * (2α)²:
             -- (-r + a) * (2α)² = b * b * 2 ?? no, 2 * (-r+a)/2 * (2α)² = 2 * b²/(2α)² * (2α)²
             -- Actually let's just manipulate directly
-            have hgoal_eq : (-r + a) / 2 = b / (2 * α) * (b / (2 * α)) ↔
-                (-r + a) * ((2 * α) * (2 * α)) = 2 * (b * b) := by
-              rw [div_mul_div_comm, div_eq_div_iff (by norm_num : (2 : R) ≠ 0) h4α2_ne]
-            rw [hgoal_eq]
+            rw [div_mul_div_comm,
+                div_eq_div_iff (by norm_num : (2 : R) ≠ 0) h4α2_ne]
             linear_combination 4 * (r - a) * hα + 2 * hr_sq
 
     obtain ⟨s, hs_sq, hcsq⟩ := hexists_sign
@@ -413,7 +411,7 @@ theorem isSquare_of_finrank_base_eq_two
     -- Using (s+a)(s-a) = b², we get d² = (s-a)/2
     -- so c² - d² = (s+a)/2 - (s-a)/2 = a
     have hs_ne : s + a ≠ 0 := by
-      rw [show s + a = 2 * c^2 from by linear_combination 2 * hc2]
+      rw [show s + a = 2 * c^2 from by linear_combination -2 * hc2]
       exact mul_ne_zero two_ne_zero hc2_ne
     have hprod : (s + a) * (s - a) = b^2 := by linear_combination hs_sq
     have hd2 : d^2 = (s - a) / 2 := by
