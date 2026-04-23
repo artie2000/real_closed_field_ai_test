@@ -122,7 +122,16 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  have h := IsStrictOrderedRing.unique_isStrictOrderedRing_iff (F := ℚ) |>.mpr key
-  obtain ⟨l, _, hu⟩ := h
-  refine ⟨l, Rat.instIsStrictOrderedRing, fun l' _ => hu l' ?_⟩
-  exact Rat.instIsStrictOrderedRing
+  refine ⟨Rat.linearOrder, inferInstance, fun l' _ => ?_⟩
+  have haux : ∀ x : ℚ, IsSumSq x ∨ IsSumSq (-x) := by
+    intro x
+    rcases le_total 0 x with hx | hx
+    · exact Or.inl (key x hx)
+    · exact Or.inr (key (-x) (by linarith))
+  have hsr : IsSemireal ℚ := by
+    constructor
+    intro s hs hs'
+    have : (-1 : ℚ) < 0 := by norm_num
+    linarith [IsSumSq.nonneg hs]
+  exact ((@IsSemireal.unique_isStrictOrderedRing ℚ _ hsr haux).uniq
+    ⟨l', inferInstance⟩ |>.symm ▸ rfl : l' = Rat.linearOrder).symm
