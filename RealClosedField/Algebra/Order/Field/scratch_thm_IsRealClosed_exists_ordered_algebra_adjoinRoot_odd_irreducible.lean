@@ -385,30 +385,19 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         Polynomial.natDegree_add_le _ _
       simp [Polynomial.natDegree_one] at this
       omega
-    -- P ≠ 0 because P has constant term 1 (+1 in the definition).
+    -- P ≠ 0 because evaluating at 0 gives a positive value.
     have hP_ne : P ≠ 0 := by
       intro hP0
-      -- If P = 0, then coeff 0 of P = 0.
-      have h1 : P.coeff 0 = 0 := by rw [hP0, Polynomial.coeff_zero]
-      -- But coeff 0 of P ≥ 1 because P = (sum of squares with ≥0 coeff) + 1 has coeff 0 ≥ 1.
-      have h2 : P.coeff 0 = (∑ y ∈ c.support, (c y : R) * ((p y).coeff 0)^2) + 1 := by
+      have h1 : P.eval 0 = 0 := by rw [hP0, Polynomial.eval_zero]
+      have h2 : P.eval 0 = (∑ y ∈ c.support, (c y : R) * ((p y).eval 0)^2) + 1 := by
         rw [hP_def]
-        simp only [Polynomial.coeff_add, Polynomial.coeff_one_zero, Polynomial.finset_sum_coeff]
-        congr 1
-        refine Finset.sum_congr rfl fun y _ => ?_
-        rw [Polynomial.coeff_C_mul, Polynomial.coeff_pow, Finset.sum_eq_single (⟨0, by decide⟩ : Fin 2)]
-        · simp
-        · intro b _ hb
-          have : b = ⟨0, by decide⟩ ∨ b = ⟨1, by decide⟩ := by
-            rcases b with ⟨b, hb'⟩; interval_cases b <;> aesop
-          rcases this with hb0 | hb1
-          · exact absurd hb0 hb
-          · rw [hb1]; simp
-        · intro hh; exfalso; apply hh; simp
-      have h3 : (0 : R) ≤ ∑ y ∈ c.support, (c y : R) * ((p y).coeff 0)^2 := by
+        simp [Polynomial.eval_add, Polynomial.eval_finset_sum, Polynomial.eval_mul,
+              Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_one]
+      have h3 : (0 : R) ≤ ∑ y ∈ c.support, (c y : R) * ((p y).eval 0)^2 := by
         apply Finset.sum_nonneg
         intro y _
         have := (c y).2
+        have : (0 : R) ≤ (c y : R) := this
         positivity
       linarith
     -- P = g * h, extract h.
@@ -442,7 +431,7 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         rw [hall_zero y hy]; ring
       have hP1 : P = 1 := by rw [hP_def, hsum0, zero_add]
       rw [hP1] at hhg
-      have : IsUnit g := isUnit_of_mul_eq_one g h hhg.symm
+      have : IsUnit g := IsUnit.of_mul_eq_one g h hhg.symm
       exact hg_irred.not_isUnit this
     sorry
 
