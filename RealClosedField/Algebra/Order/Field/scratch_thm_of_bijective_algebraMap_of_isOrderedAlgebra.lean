@@ -51,9 +51,10 @@ private lemma algebraMap_not_bijective_of_irreducible_natDegree_pos
   have hroot : p.IsRoot r := hbij.1 (by simpa using this)
   exact hirred.not_isRoot_of_natDegree_ne_one hdeg.ne' hroot
 
-/-- If `K` is an ordered algebraic field extension of `R` and the embedding `R → K` is
-bijective, then the power basis of `AdjoinRoot p` being nontrivial is a contradiction
-(for irreducible `p` of natDegree > 1). -/
+omit [LinearOrder R] [IsStrictOrderedRing R] in
+/-- Given an ordered structure on `AdjoinRoot p` (for `p` irreducible of natDegree > 1),
+the hypothesis that `algebraMap R K` is bijective for every ordered algebraic extension gives
+a contradiction. -/
 private lemma not_exists_ordered_algebra_of_bijective
     (h : ∀ (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K]
          [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K],
@@ -74,6 +75,133 @@ private lemma not_exists_ordered_algebra_of_bijective
   haveI := hom
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
+/-- Part A: showing that adjoining a square root yields an ordered extension. -/
+private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
+    {a : R} (ha : 0 ≤ a) (hsq : ¬ IsSquare a) :
+    ∃ _ : LinearOrder (AdjoinRoot (X ^ 2 - C a : R[X])),
+      IsStrictOrderedRing (AdjoinRoot (X ^ 2 - C a : R[X])) ∧
+      IsOrderedModule R (AdjoinRoot (X ^ 2 - C a : R[X])) := by
+  have hirred : Irreducible (X ^ 2 - C a : R[X]) :=
+    irreducible_X_sq_sub_C_of_not_isSquare hsq
+  have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
+  have hdeg2 : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
+  set K := AdjoinRoot (X ^ 2 - C a : R[X])
+  haveI : Fact (Irreducible (X ^ 2 - C a : R[X])) := ⟨hirred⟩
+  set hm : IsAdjoinRootMonic K (X ^ 2 - C a : R[X]) :=
+    AdjoinRoot.isAdjoinRootMonic (X ^ 2 - C a : R[X]) hmonic
+  -- π : K →ₗ[R] R is the 0-th coefficient projection
+  let π : K →ₗ[R] R :=
+    { toFun := fun x => hm.coeff x 0
+      map_add' := fun x y => by simp
+      map_smul' := fun r x => by simp }
+  -- Basic properties of π
+  have hπ_one : π 1 = 1 := by
+    show hm.coeff 1 0 = 1
+    rw [hm.coeff_one]
+    simp
+  have hπ_root : π hm.root = 0 := by
+    show hm.coeff hm.root 0 = 0
+    rw [hm.coeff_root (by rw [hdeg2]; decide)]
+    simp
+  have hπ_algebraMap : ∀ c : R, π (algebraMap R K c) = c := by
+    intro c
+    show hm.coeff (algebraMap R K c) 0 = c
+    rw [hm.coeff_algebraMap]
+    simp
+  -- root^2 = a
+  have hroot_sq : hm.root ^ 2 = algebraMap R K a := by
+    have heq : hm.root = AdjoinRoot.root (X ^ 2 - C a : R[X]) := rfl
+    have h0 : (aeval (AdjoinRoot.root (X ^ 2 - C a : R[X])) (X ^ 2 - C a : R[X])) = 0 :=
+      AdjoinRoot.eval₂_root _
+    simp [aeval_def, eval₂_sub, eval₂_pow, eval₂_X, eval₂_C, sub_eq_zero] at h0
+    rw [heq]; exact h0
+  -- Every x ∈ K can be written as algebraMap u + algebraMap v * root, using hm.coeff
+  have hrepr : ∀ x : K,
+      x = algebraMap R K (hm.coeff x 0) + algebraMap R K (hm.coeff x 1) * hm.root := by
+    intro x
+    apply hm.ext_elem
+    intro i hi
+    rw [hdeg2] at hi
+    have hroot_coeff : hm.coeff hm.root = Pi.single 1 1 := hm.coeff_root (by rw [hdeg2]; decide)
+    interval_cases i
+    · -- i = 0
+      rw [LinearMap.map_add hm.coeff]
+      rw [hm.coeff_algebraMap]
+      -- Coefficient of (algebraMap v * root) at 0.
+      rw [show algebraMap R K (hm.coeff x 1) * hm.root
+            = (hm.coeff x 1) • hm.root from by rw [Algebra.smul_def]]
+      rw [LinearMap.map_smul hm.coeff]
+      show (Pi.single 0 (hm.coeff x 0) + (hm.coeff x 1) • hm.coeff hm.root) 0 = _
+      rw [hroot_coeff]
+      simp
+    · -- i = 1
+      rw [LinearMap.map_add hm.coeff]
+      rw [hm.coeff_algebraMap]
+      rw [show algebraMap R K (hm.coeff x 1) * hm.root
+            = (hm.coeff x 1) • hm.root from by rw [Algebra.smul_def]]
+      rw [LinearMap.map_smul hm.coeff]
+      show hm.coeff x 1 = (Pi.single 0 (hm.coeff x 0) + (hm.coeff x 1) • hm.coeff hm.root) 1
+      rw [hroot_coeff]
+      simp
+  -- π(x^2) ≥ 0 for all x : K
+  have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
+    intro x
+    set u := hm.coeff x 0
+    set v := hm.coeff x 1
+    have hx : x = algebraMap R K u + algebraMap R K v * hm.root := hrepr x
+    -- Compute x^2 = algebraMap (u^2 + a*v^2) + algebraMap (2*u*v) * root
+    have hx_sq : x ^ 2 = algebraMap R K (u^2 + a * v^2) + algebraMap R K (2 * u * v) * hm.root := by
+      rw [hx]
+      have e1 : (algebraMap R K u + algebraMap R K v * hm.root) ^ 2
+              = (algebraMap R K u)^2
+                  + 2 * (algebraMap R K u) * (algebraMap R K v * hm.root)
+                  + (algebraMap R K v)^2 * (hm.root ^ 2) := by ring
+      rw [e1, hroot_sq]
+      rw [show (algebraMap R K v)^2 * algebraMap R K a = algebraMap R K (v^2 * a) from by
+            rw [← map_pow, ← map_mul]]
+      rw [show (algebraMap R K u)^2 = algebraMap R K (u^2) from by rw [← map_pow]]
+      rw [show (2 : K) * algebraMap R K u * (algebraMap R K v * hm.root)
+              = algebraMap R K (2 * u * v) * hm.root from by
+            rw [show (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v
+                  from by rw [map_mul, map_mul]; simp]; ring]
+      rw [show algebraMap R K (u^2) + algebraMap R K (v^2 * a)
+            = algebraMap R K (u^2 + a * v^2) from by rw [← map_add]; ring_nf]
+    rw [hx_sq]
+    show hm.coeff _ 0 ≥ 0
+    rw [LinearMap.map_add hm.coeff]
+    rw [hm.coeff_algebraMap]
+    rw [show algebraMap R K (2 * u * v) * hm.root = (2 * u * v) • hm.root from by
+        rw [Algebra.smul_def]]
+    rw [LinearMap.map_smul hm.coeff]
+    show (Pi.single 0 (u^2 + a*v^2) + (2*u*v) • hm.coeff hm.root) 0 ≥ 0
+    rw [hm.coeff_root (by rw [hdeg2]; decide)]
+    simp
+    positivity
+  -- Now derive non-membership
+  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+  intro hc
+  have hπ_in_span :
+      ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
+    intro s hs
+    refine Submodule.span_induction
+      (mem := ?_)
+      (zero := by rw [map_zero])
+      (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
+      (smul := fun r x _ hx => by
+        show 0 ≤ π (r • x)
+        rw [LinearMap.map_smul_of_tower]
+        show 0 ≤ (r : R) * π x
+        exact mul_nonneg r.2 hx)
+      hs
+    rintro y ⟨z, hz⟩
+    have : y = z ^ 2 := by rw [← hz]; ring
+    rw [this]
+    exact hπ_sq z
+  have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
+  have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
+  rw [h1] at h2
+  linarith
+
 /-- If an ordered field `R` has no nontrivial ordered algebraic extension, then it is
 real closed. -/
 theorem of_bijective_algebraMap_of_isOrderedAlgebra
@@ -86,117 +214,10 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
     by_contra hsq
     have hirred : Irreducible (X ^ 2 - C a : R[X]) :=
       irreducible_X_sq_sub_C_of_not_isSquare hsq
-    have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
     have hdeg2 : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
-    set K := AdjoinRoot (X ^ 2 - C a : R[X])
-    haveI : Fact (Irreducible (X ^ 2 - C a : R[X])) := ⟨hirred⟩
-    -- Use `IsAdjoinRootMonic` for the projection
-    set hm : IsAdjoinRootMonic K (X ^ 2 - C a : R[X]) :=
-      AdjoinRoot.isAdjoinRootMonic (X ^ 2 - C a : R[X]) hmonic
-    -- π is the 0-th coefficient.
-    let π : K →ₗ[R] R :=
-      { toFun := fun x => hm.coeff x 0
-        map_add' := fun x y => by simp
-        map_smul' := fun r x => by simp }
-    -- Basic properties of π
-    have hπ_one : π 1 = 1 := by
-      show hm.coeff 1 0 = 1
-      rw [hm.coeff_one]
-      simp
-    have hπ_algebraMap : ∀ c : R, π (algebraMap R K c) = c := by
-      intro c
-      show hm.coeff (algebraMap R K c) 0 = c
-      rw [hm.coeff_algebraMap]
-      simp
-    have hπ_root : π hm.root = 0 := by
-      show hm.coeff hm.root 0 = 0
-      rw [hm.coeff_root (by rw [hdeg2]; decide)]
-      simp
-    -- root^2 = a
-    have hroot_sq : hm.root ^ 2 = algebraMap R K a := by
-      have hr : (AdjoinRoot.root (X ^ 2 - C a : R[X])) ^ 2 = algebraMap R K a := by
-        have h0 : (aeval (AdjoinRoot.root (X ^ 2 - C a : R[X])) (X ^ 2 - C a : R[X])) = 0 :=
-          AdjoinRoot.eval₂_root _
-        simp [aeval_def, eval₂_sub, eval₂_pow, eval₂_X, eval₂_C, sub_eq_zero] at h0
-        exact h0
-      -- hm.root = AdjoinRoot.root ...?
-      have heq : hm.root = AdjoinRoot.root (X ^ 2 - C a : R[X]) := rfl
-      rw [heq]; exact hr
-    -- Each x in K can be written as u + v*root, using coefficients
-    have hcoeff_repr : ∀ x : K,
-        x = algebraMap R K (hm.coeff x 0) + algebraMap R K (hm.coeff x 1) * hm.root := by
-      intro x
-      apply hm.ext_elem
-      intro i hi
-      rw [hdeg2] at hi
-      interval_cases i
-      · simp [hm.coeff_algebraMap, hm.coeff_root (by rw [hdeg2]; decide)]
-      · simp [hm.coeff_algebraMap, hm.coeff_root (by rw [hdeg2]; decide)]
-    -- π(x^2) ≥ 0 for all x in K: compute x = u + v*root, x^2 = u^2 + av^2 + 2uv*root
-    have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
-      intro x
-      set u := hm.coeff x 0
-      set v := hm.coeff x 1
-      have hx : x = algebraMap R K u + algebraMap R K v * hm.root := hcoeff_repr x
-      have hx_sq : x ^ 2 = algebraMap R K (u^2 + a * v^2)
-                          + algebraMap R K (2 * u * v) * hm.root := by
-        rw [hx]
-        have e1 : (algebraMap R K u + algebraMap R K v * hm.root) ^ 2
-                = (algebraMap R K u)^2
-                    + 2 * (algebraMap R K u) * (algebraMap R K v * hm.root)
-                    + (algebraMap R K v)^2 * (hm.root ^ 2) := by ring
-        rw [e1, hroot_sq]
-        push_cast
-        ring
-      rw [hx_sq]
-      show hm.coeff _ 0 ≥ 0
-      rw [show (algebraMap R K (u^2 + a*v^2) + algebraMap R K (2*u*v) * hm.root : K)
-            = algebraMap R K (u^2 + a*v^2) + algebraMap R K (2*u*v) * hm.root from rfl]
-      have : hm.coeff (algebraMap R K (u^2 + a*v^2)
-                         + algebraMap R K (2*u*v) * hm.root) 0
-           = (u^2 + a*v^2) := by
-        rw [map_add]
-        rw [hm.coeff_algebraMap]
-        have : hm.coeff (algebraMap R K (2*u*v) * hm.root) 0 = 0 := by
-          -- algebraMap R K (2*u*v) = (2*u*v) • 1 so product = (2*u*v) • root
-          rw [show algebraMap R K (2*u*v) * hm.root = (2*u*v) • hm.root from by
-              rw [Algebra.smul_def]]
-          rw [map_smul]
-          show (2*u*v) * hm.coeff hm.root 0 = 0
-          rw [hm.coeff_root (by rw [hdeg2]; decide)]
-          simp
-        rw [this]
-        simp
-      rw [this]
-      positivity
-    -- Construct the ordered structure.
-    have hord : ∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule R K := by
-      rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
-      intro hc
-      have hπ_in_span :
-          ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
-        intro s hs
-        refine Submodule.span_induction
-          (mem := ?_)
-          (zero := by rw [map_zero])
-          (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
-          (smul := fun r x _ hx => by
-            show 0 ≤ π (r • x)
-            rw [map_smul]
-            show 0 ≤ (r : R) * π x
-            exact mul_nonneg r.2 hx)
-          hs
-        rintro y ⟨z, hz⟩
-        -- z * z = y
-        have : y = z ^ 2 := by rw [← hz]; ring
-        rw [this]
-        exact hπ_sq z
-      have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
-      have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
-      rw [h1] at h2
-      linarith
-    have hdeg_gt : 1 < (X ^ 2 - C a : R[X]).natDegree := by rw [hdeg2]; decide
-    exact not_exists_ordered_algebra_of_bijective h hirred hdeg_gt hord
+    exact not_exists_ordered_algebra_of_bijective h hirred
+      (by rw [hdeg2]; decide)
+      (exists_ordered_algebra_adjoinRoot_sq_sub_C ha hsq)
   · -- PART B: every odd-degree polynomial has a root
     sorry
 
