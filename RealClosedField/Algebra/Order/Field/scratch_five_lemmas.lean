@@ -515,22 +515,21 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
       ring
     -- c = a₀ - a₁²/4
     set c : R := a₀ - a₁^2 / 4 with hc_def
+    have h2ne : (2 : R) ≠ 0 := two_ne_zero
+    have h4ne : (4 : R) ≠ 0 := by norm_num
+    have ha1_eq : a₁ = 2 * (a₁/2) := by field_simp
+    have ha14_eq : a₁^2 / 4 = (a₁/2)^2 := by field_simp; ring
     have hf_square : f = (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 + Polynomial.C c := by
-      rw [hfexp]
-      have h2 : (2 : R) ≠ 0 := two_ne_zero
-      have : Polynomial.C c = Polynomial.C a₀ - Polynomial.C (a₁^2/4) := by
-        rw [← Polynomial.C_sub]
+      rw [hfexp, hc_def]
+      rw [show Polynomial.C (a₀ - a₁^2 / 4) = Polynomial.C a₀ - Polynomial.C (a₁^2/4)
+          from by rw [Polynomial.C_sub]]
+      rw [ha14_eq]
+      have : Polynomial.C a₁ = Polynomial.C (2 * (a₁/2)) := by rw [← ha1_eq]
       rw [this]
-      have expand : (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 =
-          Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C (a₁^2/4) := by
-        have : Polynomial.X - Polynomial.C (-(a₁/2)) = Polynomial.X + Polynomial.C (a₁/2) := by
-          rw [sub_eq_add_neg, ← Polynomial.C_neg, neg_neg]
-        rw [this]
-        ring_nf
-        rw [show (a₁ / 2) ^ 2 = a₁^2/4 from by field_simp; ring]
-        rw [show a₁/2 * 2 = a₁ from by field_simp]
-        ring
-      rw [expand]
+      rw [Polynomial.C_mul, show (Polynomial.C 2 : Polynomial R) = 2 from by
+        rw [show (2 : R) = (2 : ℕ) from rfl, Polynomial.C_natCast]; rfl]
+      rw [show (Polynomial.C ((a₁/2)^2) : Polynomial R) = Polynomial.C (a₁/2) ^ 2
+          from by rw [Polynomial.C_pow]]
       ring
     -- Show c is a square with nonzero root
     have hc_sq : IsSquare c := by
