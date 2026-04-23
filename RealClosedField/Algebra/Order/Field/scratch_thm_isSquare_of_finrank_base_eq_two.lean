@@ -387,12 +387,13 @@ theorem isSquare_of_finrank_base_eq_two
         -- Then t^2 = a^2 + b^2 = t^2 + b^2, so b^2 = 0, so b = 0, contradiction
         have hh : (a + t) / 2 = 0 := by rw [← hc2, hc0]; ring
         have hat : a + t = 0 := by
-          have : (2 : R) ≠ 0 := two_ne_zero
+          have h2 : (2 : R) ≠ 0 := two_ne_zero
           field_simp at hh
           exact hh
-        have hat' : a = -t := by linear_combination hat
-        have hat2 : a ^ 2 = t ^ 2 := by rw [hat']; ring
-        have hb_sq : b ^ 2 = 0 := by linear_combination ht_sq - hat2
+        have hat2 : a ^ 2 = t ^ 2 := by
+          have : a = -t := by linear_combination hat
+          rw [this]; ring
+        have hb_sq : b ^ 2 = 0 := by linear_combination -ht_sq - hat2
         exact hb0 ((pow_eq_zero_iff two_ne_zero).mp hb_sq)
       set d : R := b / (2 * c) with hd_def
       -- Claim: (algebraMap R K c + algebraMap R K d * α)^2 = x
