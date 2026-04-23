@@ -471,7 +471,167 @@ they are linear (`X - c`) or quadratic of the form `(X - a)^2 + b^2` with `b ≠
 theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' : Irreducible f) :
     (∃ c : R, f = Polynomial.X - Polynomial.C c) ∨
     (∃ a b : R, b ≠ 0 ∧
-      f = (Polynomial.X - Polynomial.C a) ^ 2 + Polynomial.C (b ^ 2)) := sorry
+      f = (Polynomial.X - Polynomial.C a) ^ 2 + Polynomial.C (b ^ 2)) := by
+  haveI : Fact (Irreducible f) := ⟨hf'⟩
+  haveI hFin : FiniteDimensional R (AdjoinRoot f) := hf.finite_adjoinRoot
+  have hdeg_le : f.natDegree ≤ 2 := by
+    have h1 : Module.finrank R (AdjoinRoot f) = f.natDegree := by
+      rw [PowerBasis.finrank (AdjoinRoot.powerBasis hf.ne_zero)]
+      simp
+    rw [← h1]
+    exact finrank_le_two_of_finiteDimensional R (AdjoinRoot f)
+  have hdeg_pos : 0 < f.natDegree := by
+    rcases Nat.lt_or_ge 0 f.natDegree with h | h
+    · exact h
+    · exfalso
+      have heq : f.natDegree = 0 := by omega
+      have : IsUnit f := by
+        rw [Polynomial.Monic.natDegree_eq_zero_iff_eq_one hf] at heq
+        rw [heq]; exact isUnit_one
+      exact hf'.not_isUnit this
+  interval_cases f.natDegree
+  · -- natDegree = 1
+    left
+    refine ⟨-(f.coeff 0), ?_⟩
+    have h1 : f = Polynomial.X + Polynomial.C (f.coeff 0) := hf.eq_X_add_C (by assumption)
+    rw [h1, sub_eq_add_neg, ← Polynomial.C_neg, neg_neg]
+  · -- natDegree = 2
+    right
+    set a₁ := f.coeff 1
+    set a₀ := f.coeff 0
+    have hfexp : f = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀ := by
+      have hfeq : f = ∑ i ∈ Finset.range 3, Polynomial.C (f.coeff i) * Polynomial.X ^ i := by
+        have h3 : f.natDegree + 1 = 3 := by
+          have : f.natDegree = 2 := by assumption
+          omega
+        conv_lhs => rw [f.as_sum_range_C_mul_X_pow]
+        rw [h3]
+      rw [hfeq]
+      simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add]
+      have hcoeff2 : f.coeff 2 = 1 := by
+        have hlc : f.leadingCoeff = 1 := hf
+        have h2 : f.natDegree = 2 := by assumption
+        rw [Polynomial.leadingCoeff, h2] at hlc
+        exact hlc
+      rw [hcoeff2, Polynomial.C_1, one_mul]
+      show _ = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀
+      ring
+    -- c = a₀ - a₁²/4
+    set c : R := a₀ - a₁^2 / 4 with hc_def
+    have hf_square : f = (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 + Polynomial.C c := by
+      rw [hfexp]
+      have h2 : (2 : R) ≠ 0 := two_ne_zero
+      have : Polynomial.C c = Polynomial.C a₀ - Polynomial.C (a₁^2/4) := by
+        rw [← Polynomial.C_sub]
+      rw [this]
+      have expand : (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 =
+          Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C (a₁^2/4) := by
+        have : Polynomial.X - Polynomial.C (-(a₁/2)) = Polynomial.X + Polynomial.C (a₁/2) := by
+          rw [sub_eq_add_neg, ← Polynomial.C_neg, neg_neg]
+        rw [this]
+        ring_nf
+        rw [show (a₁ / 2) ^ 2 = a₁^2/4 from by field_simp; ring]
+        rw [show a₁/2 * 2 = a₁ from by field_simp]
+        ring
+      rw [expand]
+      ring
+    -- Show c is a square with nonzero root
+    have hc_sq : IsSquare c := by
+      rcases IsRealClosed.isSquare_or_isSquare_neg c with h | h
+      · exact h
+      · exfalso
+        obtain ⟨γ, hγ⟩ := h
+        have hγsq : γ^2 = -c := by rw [sq]; linear_combination -hγ
+        by_cases hγ0 : γ = 0
+        · -- γ = 0 means c = 0, so f = (X - C(-a₁/2))², reducible
+          subst hγ0
+          have hc0 : c = 0 := by
+            rw [zero_mul] at hγ
+            linarith
+          rw [hc0, Polynomial.C_0, add_zero] at hf_square
+          -- f = (X - C(-a₁/2))^2, so f is a square, hence reducible since natDegree = 2 > 1
+          have hpow : ¬ Irreducible ((Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2) := by
+            intro hirr
+            have hnat : ((Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2).natDegree = 2 := by
+              rw [Polynomial.natDegree_pow, Polynomial.natDegree_X_sub_C]
+            have := hirr.isUnit_or_isUnit (show
+              (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 =
+              (Polynomial.X - Polynomial.C (-(a₁/2))) *
+              (Polynomial.X - Polynomial.C (-(a₁/2))) from sq _)
+            rcases this with hu | hu
+            · have : ((Polynomial.X - Polynomial.C (-(a₁/2))) : Polynomial R).natDegree = 0 :=
+                Polynomial.natDegree_eq_zero_of_isUnit hu
+              rw [Polynomial.natDegree_X_sub_C] at this
+              omega
+            · have : ((Polynomial.X - Polynomial.C (-(a₁/2))) : Polynomial R).natDegree = 0 :=
+                Polynomial.natDegree_eq_zero_of_isUnit hu
+              rw [Polynomial.natDegree_X_sub_C] at this
+              omega
+          exact hpow (hf_square ▸ hf')
+        · -- γ ≠ 0: f = (X - C(-a₁/2) - C γ)(X - C(-a₁/2) + C γ), reducible
+          have hdiff_sq :
+              (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 - Polynomial.C (γ^2) =
+              (Polynomial.X - Polynomial.C (-(a₁/2)) - Polynomial.C γ) *
+              (Polynomial.X - Polynomial.C (-(a₁/2)) + Polynomial.C γ) := by
+            ring
+          have hf_factored :
+              f = (Polynomial.X - Polynomial.C (-(a₁/2)) - Polynomial.C γ) *
+                  (Polynomial.X - Polynomial.C (-(a₁/2)) + Polynomial.C γ) := by
+            rw [hf_square, ← hdiff_sq]
+            have : Polynomial.C c = -Polynomial.C (γ^2) := by
+              rw [← Polynomial.C_neg]
+              congr 1
+              linarith
+            rw [this]
+            ring
+          -- Both factors have degree 1, so neither is a unit
+          have hnd_left :
+              ((Polynomial.X - Polynomial.C (-(a₁/2)) - Polynomial.C γ) : Polynomial R).natDegree = 1 := by
+            have : (Polynomial.X - Polynomial.C (-(a₁/2)) - Polynomial.C γ) =
+              Polynomial.X - Polynomial.C (-(a₁/2) + γ) := by
+              rw [Polynomial.C_add]; ring
+            rw [this, Polynomial.natDegree_X_sub_C]
+          have hnd_right :
+              ((Polynomial.X - Polynomial.C (-(a₁/2)) + Polynomial.C γ) : Polynomial R).natDegree = 1 := by
+            have : (Polynomial.X - Polynomial.C (-(a₁/2)) + Polynomial.C γ) =
+              Polynomial.X - Polynomial.C (-(a₁/2) - γ) := by
+              rw [Polynomial.C_sub]; ring
+            rw [this, Polynomial.natDegree_X_sub_C]
+          have := hf'.isUnit_or_isUnit hf_factored
+          rcases this with hu | hu
+          · have : ((Polynomial.X - Polynomial.C (-(a₁/2)) - Polynomial.C γ) : Polynomial R).natDegree = 0 :=
+              Polynomial.natDegree_eq_zero_of_isUnit hu
+            omega
+          · have : ((Polynomial.X - Polynomial.C (-(a₁/2)) + Polynomial.C γ) : Polynomial R).natDegree = 0 :=
+              Polynomial.natDegree_eq_zero_of_isUnit hu
+            omega
+    obtain ⟨β, hβ⟩ := hc_sq
+    have hβ_ne : β ≠ 0 := by
+      intro hβ0
+      -- If β = 0, then c = 0, so f = (X - C(-a₁/2))², reducible contradiction
+      subst hβ0
+      have hc0 : c = 0 := by rw [hβ]; ring
+      rw [hc0, Polynomial.C_0, add_zero] at hf_square
+      have hpow : ¬ Irreducible ((Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2) := by
+        intro hirr
+        have := hirr.isUnit_or_isUnit (show
+          (Polynomial.X - Polynomial.C (-(a₁/2))) ^ 2 =
+          (Polynomial.X - Polynomial.C (-(a₁/2))) *
+          (Polynomial.X - Polynomial.C (-(a₁/2))) from sq _)
+        rcases this with hu | hu
+        · have : ((Polynomial.X - Polynomial.C (-(a₁/2))) : Polynomial R).natDegree = 0 :=
+            Polynomial.natDegree_eq_zero_of_isUnit hu
+          rw [Polynomial.natDegree_X_sub_C] at this; omega
+        · have : ((Polynomial.X - Polynomial.C (-(a₁/2))) : Polynomial R).natDegree = 0 :=
+            Polynomial.natDegree_eq_zero_of_isUnit hu
+          rw [Polynomial.natDegree_X_sub_C] at this; omega
+      exact hpow (hf_square ▸ hf')
+    refine ⟨-(a₁/2), β, hβ_ne, ?_⟩
+    rw [hf_square]
+    congr 1
+    rw [← hβ]
+    congr 1
+    rw [sq]
 
 end Algebraic
 
