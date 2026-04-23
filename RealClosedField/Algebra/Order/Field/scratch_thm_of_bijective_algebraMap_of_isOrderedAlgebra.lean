@@ -65,6 +65,28 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
          [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K],
          Function.Bijective (algebraMap R K)) :
     IsRealClosed R := by
-  sorry
+  refine IsRealClosed.of_linearOrderedField (fun {a} ha => ?_) (fun {f} hodd => ?_)
+  · -- PART A: every nonneg element is a square
+    -- Apply part A by contradiction
+    by_contra hsq
+    have hirred : Irreducible (X ^ 2 - C a : R[X]) :=
+      irreducible_X_sq_sub_C_of_not_isSquare hsq
+    haveI : Fact (Irreducible (X ^ 2 - C a : R[X])) := ⟨hirred⟩
+    set K := AdjoinRoot (X ^ 2 - C a : R[X])
+    haveI : Module.Finite R K :=
+      (monic_X_pow_sub_C a (by decide : (2 : ℕ) ≠ 0)).finite_adjoinRoot
+    haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
+    -- Provide an ordered algebra structure on K. For that, use the functional
+    -- π : K → R given by taking 'real part' (coefficient of 1 in basis {1, root}).
+    -- We show -1 ∉ span_{R≥0} {squares in K}
+    have : (∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule R K) := by
+      rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+      sorry
+    obtain ⟨_, _, _⟩ := this
+    have hdeg : (1 : ℕ) < (X ^ 2 - C a : R[X]).natDegree := by
+      rw [natDegree_X_pow_sub_C]; decide
+    exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h K)
+  · -- PART B: every odd-degree polynomial has a root
+    sorry
 
 end IsRealClosed
