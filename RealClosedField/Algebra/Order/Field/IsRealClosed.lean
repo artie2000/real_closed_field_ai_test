@@ -792,25 +792,7 @@ lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
     rw [hm.coeff_root (by rw [hdeg2]; decide)]
     simp
     positivity
-  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
-  intro hc
-  have hπ_in_span :
-      ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
-    intro s hs
-    refine Submodule.span_induction
-      (mem := ?_)
-      (zero := by rw [map_zero])
-      (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
-      (smul := fun r x _ hx => by
-        show 0 ≤ π (r • x)
-        rw [LinearMap.map_smul_of_tower]
-        exact mul_nonneg r.2 hx) hs
-    rintro y ⟨z, hz⟩
-    have heq : y = z ^ 2 := by rw [hz]; ring
-    rw [heq]; exact hπ_sq z
-  have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
-  have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
-  linarith [h1 ▸ h2]
+  exact exists_isOrderedAlgebra_of_linearFunctional π hπ_one hπ_sq
 
 /-- If an ordered field `R` has no nontrivial ordered algebraic extension, then it is
 real closed. -/
