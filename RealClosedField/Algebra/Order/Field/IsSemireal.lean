@@ -121,6 +121,10 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  refine ⟨inferInstance, inferInstance, fun l' h' => ?_⟩
-  exact (IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key).unique
-    inferInstance h'
+  have := IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  rcases this with ⟨l, hl, hu⟩
+  refine ⟨l, ?_, ?_⟩
+  · exact Subsingleton.elim _ _ ▸ hl
+  · intros l' _
+    apply hu
+    exact Subsingleton.elim _ _ ▸ hl
