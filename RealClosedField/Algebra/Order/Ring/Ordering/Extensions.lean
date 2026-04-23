@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
+import Mathlib.LinearAlgebra.Basis.Basic
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import RealClosedField.Algebra.Order.Algebra
 
@@ -96,10 +97,11 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       rw [Algebra.smul_def, mul_one]
       exact hα_range t
     have hsp : ⊤ ≤ Submodule.span F (Set.range ![(1 : K), α]) := by
-      rw [show Set.range ![(1 : K), α] = {(1 : K), α} by
-        rw [Matrix.range_cons, Matrix.range_cons, Matrix.range_empty, Set.union_empty,
-          Set.union_singleton]]
-      rw [hspan]
+      rw [← hspan]
+      refine Submodule.span_mono ?_
+      rintro x (rfl | rfl)
+      · exact ⟨0, rfl⟩
+      · exact ⟨1, rfl⟩
     let b : Basis (Fin 2) F K := Basis.mk hv hsp
     have hb0 : b 0 = 1 := by simp [b]
     have hb1 : b 1 = α := by simp [b]
