@@ -1136,16 +1136,226 @@ theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :
   obtain ⟨_, _, _⟩ := h
   exact surjective_algebraMap_of_isAlgebraic_of_isSemireal R K
 
+/-- Helper: a monic polynomial of degree 2 or 3 over a field is irreducible iff it has no root. -/
+private lemma monic_deg23_irreducible_of_no_root
+    {p : Polynomial R} (hp_monic : p.Monic) (hp_deg : 2 ≤ p.natDegree) (hp_deg' : p.natDegree ≤ 3)
+    (hp_no_root : ∀ c : R, ¬ p.IsRoot c) : Irreducible p := by
+  refine ⟨?_, ?_⟩
+  · intro hu
+    have : p.natDegree = 0 := Polynomial.natDegree_eq_zero_of_isUnit hu
+    omega
+  · intro g q hgq
+    have hp_ne_zero : p ≠ 0 := hp_monic.ne_zero
+    have hg_ne_zero : g ≠ 0 := by
+      rintro rfl
+      rw [zero_mul] at hgq; exact hp_ne_zero hgq.symm
+    have hq_ne_zero : q ≠ 0 := by
+      rintro rfl
+      rw [mul_zero] at hgq; exact hp_ne_zero hgq.symm
+    have hdeg_sum : g.natDegree + q.natDegree = p.natDegree := by
+      have := congr_arg Polynomial.natDegree hgq
+      rw [Polynomial.natDegree_mul hg_ne_zero hq_ne_zero] at this
+      exact this.symm
+    -- If both g and q have deg ≥ 1, then one of them has degree 1, which means it has a root.
+    by_contra hcontra
+    push_neg at hcontra
+    obtain ⟨hgnu, hqnu⟩ := hcontra
+    have hg_pos : 0 < g.natDegree := by
+      by_contra h
+      push_neg at h
+      interval_cases g.natDegree
+      obtain ⟨c, hc⟩ := Polynomial.natDegree_eq_zero.mp (by omega : g.natDegree = 0)
+      rw [← hc] at hgnu
+      have hc_ne : c ≠ 0 := fun hcz => by
+        rw [hcz] at hc; rw [← hc, Polynomial.C_0] at hg_ne_zero
+        exact hg_ne_zero rfl
+      exact hgnu (isUnit_iff_exists_inv.mpr ⟨Polynomial.C c⁻¹, by
+        rw [← Polynomial.C_mul, mul_inv_cancel₀ hc_ne, Polynomial.C_1]⟩)
+    have hq_pos : 0 < q.natDegree := by
+      by_contra h
+      push_neg at h
+      interval_cases q.natDegree
+      obtain ⟨c, hc⟩ := Polynomial.natDegree_eq_zero.mp (by omega : q.natDegree = 0)
+      rw [← hc] at hqnu
+      have hc_ne : c ≠ 0 := fun hcz => by
+        rw [hcz] at hc; rw [← hc, Polynomial.C_0] at hq_ne_zero
+        exact hq_ne_zero rfl
+      exact hqnu (isUnit_iff_exists_inv.mpr ⟨Polynomial.C c⁻¹, by
+        rw [← Polynomial.C_mul, mul_inv_cancel₀ hc_ne, Polynomial.C_1]⟩)
+    -- One of g or q has degree exactly 1 (since sum ≤ 3 and both ≥ 1)
+    have hone : g.natDegree = 1 ∨ q.natDegree = 1 := by omega
+    rcases hone with h1 | h1
+    · -- g has degree 1
+      obtain ⟨c, hc⟩ : ∃ c, g.eval c = 0 := by
+        have : 0 < g.natDegree := h1 ▸ one_pos
+        obtain ⟨c, hc⟩ := Polynomial.exists_root_of_natDegree_eq_one h1
+        exact ⟨c, hc⟩
+      apply hp_no_root c
+      show p.eval c = 0
+      rw [hgq, Polynomial.eval_mul, hc, zero_mul]
+    · obtain ⟨c, hc⟩ : ∃ c, q.eval c = 0 := by
+        obtain ⟨c, hc⟩ := Polynomial.exists_root_of_natDegree_eq_one h1
+        exact ⟨c, hc⟩
+      apply hp_no_root c
+      show p.eval c = 0
+      rw [hgq, Polynomial.eval_mul, hc, mul_zero]
+
 /-- If `R` is an ordered field with no nontrivial ordered algebraic extensions, then every
 non-negative element of `R` is a square in `R`. Corresponds to blueprint `cor:ext_ord_to_adj_sqrt`. -/
 private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
-    (h : NoNontrivialOrderedAlgExt R) {x : R} (hx : 0 ≤ x) : IsSquare x := sorry
+    (h : NoNontrivialOrderedAlgExt R) {x : R} (hx : 0 ≤ x) : IsSquare x := by
+  by_contra hxns
+  set p : Polynomial R := Polynomial.X ^ 2 - Polynomial.C x with hp_def
+  have hp_monic : p.Monic := Polynomial.monic_X_pow_sub_C x (by norm_num : (2 : ℕ) ≠ 0)
+  have hp_natDegree : p.natDegree = 2 := Polynomial.natDegree_X_pow_sub_C
+  have hp_ne_zero : p ≠ 0 := hp_monic.ne_zero
+  -- p has no roots (since x is not a square)
+  have hp_no_root : ∀ c : R, ¬ p.IsRoot c := by
+    intro c hc
+    apply hxns
+    have heval : c^2 - x = 0 := by
+      have : p.eval c = 0 := hc
+      simpa [p, Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
+        Polynomial.eval_C] using this
+    exact ⟨c, by linear_combination -heval⟩
+  -- p is irreducible
+  have hp_irr : Irreducible p :=
+    monic_deg23_irreducible_of_no_root R hp_monic (by rw [hp_natDegree]) (by rw [hp_natDegree])
+      hp_no_root
+  haveI hirr : Fact (Irreducible p) := ⟨hp_irr⟩
+  -- K := AdjoinRoot p is a field with [K:R] = 2
+  let K : Type _ := AdjoinRoot p
+  haveI hKField : Field K := AdjoinRoot.instField
+  haveI : Algebra R K := AdjoinRoot.instAlgebra
+  have hpb : PowerBasis R K := AdjoinRoot.powerBasis hp_irr.ne_one
+  have hpb_dim : hpb.dim = p.natDegree := AdjoinRoot.powerBasis_dim hp_irr.ne_one
+  haveI : FiniteDimensional R K := hpb.finite
+  haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
+  have hfinrank : Module.finrank R K = 2 := by
+    rw [hpb.finrank, hpb_dim, hp_natDegree]
+  let α : K := AdjoinRoot.root p
+  have hα_sq : α ^ 2 = algebraMap R K x := by
+    have hroot : Polynomial.aeval α p = 0 := AdjoinRoot.aeval_root p
+    show α ^ 2 = algebraMap R K x
+    have : Polynomial.aeval α (Polynomial.X ^ 2 - Polynomial.C x) = α ^ 2 - algebraMap R K x := by
+      simp [Polynomial.aeval_X, Polynomial.aeval_C]
+    rw [this] at hroot
+    linarith [sub_eq_zero.mp hroot]
+  have hspan : Submodule.span R {(1 : K), α} = ⊤ := by
+    -- {1, α} spans K since {α^0, α^1} = {1, α} is the power basis when dim = 2
+    rw [eq_top_iff]
+    intro y _
+    have hy_mem : y ∈ Submodule.span R (Set.range hpb.basis) := by
+      rw [hpb.basis.span_eq]; exact Submodule.mem_top
+    have hrange : Set.range hpb.basis = (Set.range (fun i : Fin hpb.dim => α ^ (i : ℕ))) := by
+      ext z
+      simp only [Set.mem_range]
+      constructor
+      · rintro ⟨i, rfl⟩
+        refine ⟨i, ?_⟩
+        show hpb.basis i = α ^ (i : ℕ)
+        rw [PowerBasis.basis_eq_pow]
+      · rintro ⟨i, rfl⟩
+        refine ⟨i, ?_⟩
+        show hpb.basis i = α ^ (i : ℕ)
+        rw [PowerBasis.basis_eq_pow]
+    rw [hrange] at hy_mem
+    have hdim2 : hpb.dim = 2 := by rw [hpb_dim, hp_natDegree]
+    have hsubset : Set.range (fun i : Fin hpb.dim => α ^ (i : ℕ)) ⊆ ({1, α} : Set K) := by
+      intro z hz
+      obtain ⟨i, rfl⟩ := hz
+      rw [hdim2] at i
+      fin_cases i
+      · left; show α^0 = 1; ring
+      · right; show α^1 = α; ring
+    exact Submodule.span_mono hsubset hy_mem
+  obtain ⟨_, _, _⟩ := Field.exists_isOrderedAlgebra_of_adjoin_sqrt hx hα_sq hspan
+  -- Apply NoNontrivialOrderedAlgExt
+  have hsurj := h K ⟨inferInstance, inferInstance, inferInstance⟩
+  have : Module.finrank R K = 1 := finrank_eq_one_of_surjective_algebraMap R hsurj
+  omega
 
 /-- If `R` is an ordered field with no nontrivial ordered algebraic extensions, then every
 odd-degree polynomial in `R[X]` has a root in `R`. Corresponds to blueprint `lem:ext_ord_odd_deg`. -/
 private lemma exists_isRoot_of_odd_natDegree_of_noNontrivialOrderedAlgExt
     (h : NoNontrivialOrderedAlgExt R) {f : Polynomial R}
-    (hodd : Odd f.natDegree) : ∃ x, f.IsRoot x := sorry
+    (hodd : Odd f.natDegree) : ∃ x, f.IsRoot x := by
+  -- Strong induction on natDegree
+  suffices hsuf : ∀ n : ℕ, Odd n → ∀ (f : Polynomial R), f.natDegree = n → ∃ x, f.IsRoot x by
+    exact hsuf f.natDegree hodd f rfl
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro hodd_n f hfn
+  have hn_pos : 0 < n := by rcases hodd_n with ⟨k, hk⟩; omega
+  have hf_ne_zero : f ≠ 0 := by
+    intro h_f
+    rw [h_f, Polynomial.natDegree_zero] at hfn
+    omega
+  have hf_not_unit : ¬ IsUnit f := by
+    intro hu
+    have : f.natDegree = 0 := Polynomial.natDegree_eq_zero_of_isUnit hu
+    omega
+  -- Find a monic irreducible factor g of f with odd degree
+  obtain ⟨g, hg_monic, hg_irr, hg_dvd⟩ := Polynomial.exists_monic_irreducible_factor f hf_not_unit
+  obtain ⟨q, hfgq⟩ := hg_dvd
+  have hq_ne_zero : q ≠ 0 := by
+    intro h_q
+    rw [h_q, mul_zero] at hfgq
+    exact hf_ne_zero hfgq
+  have hg_ne_zero : g ≠ 0 := hg_monic.ne_zero
+  have hdeg_sum : g.natDegree + q.natDegree = n := by
+    rw [← hfn, hfgq, Polynomial.natDegree_mul hg_ne_zero hq_ne_zero]
+  -- At least one of g, q has odd natDegree.
+  have hg_pos : 0 < g.natDegree := by
+    by_contra h
+    push_neg at h
+    interval_cases g.natDegree
+    obtain ⟨c, hc⟩ := Polynomial.natDegree_eq_zero.mp (by omega : g.natDegree = 0)
+    rw [← hc, hg_monic.def] at hc
+    -- g is a constant, but monic so g = 1, but irreducible not unit, contradiction
+    have : g = 1 := by rw [← hc]; simp
+    exact hg_irr.not_isUnit (this ▸ isUnit_one)
+  have hcase : Odd g.natDegree ∨ Odd q.natDegree := by
+    rcases Nat.even_or_odd g.natDegree with hge | hgo
+    · right
+      have : Odd (g.natDegree + q.natDegree) := hdeg_sum ▸ hodd_n
+      exact (Nat.Odd.add_right_iff hge).mp this
+    · left; exact hgo
+  rcases hcase with hg_odd | hq_odd
+  · -- g has odd degree; if deg = 1, done; else AdjoinRoot argument
+    rcases eq_or_lt_of_le (show 1 ≤ g.natDegree from hg_pos) with hg1 | hg_gt1
+    · -- deg g = 1
+      obtain ⟨c, hc⟩ := Polynomial.exists_root_of_natDegree_eq_one hg1.symm
+      refine ⟨c, ?_⟩
+      show f.eval c = 0
+      rw [hfgq, Polynomial.eval_mul, hc, zero_mul]
+    · -- deg g ≥ 2 odd; use exists_isOrderedAlgebra_of_odd_finrank
+      exfalso
+      haveI hirr : Fact (Irreducible g) := ⟨hg_irr⟩
+      let K : Type _ := AdjoinRoot g
+      haveI hKField : Field K := AdjoinRoot.instField
+      haveI : Algebra R K := AdjoinRoot.instAlgebra
+      have hpb : PowerBasis R K := AdjoinRoot.powerBasis hg_irr.ne_one
+      have hpb_dim : hpb.dim = g.natDegree := AdjoinRoot.powerBasis_dim hg_irr.ne_one
+      haveI : FiniteDimensional R K := hpb.finite
+      haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
+      have hfinrank : Module.finrank R K = g.natDegree := by
+        rw [hpb.finrank, hpb_dim]
+      have hfinrank_odd : Odd (Module.finrank R K) := by rw [hfinrank]; exact hg_odd
+      obtain ⟨_, _, _⟩ := Field.exists_isOrderedAlgebra_of_odd_finrank hfinrank_odd
+      have hsurj := h K ⟨inferInstance, inferInstance, inferInstance⟩
+      have hfr1 : Module.finrank R K = 1 := finrank_eq_one_of_surjective_algebraMap R hsurj
+      rw [hfinrank] at hfr1
+      omega
+  · -- q has odd degree, q < n, apply induction
+    have hq_lt : q.natDegree < n := by omega
+    obtain ⟨c, hc⟩ := ih q.natDegree hq_lt hq_odd q rfl
+    refine ⟨c, ?_⟩
+    show f.eval c = 0
+    rw [hfgq, Polynomial.eval_mul]
+    have : q.eval c = 0 := hc
+    rw [this, mul_zero]
 
 /-- An ordered field with no nontrivial ordered algebraic extensions is real closed. -/
 theorem isRealClosed_of_noNontrivialOrderedAlgExt (h : NoNontrivialOrderedAlgExt R) :
