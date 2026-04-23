@@ -350,8 +350,7 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         refine Finset.sum_congr rfl fun y hy => ?_
         rw [map_mul, map_pow, AdjoinRoot.mk_C, hp_mk y hy, ← hsqRoot y hy]
         show (algebraMap R K (c y : R)) * y = (c y : ↥(Subsemiring.nonneg R)) • y
-        rw [Algebra.smul_def]
-        rfl
+        rw [Subsemiring.smul_def, Algebra.smul_def]
       rw [key]
       have hsum_eq : c.sum (fun mi r => r • mi) = ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y := rfl
       rw [← hsum_eq, hc_sum]; ring
