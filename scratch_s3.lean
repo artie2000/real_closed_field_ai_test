@@ -103,6 +103,52 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
     have hdeg1 : (minpoly R α).natDegree = 1 := (minpoly.natDegree_eq_one_iff).mpr hα_range
     rw [hnatdeg] at hdeg1
     exact absurd hdeg1 (by norm_num)
-  sorry
+  -- Now -δ > 0. Get c with c^2 = -δ.
+  have hnegδ_pos : 0 < -δ := by linarith
+  obtain ⟨c, hc⟩ :=
+    (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -δ)).mp hnegδ_pos.le
+  -- c * c = -δ, so c ≠ 0.
+  have hcne : c ≠ 0 := by
+    rintro rfl
+    rw [mul_zero] at hc
+    linarith
+  have hcsq_neg : c ^ 2 = -δ := by rw [sq]; exact hc.symm
+  -- Define i' := β * (algebraMap R K c)⁻¹.
+  set cK : K := algebraMap R K c with hcKdef
+  have hcK_ne : cK ≠ 0 := by
+    rw [hcKdef]
+    exact (map_ne_zero (algebraMap R K)).mpr hcne
+  set i' : K := β * cK⁻¹ with hi'def
+  have hi'sq : i' ^ 2 = -1 := by
+    rw [hi'def, mul_pow, hβsq]
+    rw [show (cK⁻¹) ^ 2 = (cK ^ 2)⁻¹ from by rw [inv_pow]]
+    rw [show cK ^ 2 = algebraMap R K (-δ) from by rw [hcKdef, ← map_pow, hcsq_neg]]
+    rw [← map_inv₀, ← map_mul]
+    have hδne : δ ≠ 0 := ne_of_lt hdelta_neg
+    have h_eq : δ * (-δ)⁻¹ = -1 := by field_simp
+    rw [h_eq]; simp
+  -- Build AlgHom Ri R →ₐ[R] K via liftAlgHom
+  have h_eval : (X ^ 2 + 1 : R[X]).eval₂ (algebraMap R K) i' = 0 := by
+    simp [eval₂_add, eval₂_pow, eval₂_X, eval₂_one, hi'sq]
+  set φ : Ri R →ₐ[R] K :=
+    AdjoinRoot.liftAlgHom (X ^ 2 + 1 : R[X]) (Algebra.ofId R K) i' h_eval
+  -- φ is injective because domain is a field (nontrivial target)
+  have hφ_inj : Function.Injective φ := φ.toRingHom.injective
+  -- finrank equal, so injective ↔ surjective for the underlying linear map
+  have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
+    have hne : (X ^ 2 + 1 : R[X]) ≠ 0 := irreducible_X_sq_add_one.ne_zero
+    have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
+      have h : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1 : R) := by simp [sub_neg_eq_add]
+      rw [h]; exact natDegree_X_pow_sub_C
+    have := (AdjoinRoot.powerBasis hne).finrank
+    rw [AdjoinRoot.powerBasis_dim hne] at this
+    rw [this, hdeg]
+  have heq_rank : Module.finrank R K = Module.finrank R (Ri R) := by rw [h, hfinrank_Ri]
+  have hφ_surj : Function.Surjective φ := by
+    have : Function.Injective φ.toLinearMap := hφ_inj
+    exact (LinearMap.injective_iff_surjective_of_finrank_eq_finrank heq_rank.symm).mp this
+  -- φ is a bijective AlgHom; invert it.
+  let ψ : Ri R ≃ₐ[R] K := AlgEquiv.ofBijective φ ⟨hφ_inj, hφ_surj⟩
+  exact ⟨ψ.symm⟩
 
 end IsRealClosed
