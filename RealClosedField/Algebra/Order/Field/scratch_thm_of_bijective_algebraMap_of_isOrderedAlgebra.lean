@@ -74,6 +74,95 @@ private lemma not_exists_ordered_algebra_of_bijective
   haveI := hom
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
+/-- If `f : R[X]` has odd natDegree, then it has an irreducible factor of odd natDegree. -/
+private lemma exists_odd_irreducible_factor
+    {f : R[X]} (hf : Odd f.natDegree) :
+    ∃ g : R[X], Monic g ∧ Irreducible g ∧ g ∣ f ∧ Odd g.natDegree := by
+  classical
+  -- Write f as a product of its irreducible factors (via UniqueFactorizationMonoid)
+  have hne : f ≠ 0 := fun h => by
+    rw [h, natDegree_zero] at hf
+    exact (Nat.not_odd_iff_even.mpr (by exact even_zero)) hf
+  have hnonunit : ¬ IsUnit f := fun hu => by
+    have := natDegree_eq_zero_of_isUnit hu
+    rw [this] at hf
+    exact (Nat.not_odd_iff_even.mpr (by exact even_zero)) hf
+  -- Take the factor set
+  have : ∃ s : Multiset R[X], (∀ p ∈ s, Irreducible p) ∧ Associated f s.prod :=
+    WfDvdMonoid.exists_factors f hne
+  obtain ⟨s, hs_irred, hassoc⟩ := this
+  -- The natDegree of f equals sum of natDegrees of irreducible factors (up to units)
+  -- Actually this needs some care. Associate f = unit * s.prod.
+  -- natDegree respects associates
+  rcases hassoc with ⟨u, hu⟩
+  -- f = u * s.prod, and s.prod ≠ 0 because f ≠ 0
+  have hu_deg : u.1.natDegree = 0 := natDegree_eq_zero_of_isUnit u.isUnit
+  have hs_prod_ne : s.prod ≠ 0 := fun hz => hne (by
+    -- f = s.prod * u, so f = 0 iff s.prod = 0 or u = 0
+    have : f = s.prod * u.1 := by rw [← hu]
+    rw [this, hz, zero_mul])
+  have hfdeg : f.natDegree = (s.map natDegree).sum := by
+    have h1 : f.natDegree = (s.prod * u.1).natDegree := by rw [← hu]
+    have h2 : (s.prod * u.1).natDegree = s.prod.natDegree := by
+      rw [natDegree_mul hs_prod_ne (fun hu0 => by
+        rw [hu0, natDegree_zero] at hu_deg; exact absurd hu_deg (by decide : (0:ℕ) ≠ 0))]
+      · rw [hu_deg]; ring
+      · exact fun h => (IsUnit.ne_zero u.isUnit) h
+    rw [h1, h2]
+    induction s using Multiset.induction with
+    | empty => simp
+    | cons a t ih =>
+      simp only [Multiset.prod_cons, Multiset.map_cons, Multiset.sum_cons]
+      rw [natDegree_mul]
+      · congr 1; apply ih
+        · intro p hp; exact hs_irred p (Multiset.mem_cons_of_mem hp)
+        · intro hz; exact hs_prod_ne (by rw [Multiset.prod_cons, hz, mul_zero])
+      · exact (hs_irred a (Multiset.mem_cons_self _ _)).ne_zero
+      · intro hz; exact hs_prod_ne (by rw [Multiset.prod_cons, hz, mul_zero])
+  -- Now: f.natDegree is odd, = sum. Sum of evens is even. So some natDegree is odd.
+  have hexists : ∃ p ∈ s, Odd p.natDegree := by
+    by_contra hall
+    push_neg at hall
+    have : ∀ p ∈ s, Even p.natDegree := fun p hp => Nat.not_odd_iff_even.mp (hall p hp)
+    have heven_sum : Even ((s.map natDegree).sum) := by
+      refine Multiset.sum_induction_nonneg_of_forall _ ?_ ?_
+      · exact Even.add
+      · exact fun d hd => by
+          rw [Multiset.mem_map] at hd
+          obtain ⟨p, hp, hpd⟩ := hd
+          rw [← hpd]
+          exact this p hp
+    rw [← hfdeg] at heven_sum
+    exact (Nat.not_even_iff_odd.mpr hf) heven_sum
+  obtain ⟨p, hp, hp_odd⟩ := hexists
+  -- p is irreducible, so has a monic associate
+  have hp_irred : Irreducible p := hs_irred p hp
+  have hp_ne : p ≠ 0 := hp_irred.ne_zero
+  set g := p * C (p.leadingCoeff)⁻¹
+  have hg_monic : g.Monic := monic_mul_leadingCoeff_inv hp_ne
+  have hg_irred : Irreducible g := by
+    have hassoc : Associated p g := associated_mul_unit_right _ _ <|
+      isUnit_C.2 (leadingCoeff_ne_zero.2 hp_ne).isUnit.inv
+    exact hassoc.irreducible hp_irred
+  have hg_dvd : g ∣ f := by
+    have hp_dvd : p ∣ f := by
+      have hps : p ∣ s.prod := Multiset.dvd_prod hp
+      calc p ∣ s.prod := hps
+        _ ∣ s.prod * u.1 := dvd_mul_right _ _
+        _ = f := hu
+    have hgp : g ∣ p := by
+      use C (p.leadingCoeff)
+      rw [mul_assoc, ← C_mul, inv_mul_cancel₀ (leadingCoeff_ne_zero.2 hp_ne), C_1, mul_one]
+    exact hgp.trans hp_dvd
+  have hg_deg : g.natDegree = p.natDegree := by
+    rw [natDegree_mul hp_ne (by
+      simp only [ne_eq, C_eq_zero]
+      exact inv_ne_zero (leadingCoeff_ne_zero.2 hp_ne))]
+    simp [natDegree_C]
+  refine ⟨g, hg_monic, hg_irred, hg_dvd, ?_⟩
+  rw [hg_deg]
+  exact hp_odd
+
 /-- Part A: showing that adjoining a square root yields an ordered extension. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
     {a : R} (ha : 0 ≤ a) (hsq : ¬ IsSquare a) :
