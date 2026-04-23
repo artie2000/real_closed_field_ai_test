@@ -318,10 +318,7 @@ theorem isSquare_of_finrank_base_eq_two
   set b : R := B.repr x 1 with hb_def
   have hx_decomp : x = algebraMap R K a + algebraMap R K b * j := by
     have hsum : ∑ i, B.repr x i • B i = x := B.sum_repr x
-    have h_univ : (Finset.univ : Finset (Fin 2)) = {0, 1} := by
-      ext i
-      fin_cases i <;> simp
-    rw [h_univ, Finset.sum_insert (by simp), Finset.sum_singleton] at hsum
+    rw [Fin.sum_univ_two] at hsum
     rw [hB0, hB1] at hsum
     rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hsum
     linear_combination -hsum
