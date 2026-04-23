@@ -59,9 +59,9 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       show 0 ≤ e.symm (x^2)
       set r := e.symm x with hr
       have hxr : x = algebraMap F K r := by
-        have := e.apply_symm_apply x
-        rw [he_apply] at this
-        exact this.symm
+        have h_er : e r = x := e.apply_symm_apply x
+        rw [he_apply] at h_er
+        exact h_er.symm
       have hx2 : x^2 = algebraMap F K (r^2) := by rw [hxr, ← map_pow]
       have hesx : e.symm (x^2) = r^2 := by
         rw [hx2, ← he_apply, e.symm_apply_apply]
@@ -92,15 +92,16 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       rw [← hb0]; exact hcoord00
     · intro x
       show 0 ≤ b.coord 0 (x^2)
-      set c := b.coord 0 x with hc_def
-      set d := b.coord 1 x with hd_def
-      -- Expand x in the basis b.
-      have hx_eq : x = c • (1 : K) + d • α := by
+      -- Expand x in the basis b using c = b.repr x 0, d = b.repr x 1.
+      have hx_eq : x = b.repr x 0 • (1 : K) + b.repr x 1 • α := by
         have hsum : ∑ i, b.repr x i • b i = x := Basis.sum_repr b x
         rw [Fin.sum_univ_two, hb0, hb1] at hsum
-        -- Now `hsum : b.repr x 0 • 1 + b.repr x 1 • α = x`
-        -- and c = b.coord 0 x = b.repr x 0, d = b.coord 1 x = b.repr x 1 (by Basis.coord_apply)
         exact hsum.symm
+      -- Shorthand
+      set c := b.repr x 0
+      set d := b.repr x 1
+      -- Note: b.coord i x = b.repr x i by definition
+      have hc_coord : b.coord 0 x = c := rfl
       -- Compute x^2.
       have hx_sq : x^2 = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by
         have h_sm : ∀ (t : F) (y : K), t • y = algebraMap F K t * y :=
@@ -117,7 +118,7 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
           _ = c^2 • (1 : K) + (2 * c * d) • α + (d^2 * a) • (1 : K) := by rw [smul_smul]
           _ = c^2 • (1 : K) + (d^2 * a) • (1 : K) + (2 * c * d) • α := by ring
           _ = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by rw [← add_smul]
-      -- Compute π(x^2).
+      -- Compute (b.coord 0) (x^2).
       have hπ_x_sq : b.coord 0 (x^2) = c^2 + d^2 * a := by
         rw [hx_sq, map_add, map_smul, map_smul]
         rw [show (1 : K) = b 0 from hb0.symm, show α = b 1 from hb1.symm]
