@@ -19,8 +19,7 @@ universe u
 
 variable {R : Type u} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
-/-- A polynomial of the form `X^2 - C a` with `a` not a square
-is irreducible in `R[X]`. -/
+/-- A polynomial of the form `X^2 - C a` with `a` not a square is irreducible in `R[X]`. -/
 private lemma irreducible_X_sq_sub_C_of_not_isSquare
     {a : R} (hsq : ¬ IsSquare a) : Irreducible (X ^ 2 - C a : R[X]) := by
   have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
@@ -32,6 +31,32 @@ private lemma irreducible_X_sq_sub_C_of_not_isSquare
   rw [mem_roots hmonic.ne_zero] at hc
   simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C, sub_eq_zero] at hc
   exact hsq ⟨c, by linear_combination hc.symm⟩
+
+/-- Any irreducible polynomial of natDegree > 1 gives a non-surjective algebraMap into its
+AdjoinRoot. -/
+private lemma algebraMap_not_bijective_of_irreducible_natDegree_pos
+    {p : R[X]} (hirred : Irreducible p) (hdeg : 1 < p.natDegree) :
+    ¬ Function.Bijective (algebraMap R (AdjoinRoot p)) := by
+  intro hbij
+  -- root p has minpoly (up to unit) = p, which has natDegree > 1, so is not in the range
+  haveI : Fact (Irreducible p) := ⟨hirred⟩
+  -- Since algebraMap is bijective, every element is in its range
+  have hsurj : Function.Surjective (algebraMap R (AdjoinRoot p)) := hbij.2
+  obtain ⟨r, hr⟩ := hsurj (AdjoinRoot.root p)
+  -- But evaluating p at r gives 0, contradicting that p has degree > 1 and no linear factor
+  have hroot : p.IsRoot r := by
+    have h₁ : (AdjoinRoot.mk p) p = 0 := AdjoinRoot.mk_self
+    have h₂ : (aeval (AdjoinRoot.root p) p) = 0 := AdjoinRoot.eval₂_root p
+    -- Since algebraMap r = root p, r should be a root of p in R
+    have : algebraMap R (AdjoinRoot p) (p.eval r) = 0 := by
+      rw [← hr] at h₂
+      rw [show algebraMap R (AdjoinRoot p) (p.eval r) = (aeval (algebraMap R (AdjoinRoot p) r) p)
+          from (Polynomial.aeval_algebraMap_apply _ _ _).symm]
+      exact h₂
+    have : p.eval r = 0 := hbij.1 (by simpa using this)
+    exact this
+  -- But p is irreducible of degree > 1, so has no root
+  exact hirred.not_isRoot_of_natDegree_ne_one hdeg.ne' hroot
 
 /-- If an ordered field `R` has no nontrivial ordered algebraic extension, then it is
 real closed. -/
