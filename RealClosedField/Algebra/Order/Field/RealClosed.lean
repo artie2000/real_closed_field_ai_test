@@ -84,18 +84,11 @@ theorem surjective_algebraMap_of_odd_finrank
   have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; exact Algebra.mem_top
   exact Algebra.mem_bot.mp hx
 
-/-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
-any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
-theorem nonempty_algEquiv_of_finrank_eq_two
-    (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
-    (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
-    Nonempty (K ≃ₐ[R] K') := by
-  suffices h : ∀ (L : Type*) [Field L] [Algebra R L], Module.finrank R L = 2 →
-      ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) by
-    obtain ⟨pbK, hminK⟩ := h K hK
-    obtain ⟨pbK', hminK'⟩ := h K' hK'
-    exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
-  intro L _ _ hL
+/-- Auxiliary: any quadratic extension of a real closed field admits a power basis whose
+generator is a root of `X ^ 2 + 1`. -/
+private theorem exists_powerBasis_of_finrank_eq_two_aux
+    (L : Type*) [Field L] [Algebra R L] (hL : Module.finrank R L = 2) :
+    ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
   have hFin : FiniteDimensional R L := .of_finrank_eq_succ hL
   have hInj : Function.Injective (algebraMap R L) := (algebraMap R L).injective
   have hne : ∃ x : L, x ∉ (algebraMap R L).range := by
@@ -141,6 +134,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
       rw [← map_pow]
       congr 1
       field_simp
+      ring
     have half_times : 2 * (algebraMap R L) (a / 2) = (algebraMap R L) a := by
       have : (2 : L) = (algebraMap R L) 2 := (map_ofNat (algebraMap R L) 2).symm
       rw [this, ← map_mul]
@@ -236,7 +230,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     have hgdeg : g.natDegree = 2 := by
       show (Polynomial.X ^ 2 + Polynomial.C (1 : R)).natDegree = 2
       exact Polynomial.natDegree_X_pow_add_C
-    refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
+    refine (minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_).symm
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
     exact le_refl _
@@ -258,7 +252,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
       linear_combination -hrt
   have hcard : Fintype.card (Fin 2) = Module.finrank R L := by
     rw [Fintype.card_fin, hL]
-  let basis2 : Basis (Fin 2) R L := basisOfLinearIndependentOfCardEqFinrank hli hcard
+  let basis2 := basisOfLinearIndependentOfCardEqFinrank hli hcard
   have hbasis_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
     intro i
     have key : basisOfLinearIndependentOfCardEqFinrank hli hcard i = ![(1 : L), α] i := by
@@ -268,6 +262,16 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     fin_cases i <;> simp
   refine ⟨{ gen := α, dim := 2, basis := basis2, basis_eq_pow := hbasis_eq }, ?_⟩
   exact hmin
+
+/-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
+any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
+theorem nonempty_algEquiv_of_finrank_eq_two
+    (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
+    (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
+    Nonempty (K ≃ₐ[R] K') := by
+  obtain ⟨pbK, hminK⟩ := exists_powerBasis_of_finrank_eq_two_aux R K hK
+  obtain ⟨pbK', hminK'⟩ := exists_powerBasis_of_finrank_eq_two_aux R K' hK'
+  exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
 
 /-- `R(i)` has no quadratic extension: equivalently, every element of any quadratic
 extension `K` of `R` is a square in `K`. -/
