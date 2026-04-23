@@ -8,6 +8,7 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
+import Mathlib.FieldTheory.Minpoly.Finite
 import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
@@ -83,18 +84,11 @@ theorem surjective_algebraMap_of_odd_finrank
   have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; exact Algebra.mem_top
   exact Algebra.mem_bot.mp hx
 
-/-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
-any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
-theorem nonempty_algEquiv_of_finrank_eq_two
-    (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
-    (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
-    Nonempty (K ≃ₐ[R] K') := by
-  suffices h : ∀ (L : Type*) [Field L] [Algebra R L], Module.finrank R L = 2 →
-      ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) by
-    obtain ⟨pbK, hminK⟩ := h K hK
-    obtain ⟨pbK', hminK'⟩ := h K' hK'
-    exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
-  intro L _ _ hL
+/-- Auxiliary: any quadratic extension `L/R` of a real closed field has a power basis
+whose minimal polynomial is `X^2 + 1`. -/
+private theorem powerBasis_X_sq_add_one_of_finrank_eq_two
+    (L : Type*) [Field L] [Algebra R L] (hL : Module.finrank R L = 2) :
+    ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
   have hFin : FiniteDimensional R L := .of_finrank_eq_succ hL
   have hInj : Function.Injective (algebraMap R L) := (algebraMap R L).injective
   have hne : ∃ x : L, x ∉ (algebraMap R L).range := by
@@ -223,7 +217,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     have hgdeg : g.natDegree = 2 := by
       show (Polynomial.X ^ 2 + Polynomial.C (1 : R)).natDegree = 2
       exact Polynomial.natDegree_X_pow_add_C
-    refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
+    refine (minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_).symm
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
     exact le_refl _
