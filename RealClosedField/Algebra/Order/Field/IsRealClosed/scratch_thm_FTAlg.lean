@@ -55,7 +55,7 @@ private theorem finrank_le_two_of_galois
 private theorem finrank_one_or_two_of_galois
     (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L = 1 ∨ Module.finrank R L = 2 := by
-  have h := finrank_le_two_of_galois L
+  have h : Module.finrank R L ≤ 2 := finrank_le_two_of_galois (R := R) L
   have hpos : 0 < Module.finrank R L := Module.finrank_pos
   interval_cases (Module.finrank R L) <;> simp_all <;> omega
 
