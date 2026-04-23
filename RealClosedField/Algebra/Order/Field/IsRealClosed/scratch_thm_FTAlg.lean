@@ -46,6 +46,77 @@ axiom nonempty_algEquiv_Ri_of_finrank_eq_two'
 axiom no_quadratic_ext_Ri'
     (M : Type u) [Field M] [Algebra (Ri' R) M] (h : Module.finrank (Ri' R) M = 2) : False
 
+/-- Key lemma: Any finite Galois extension of an RCF has order a power of 2. -/
+private theorem finrank_pow_two_of_galois
+    (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
+    ∃ k : ℕ, Module.finrank R L = 2 ^ k := by
+  haveI : Finite (L ≃ₐ[R] L) := by
+    have h : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+    have hpos : 0 < Module.finrank R L := Module.finrank_pos
+    rw [← h] at hpos
+    exact Nat.finite_of_card_ne_zero (Nat.pos_iff_ne_zero.mp hpos)
+  set G := L ≃ₐ[R] L with hGdef
+  set n := Nat.card G with hndef
+  have hn_eq : n = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+  have hn_pos : 0 < n := by rw [hn_eq]; exact Module.finrank_pos
+  have hn_ne : n ≠ 0 := Nat.pos_iff_ne_zero.mp hn_pos
+  -- n = 2^k * q with q odd
+  set k := Nat.factorization n 2 with hkdef
+  set q := n / 2 ^ k with hqdef
+  have h2_prime : Nat.Prime 2 := Nat.prime_two
+  haveI : Fact (Nat.Prime 2) := ⟨h2_prime⟩
+  have hn_split : n = 2 ^ k * q := by
+    rw [hqdef, hkdef]; exact (Nat.ordProj_mul_ordCompl_eq_self n 2).symm
+  have hq_odd : ¬ 2 ∣ q := Nat.not_dvd_ordCompl h2_prime hn_ne
+  -- Sylow: exists subgroup H of order 2^k
+  obtain ⟨H, hH_card⟩ : ∃ H : Subgroup G, Nat.card H = 2 ^ k := by
+    refine Sylow.exists_subgroup_card_pow_prime 2 ?_
+    exact ⟨q, hn_split⟩
+  -- The fixed field of H has degree q over R, which is odd
+  let M : IntermediateField R L := IntermediateField.fixedField H
+  have hM_finrank_L : Module.finrank M L = 2 ^ k := by
+    rw [← hH_card]; exact IntermediateField.finrank_fixedField_eq_card H
+  -- Tower law: finrank R M * finrank M L = finrank R L
+  have htower : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
+    Module.finrank_mul_finrank R M L
+  have hM_finrank : Module.finrank R M = q := by
+    rw [hM_finrank_L] at htower
+    rw [← hn_eq, hn_split] at htower
+    have h2pos : (0 : ℕ) < 2 ^ k := Nat.pos_pow_of_pos k (by decide)
+    have := Nat.eq_of_mul_eq_mul_right h2pos (by linarith [htower] : Module.finrank R M * 2^k = q * 2^k)
+    exact this
+  -- M is finite-dim over R
+  haveI : FiniteDimensional R M := by
+    apply Module.Finite.of_finrank_pos
+    rw [hM_finrank]
+    -- q positive: q ≥ 1 since n > 0 and 2^k divides n
+    have : q ≠ 0 := by
+      intro hq0
+      rw [hqdef] at hq0
+      have : n = 0 := by
+        have h1 : 2^k ∣ n := Nat.ordProj_dvd n 2
+        rw [Nat.div_eq_zero_iff (Nat.pos_pow_of_pos k (by decide))] at hq0
+        -- Actually, if n/2^k = 0 and 2^k ∣ n, then n = 0 would follow only if 2^k > n.
+        -- Wait, if 2^k ∣ n and n / 2^k = 0 and n > 0 then n < 2^k which is impossible.
+        sorry
+      exact hn_ne this
+    exact Nat.pos_of_ne_zero this
+  -- Apply S2
+  have hq_1 : q = 1 := by
+    have hOdd : Odd q := by
+      rcases Nat.even_or_odd q with he | ho
+      · exact absurd he.two_dvd hq_odd
+      · exact ho
+    have hfM := hM_finrank
+    rw [← hfM] at hOdd
+    have := finrank_eq_one_of_odd_finrank' (R := R) M hOdd
+    rw [hM_finrank] at this
+    exact this
+  -- So n = 2^k
+  have hn_pow : n = 2 ^ k := by rw [hn_split, hq_1, mul_one]
+  refine ⟨k, ?_⟩
+  rw [← hn_eq]; exact hn_pow
+
 /-- Any finite Galois extension of an RCF has degree 1 or 2. -/
 private theorem finrank_le_two_of_galois
     (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
