@@ -470,7 +470,8 @@ theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :
 
 /-- An ordered field with no nontrivial ordered algebraic extensions is real closed. -/
 theorem isRealClosed_of_noNontrivialOrderedAlgExt (h : NoNontrivialOrderedAlgExt R) :
-    IsRealClosed R := sorry
+    IsRealClosed R := by
+  sorry
 
 /-- For an ordered field `R`, the following are equivalent:
 1. `R` is real closed.

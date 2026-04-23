@@ -468,9 +468,9 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
 theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :
     NoNontrivialOrderedAlgExt R := by
   intro K _ _ _ hK
-  obtain ⟨_, _, _⟩ := hK
-  have hsemi : IsSemireal K :=
-    Field.exists_isStrictOrderedRing_iff_isSemireal.mp ⟨_, ‹_›⟩
+  obtain ⟨l, hsr, _⟩ := hK
+  haveI hsemi : IsSemireal K :=
+    Field.exists_isStrictOrderedRing_iff_isSemireal.mp ⟨l, hsr⟩
   exact surjective_algebraMap_of_isAlgebraic_of_isSemireal R K
 
 /-- An ordered field with no nontrivial ordered algebraic extensions is real closed. -/

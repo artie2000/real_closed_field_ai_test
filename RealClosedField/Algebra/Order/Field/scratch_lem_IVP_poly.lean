@@ -324,7 +324,7 @@ theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
       rw [Polynomial.eval_eq_C_of_natDegree_eq_zero hdeg,
           Polynomial.eval_eq_C_of_natDegree_eq_zero hdeg]
     have h0 : f.eval a = 0 := le_antisymm hfa (by rw [heq]; exact hfb)
-    exact ⟨a, ⟨hab.ge_iff_le.mp hab, hab⟩, h0⟩
+    exact ⟨a, ⟨le_refl a, hab⟩, h0⟩
   | succ n ih =>
     intro f hf a b hab hfa hfb
     -- Either f has degree ≤ n (use ih) or natDegree f = n+1.
@@ -414,10 +414,53 @@ theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
         have : h.eval r = 0 := hrroot
         rw [this, mul_zero]
     · -- g = (X - C p)^2 + C (q^2), always positive on R.
-      have hq_sq_pos : 0 < q ^ 2 := pow_pos (abs_pos.mpr hqne).lt_of_le (by positivity) |>.trans_eq
-        (by rw [sq_abs]) |>.lt_of_ne' (by positivity) -- dummy
-      sorry
-  where X := Polynomial.X
+      have hq_sq_pos : 0 < q ^ 2 := by positivity
+      have h_geval_pos : ∀ x : R, 0 < g.eval x := fun x => by
+        rw [hgq]
+        simp only [Polynomial.eval_add, Polynomial.eval_pow, Polynomial.eval_sub,
+          Polynomial.eval_X, Polynomial.eval_C]
+        have : 0 ≤ (x - p) ^ 2 := sq_nonneg _
+        linarith
+      have hg_natDegree : g.natDegree = 2 := by
+        rw [hgq]
+        -- (X - C p)^2 + C (q^2): degree 2.
+        have h1 : ((Polynomial.X - Polynomial.C p) ^ 2 : Polynomial R).natDegree = 2 := by
+          rw [Polynomial.natDegree_pow, Polynomial.natDegree_X_sub_C]
+        have h2 : (Polynomial.C (q ^ 2) : Polynomial R).natDegree = 0 :=
+          Polynomial.natDegree_C _
+        have h3 : ((Polynomial.X - Polynomial.C p) ^ 2).degree =
+                  (2 : ℕ) := by
+          rw [← h1]
+          refine Polynomial.degree_eq_natDegree ?_
+          exact pow_ne_zero _ (Polynomial.X_sub_C_ne_zero p)
+        have h4 : (Polynomial.C (q ^ 2) : Polynomial R).degree < ((Polynomial.X - Polynomial.C p) ^ 2).degree := by
+          rw [h3]
+          exact (Polynomial.degree_C_le).trans_lt (by decide)
+        rw [Polynomial.natDegree_add_of_degree_lt h4, h1]
+      have hh_natDegree : h.natDegree = f.natDegree - 2 := by
+        have := hgm.natDegree_mul' hhne
+        rw [← hfh] at this
+        omega
+      have hh_le_n : h.natDegree ≤ n := by omega
+      have hga_pos : 0 < g.eval a := h_geval_pos a
+      have hgb_pos : 0 < g.eval b := h_geval_pos b
+      have hfa' : (g * h).eval a ≤ 0 := by rw [← hfh]; exact hfa
+      have hfb' : 0 ≤ (g * h).eval b := by rw [← hfh]; exact hfb
+      rw [Polynomial.eval_mul] at hfa' hfb'
+      have hha : h.eval a ≤ 0 := by
+        rcases mul_nonpos_iff.mp hfa' with ⟨_, hneg⟩ | ⟨hneg, _⟩
+        · exact hneg
+        · linarith
+      have hhb : 0 ≤ h.eval b := by
+        rcases mul_nonneg_iff.mp hfb' with ⟨_, hpos2⟩ | ⟨hneg1, _⟩
+        · exact hpos2
+        · linarith
+      obtain ⟨r, hrI, hrroot⟩ := ih h hh_le_n a b hab hha hhb
+      refine ⟨r, hrI, ?_⟩
+      show f.eval r = 0
+      rw [hfh, Polynomial.eval_mul]
+      have : h.eval r = 0 := hrroot
+      rw [this, mul_zero]
 
 namespace polynomialIVP_aux
 
