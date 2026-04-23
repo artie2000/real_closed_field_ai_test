@@ -88,7 +88,172 @@ any quadratic extension of `R` is `R`-isomorphic to any other quadratic extensio
 theorem nonempty_algEquiv_of_finrank_eq_two
     (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
     (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
-    Nonempty (K ≃ₐ[R] K') := sorry
+    Nonempty (K ≃ₐ[R] K') := by
+  suffices h : ∀ (L : Type*) [Field L] [Algebra R L], Module.finrank R L = 2 →
+      ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) by
+    obtain ⟨pbK, hminK⟩ := h K hK
+    obtain ⟨pbK', hminK'⟩ := h K' hK'
+    exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
+  intro L _ _ hL
+  have hFin : FiniteDimensional R L := .of_finrank_eq_succ hL
+  have hInj : Function.Injective (algebraMap R L) := (algebraMap R L).injective
+  have hne : ∃ x : L, x ∉ (algebraMap R L).range := by
+    by_contra h
+    push_neg at h
+    have hTop : (⊥ : Subalgebra R L) = ⊤ := by
+      rw [eq_top_iff]
+      rintro x -
+      obtain ⟨r, hr⟩ := h x
+      exact Algebra.mem_bot.mpr ⟨r, hr⟩
+    have heq : Module.finrank R (⊥ : Subalgebra R L) = Module.finrank R L := by
+      rw [hTop]; exact Subalgebra.topEquiv.toLinearEquiv.finrank_eq
+    rw [Subalgebra.finrank_bot] at heq
+    omega
+  obtain ⟨x, hx⟩ := hne
+  have hxI : IsIntegral R x := .of_finite R x
+  have hdeg2 : (minpoly R x).natDegree = 2 := by
+    have h2 : 2 ≤ (minpoly R x).natDegree := (minpoly.two_le_natDegree_iff hxI).mpr hx
+    have hle : (minpoly R x).natDegree ≤ Module.finrank R L := minpoly.natDegree_le x
+    omega
+  set a : R := (minpoly R x).coeff 1 with ha_def
+  set b : R := (minpoly R x).coeff 0 with hb_def
+  have hfm : (minpoly R x).Monic := minpoly.monic hxI
+  have hcoeff2 : (minpoly R x).coeff 2 = 1 := by
+    have hlc : (minpoly R x).leadingCoeff = 1 := hfm
+    rw [Polynomial.leadingCoeff, hdeg2] at hlc
+    exact hlc
+  have hroot : x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) b = 0 := by
+    have hlt : (minpoly R x).natDegree < 3 := by omega
+    have haev := minpoly.aeval R x
+    rw [Polynomial.aeval_eq_sum_range' hlt] at haev
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+      Algebra.smul_def, pow_zero, mul_one, pow_one] at haev
+    rw [hcoeff2, map_one, one_mul] at haev
+    show x ^ 2 + (algebraMap R L) ((minpoly R x).coeff 1) * x +
+      (algebraMap R L) ((minpoly R x).coeff 0) = 0
+    linear_combination haev
+  set c : R := a ^ 2 / 4 - b with hc_def
+  set y : L := x + (algebraMap R L) (a / 2) with hy_def
+  have h2R : (2 : R) ≠ 0 := two_ne_zero
+  have hy_sq : y ^ 2 = (algebraMap R L) c := by
+    have half_sq : (algebraMap R L) (a / 2) ^ 2 = (algebraMap R L) (a ^ 2 / 4) := by
+      rw [← map_pow]; congr 1; field_simp
+    have half_times : 2 * (algebraMap R L) (a / 2) = (algebraMap R L) a := by
+      have : (2 : L) = (algebraMap R L) 2 := (map_ofNat (algebraMap R L) 2).symm
+      rw [this, ← map_mul]; congr 1; field_simp
+    have expand : y ^ 2 = x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) (a ^ 2 / 4) := by
+      show (x + (algebraMap R L) (a / 2)) ^ 2 = _
+      have : (x + (algebraMap R L) (a / 2)) ^ 2 =
+          x ^ 2 + x * (2 * (algebraMap R L) (a / 2)) + (algebraMap R L) (a / 2) ^ 2 := by ring
+      rw [this, half_sq, half_times]; ring
+    rw [expand]
+    show x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) (a ^ 2 / 4) =
+      (algebraMap R L) (a ^ 2 / 4 - b)
+    rw [map_sub]; linear_combination hroot
+  have hy_ni : y ∉ (algebraMap R L).range := by
+    rintro ⟨r, hr⟩
+    apply hx
+    refine ⟨r - a / 2, ?_⟩
+    have hr' : (algebraMap R L) r = x + (algebraMap R L) (a / 2) := hr
+    rw [map_sub]; linear_combination hr'
+  have hc_ni : ¬ IsSquare c := by
+    rintro ⟨s, hs⟩
+    have halg_sq : y ^ 2 = ((algebraMap R L) s) ^ 2 := by
+      rw [hy_sq, show c = s * s from hs, map_mul]; ring
+    have hfact : (y - (algebraMap R L) s) * (y + (algebraMap R L) s) = 0 := by
+      linear_combination halg_sq
+    apply hy_ni
+    rcases mul_eq_zero.mp hfact with hd | hd
+    · exact ⟨s, by linear_combination -hd⟩
+    · refine ⟨-s, ?_⟩
+      rw [map_neg]; linear_combination -hd
+  have hnc_sq : IsSquare (-c) := (IsRealClosed.isSquare_or_isSquare_neg c).resolve_left hc_ni
+  obtain ⟨s, hs⟩ := hnc_sq
+  have hs_ne : s ≠ 0 := by
+    rintro rfl
+    apply hc_ni
+    have hmc : -c = 0 := by rw [hs]; ring
+    have hc0 : c = 0 := by linear_combination -hmc
+    rw [hc0]; exact ⟨0, by ring⟩
+  have hsL_ne : (algebraMap R L) s ≠ 0 := (map_ne_zero_iff _ hInj).mpr hs_ne
+  set sL : L := (algebraMap R L) s with hsL_def
+  have hsL_sq : sL ^ 2 = - (algebraMap R L) c := by
+    show ((algebraMap R L) s) ^ 2 = - (algebraMap R L) c
+    rw [← map_pow, ← map_neg]; congr 1
+    rw [pow_two, ← hs]
+  set α : L := y * sL⁻¹ with hα_def
+  have hcL_ne : (algebraMap R L) c ≠ 0 := by
+    intro hc0
+    have : c = 0 := (map_eq_zero_iff _ hInj).mp hc0
+    apply hc_ni
+    rw [this]; exact ⟨0, by ring⟩
+  have hsL_sq_ne : sL ^ 2 ≠ 0 := by
+    rw [hsL_sq]; exact neg_ne_zero.mpr hcL_ne
+  have hα_sq : α ^ 2 = -1 := by
+    have step1 : α ^ 2 * sL ^ 2 = (algebraMap R L) c := by
+      calc α ^ 2 * sL ^ 2
+          = (y * sL⁻¹) ^ 2 * sL ^ 2 := by rw [hα_def]
+        _ = y ^ 2 * (sL⁻¹ * sL) ^ 2 := by ring
+        _ = y ^ 2 * 1 ^ 2 := by rw [inv_mul_cancel₀ hsL_ne]
+        _ = y ^ 2 := by ring
+        _ = (algebraMap R L) c := hy_sq
+    have step2 : α ^ 2 * sL ^ 2 = (-1) * sL ^ 2 := by
+      rw [step1, hsL_sq]; ring
+    exact mul_right_cancel₀ hsL_sq_ne step2
+  have hα_ni : α ∉ (algebraMap R L).range := by
+    rintro ⟨r, hr⟩
+    apply hy_ni
+    refine ⟨r * s, ?_⟩
+    have hy_eq : y = α * sL := by
+      show y = (y * sL⁻¹) * sL
+      rw [mul_assoc, inv_mul_cancel₀ hsL_ne, mul_one]
+    rw [hy_eq, ← hr, hsL_def, ← map_mul]
+  have hαI : IsIntegral R α := .of_finite R α
+  have hmin : minpoly R α = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
+    set g : Polynomial R := Polynomial.X ^ 2 + Polynomial.C (1 : R) with hg_def
+    have hgm : g.Monic := Polynomial.monic_X_pow_add_C (1 : R) (by norm_num : (2 : ℕ) ≠ 0)
+    have hgroot : Polynomial.aeval α g = 0 := by
+      show Polynomial.aeval α (Polynomial.X ^ 2 + Polynomial.C (1 : R)) = 0
+      simp [hα_sq]
+    have hdα : (minpoly R α).natDegree = 2 := by
+      have h2α : 2 ≤ (minpoly R α).natDegree :=
+        (minpoly.two_le_natDegree_iff hαI).mpr hα_ni
+      have hαle : (minpoly R α).natDegree ≤ Module.finrank R L := minpoly.natDegree_le α
+      omega
+    have hgdeg : g.natDegree = 2 := by
+      show (Polynomial.X ^ 2 + Polynomial.C (1 : R)).natDegree = 2
+      exact Polynomial.natDegree_X_pow_add_C
+    refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
+    rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
+        Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
+    exact le_refl _
+  have hli : LinearIndependent R ![(1 : L), α] := by
+    rw [LinearIndependent.pair_iff]
+    intro r t hrt
+    by_cases ht : t = 0
+    · subst ht
+      simp only [zero_smul, add_zero] at hrt
+      rw [Algebra.smul_def, mul_one] at hrt
+      exact ⟨(map_eq_zero_iff _ hInj).mp hrt, rfl⟩
+    · exfalso
+      apply hα_ni
+      rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hrt
+      have htL : (algebraMap R L) t ≠ 0 := (map_ne_zero_iff _ hInj).mpr ht
+      refine ⟨-r / t, ?_⟩
+      rw [map_div₀, map_neg]
+      field_simp
+      linear_combination -hrt
+  have hcard : Fintype.card (Fin 2) = Module.finrank R L := by
+    rw [Fintype.card_fin, hL]
+  let basis2 : Module.Basis (Fin 2) R L := basisOfLinearIndependentOfCardEqFinrank hli hcard
+  have hbasis_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
+    intro i
+    have key : basisOfLinearIndependentOfCardEqFinrank hli hcard i = ![(1 : L), α] i := by
+      rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
+    show basisOfLinearIndependentOfCardEqFinrank hli hcard i = α ^ (i : ℕ)
+    rw [key]
+    fin_cases i <;> simp
+  exact ⟨{ gen := α, dim := 2, basis := basis2, basis_eq_pow := hbasis_eq }, hmin⟩
 
 /-- `R(i)` has no quadratic extension: equivalently, every element of any quadratic
 extension `K` of `R` is a square in `K`. -/
