@@ -540,7 +540,8 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
             positivity
           have hpos_term : 0 < (c y₀ : R) * ((p y₀).leadingCoeff)^2 := mul_pos hc0_pos hlc0
           rw [← Finset.sum_erase_add _ _ hy₀]
-          rw [if_pos hpy0_deg]
+          have hpy0_deg_d : (p y₀).natDegree = d := by rw [hd0]; exact hpy0_deg
+          rw [if_pos hpy0_deg_d]
           have hnn_rest :
               (0 : R) ≤ ∑ x ∈ c.support.erase y₀,
                 if (p x).natDegree = d then (c x : R) * ((p x).leadingCoeff)^2 else 0 := by
@@ -569,7 +570,8 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
             _ ≤ 2 * (p y).natDegree := by
                 have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
             _ ≤ 2 * d := by
-                have hle : (p y).natDegree ≤ d := Finset.le_sup ‹y ∈ c.support›
+                have hle : (p y).natDegree ≤ d :=
+                  Finset.le_sup (f := fun y => (p y).natDegree) ‹y ∈ c.support›
                 omega
         · -- ≥ 2 * d: because coeff (2*d) ≠ 0.
           apply Polynomial.le_natDegree_of_ne_zero
