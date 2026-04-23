@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
-import Mathlib.LinearAlgebra.Basis.Basic
+import Mathlib.LinearAlgebra.Module.Basis.Basic
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import RealClosedField.Algebra.Order.Algebra
 
@@ -102,13 +102,13 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       rintro x (rfl | rfl)
       · exact ⟨0, rfl⟩
       · exact ⟨1, rfl⟩
-    let b : Basis (Fin 2) F K := Basis.mk hv hsp
+    let b : Module.Basis (Fin 2) F K := Module.Basis.mk hv hsp
     have hb0 : b 0 = 1 := by simp [b]
     have hb1 : b 1 = α := by simp [b]
     have hcoord00 : b.coord 0 (b 0) = 1 := by
-      rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_eq_same]
+      rw [Module.Basis.coord_apply, Module.Basis.repr_self, Finsupp.single_eq_same]
     have hcoord01 : b.coord 0 (b 1) = 0 := by
-      rw [Basis.coord_apply, Basis.repr_self,
+      rw [Module.Basis.coord_apply, Module.Basis.repr_self,
           Finsupp.single_eq_of_ne (show (0 : Fin 2) ≠ 1 by decide)]
     refine exists_isOrderedAlgebra_of_linearProj_nonneg_sq (b.coord 0) ?_ ?_
     · show b.coord 0 1 = 1
@@ -116,7 +116,7 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
     · intro x
       show 0 ≤ b.coord 0 (x ^ 2)
       have hx_eq : x = b.repr x 0 • (1 : K) + b.repr x 1 • α := by
-        have hsum : ∑ i, b.repr x i • b i = x := Basis.sum_repr b x
+        have hsum : ∑ i, b.repr x i • b i = x := Module.Basis.sum_repr b x
         rw [Fin.sum_univ_two, hb0, hb1] at hsum
         exact hsum.symm
       set c := b.repr x 0 with hc_def
