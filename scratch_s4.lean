@@ -183,16 +183,40 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
     -- Now witness: u' + v*i
     refine ⟨algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root, ?_⟩
     rw [hz]
+    set i : Ri R := hm.root
+    set A : Ri R := algebraMap R (Ri R) u'
+    set B : Ri R := algebraMap R (Ri R) v
+    have hi2 : i * i = -1 := by
+      show hm.root * hm.root = -1
+      rw [← sq]; exact hroot_sq
     have hsq :
-        (algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root) *
-        (algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root)
-        = algebraMap R (Ri R) (u'^2 - v^2)
-          + algebraMap R (Ri R) (2 * u' * v) * hm.root := by
-      have : hm.root * hm.root = -1 := by rw [← sq]; exact hroot_sq
-      push_cast
-      ring_nf
-      rw [show hm.root ^ 2 = -1 from hroot_sq]
-      ring
-    rw [hsq, hu'2_sub_v2, hv_rel]
+        (A + B * i) * (A + B * i)
+        = (A * A - B * B) + (A * B + A * B) * i := by
+      have : B * i * (B * i) = -(B * B) := by
+        calc B * i * (B * i) = (B * B) * (i * i) := by ring
+          _ = (B * B) * (-1) := by rw [hi2]
+          _ = -(B * B) := by ring
+      calc (A + B * i) * (A + B * i)
+          = A * A + A * (B * i) + B * i * A + B * i * (B * i) := by ring
+        _ = A * A + A * B * i + A * B * i + (-(B * B)) := by rw [this]; ring
+        _ = (A * A - B * B) + (A * B + A * B) * i := by ring
+    rw [hsq]
+    have hAA : A * A = algebraMap R (Ri R) (u' * u') := by
+      show algebraMap R (Ri R) u' * algebraMap R (Ri R) u' = _
+      rw [← map_mul]
+    have hBB : B * B = algebraMap R (Ri R) (v * v) := by
+      show algebraMap R (Ri R) v * algebraMap R (Ri R) v = _
+      rw [← map_mul]
+    have hAB : A * B + A * B = algebraMap R (Ri R) (2 * u' * v) := by
+      show algebraMap R (Ri R) u' * algebraMap R (Ri R) v
+          + algebraMap R (Ri R) u' * algebraMap R (Ri R) v = _
+      rw [← map_mul, ← map_add]
+      congr 1; ring
+    rw [hAA, hBB, hAB, ← map_sub]
+    have heq_a : u' * u' - v * v = a := by
+      have h1 : u' * u' = u' ^ 2 := by rw [sq]
+      have h2 : v * v = v ^ 2 := by rw [sq]
+      rw [h1, h2]; exact hu'2_sub_v2
+    rw [heq_a, hv_rel]
 
 end IsRealClosed
