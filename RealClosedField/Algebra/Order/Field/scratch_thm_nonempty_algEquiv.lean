@@ -163,32 +163,38 @@ theorem nonempty_algEquiv_of_finrank_eq_two
   have hsL_ne : (algebraMap R L) s ≠ 0 :=
     (map_ne_zero_iff _ hInj).mpr hs_ne
   -- Step 7: α = y / algebraMap s. Then α^2 = -1.
-  set α : L := y * (algebraMap R L) s⁻¹ with hα_def
+  set sL : L := (algebraMap R L) s with hsL_def
+  have hsL_sq : sL ^ 2 = - (algebraMap R L) c := by
+    show ((algebraMap R L) s) ^ 2 = - (algebraMap R L) c
+    rw [← map_pow, ← map_neg]
+    congr 1
+    have : -c = s ^ 2 := by rw [hs]; ring
+    linear_combination -this
+  set α : L := y * sL⁻¹ with hα_def
   have hα_sq : α ^ 2 = -1 := by
-    show (y * (algebraMap R L) s⁻¹) ^ 2 = -1
-    rw [mul_pow, hy_sq]
-    rw [show (algebraMap R L) s⁻¹ ^ 2 = (algebraMap R L) (s⁻¹ * s⁻¹) by rw [← map_mul]; ring_nf]
-    rw [← map_mul]
-    have hs2 : s * s = -c := by rw [← sq]; rw [sq, hs]
-    have hinv2 : c * (s⁻¹ * s⁻¹) = -1 := by
-      have hs_ne' : s ≠ 0 := hs_ne
-      field_simp
-      linear_combination -hs2
-    rw [hinv2]
-    simp
+    have hsL_pow_inv : sL⁻¹ ^ 2 = (sL ^ 2)⁻¹ := by rw [inv_pow]
+    calc α ^ 2 = y ^ 2 * (sL ^ 2)⁻¹ := by rw [mul_pow, hsL_pow_inv]
+      _ = (algebraMap R L) c * (sL ^ 2)⁻¹ := by rw [hy_sq]
+      _ = (algebraMap R L) c * (- (algebraMap R L) c)⁻¹ := by rw [hsL_sq]
+      _ = -1 := by
+          have hcL_ne : (algebraMap R L) c ≠ 0 := by
+            intro hc0
+            have : c = 0 := (map_eq_zero_iff _ hInj).mp hc0
+            apply hc_ni
+            rw [this]; exact ⟨0, by ring⟩
+          field_simp
   have hα_ni : α ∉ (algebraMap R L).range := by
     rintro ⟨r, hr⟩
     apply hy_ni
     refine ⟨r * s, ?_⟩
     rw [map_mul]
-    have hy_eq : y = (algebraMap R L) s * α := by
-      show y = (algebraMap R L) s * (y * (algebraMap R L) s⁻¹)
-      have : (algebraMap R L) s * (algebraMap R L) s⁻¹ = 1 := by
-        rw [← map_mul, mul_inv_cancel₀ hs_ne, map_one]
-      rw [show (algebraMap R L) s * (y * (algebraMap R L) s⁻¹) =
-          y * ((algebraMap R L) s * (algebraMap R L) s⁻¹) by ring, this, mul_one]
+    -- y = α * sL
+    have hy_eq : y = α * sL := by
+      show y = (y * sL⁻¹) * sL
+      rw [mul_assoc, inv_mul_cancel₀ hsL_ne, mul_one]
     rw [hy_eq, ← hr]
-    ring
+    show (algebraMap R L) r * sL = (algebraMap R L) r * sL
+    rfl
   have hαI : IsIntegral R α := .of_finite R α
   -- Step 8: show minpoly R α = X^2 + 1.
   have hmin : minpoly R α = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
