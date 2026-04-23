@@ -187,20 +187,21 @@ private theorem finrank_le_two_of_galois
     have := IntermediateField.finrank_bot_mul_relfinrank hM_le_N
     rw [hM_finrank, hN_finrank] at this
     omega
-  -- Set up Algebra M N structure via the inclusion M ≤ N in L
-  letI : Algebra M N := (IntermediateField.inclusion hM_le_N).toAlgebra
-  -- finrank M N = 2
-  have hMN_finrank : Module.finrank M N = 2 := by
-    -- relfinrank is defined via toSubfield relrank; the Algebra structure
-    -- matches. Use `IntermediateField.relfinrank_eq_finrank_of_le`
-    sorry
-  -- Transport Algebra structure: Ri' R → M → N
-  letI : Algebra (Ri' R) N := ((IntermediateField.inclusion hM_le_N).comp
-    e.symm.toAlgHom).toAlgebra
-  -- finrank (Ri' R) N = 2
-  have hRiN_finrank : Module.finrank (Ri' R) N = 2 := by
-    sorry
-  exact no_quadratic_ext_Ri' (R := R) N hRiN_finrank
+  -- Use extendScalars: N viewed as IntermediateField M L, with finrank M = 2
+  let N' : IntermediateField M L := IntermediateField.extendScalars hM_le_N
+  have hMN'_finrank : Module.finrank M N' = 2 := by
+    rw [← IntermediateField.relfinrank_eq_finrank_of_le hM_le_N]
+    exact hrel_MN
+  -- Transport Algebra structure: Ri' R → M → N' via e.symm
+  letI : Algebra (Ri' R) N' :=
+    (((IntermediateField.algebra (F := M) (E := L)) |>.toRingHom.comp e.symm.toRingHom
+       : Ri' R →+* N').toAlgebra)
+  -- Wait, simpler: N' has Algebra M; use AlgEquiv.toAlgHom (e.symm : Ri' R →ₐ[R] M) then compose
+  -- Actually let me just create the algebra directly
+  -- Actually we already have Algebra (Ri' R) N' as above. Check finrank (Ri' R) N' = 2.
+  -- Via e.symm : Ri' R ≃ₐ[R] M, we transport: N' as M-module via LinearEquiv ≃ N' as Ri' R-module
+  -- Use restriction of scalars and LinearEquiv.finrank_eq or similar.
+  sorry
 
 /-- Any finite Galois extension of an RCF has degree 1 or 2. -/
 private theorem finrank_one_or_two_of_galois
