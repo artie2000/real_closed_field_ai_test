@@ -46,19 +46,48 @@ theorem of_ivp
   refine IsRealClosed.of_linearOrderedField ?_ ?_
   · -- isSquare_of_nonneg
     intro x hx
-    have ha : (X^2 - C x).eval 0 ≤ 0 := by simp
+    have ha : (X^2 - C x).eval 0 ≤ 0 := by
+      simp only [eval_sub, eval_pow, eval_X, eval_C]
+      linarith
     have hb : 0 ≤ (X^2 - C x).eval (x + 1) := by
       simp only [eval_sub, eval_pow, eval_X, eval_C]
-      nlinarith [sq_nonneg x, sq_nonneg (x+1), hx]
+      nlinarith [sq_nonneg x, hx]
     have hab : (0 : R) ≤ x + 1 := by linarith
     obtain ⟨c, _, hc⟩ := h (X^2 - C x) 0 (x + 1) hab ha hb
-    have : c^2 = x := by
+    have hcsq : c ^ 2 = x := by
       have := hc
       simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C] at this
       linarith
-    exact ⟨c, by linarith [sq c, this]⟩
+    exact ⟨c, by rw [← hcsq, sq]⟩
   · -- exists_isRoot_of_odd_natDegree
-    sorry
+    intro f hodd
+    -- Key lemma: for polynomial g with positive leading coefficient, we can find
+    -- M > 0 with g.eval M > 0 and, if natDegree is odd, g.eval (-M) < 0.
+    -- Strategy: Replace f by (f / aₙ) — actually easier: bound via coefficients directly.
+    -- For large x, f(x) ≈ aₙ x^n. Since n is odd, sign of f(-x) and f(x) differ.
+    have hn : 1 ≤ f.natDegree := hodd.pos
+    -- reduce to the case where leading coeff > 0
+    have key : ∀ (g : R[X]), g.natDegree = f.natDegree → 0 < g.leadingCoeff →
+        ∃ c, g.IsRoot c := by
+      intro g hgdeg hlc
+      sorry
+    by_cases hlc : 0 < f.leadingCoeff
+    · exact key f rfl hlc
+    · have hlc' : 0 < (-f).leadingCoeff := by
+        rw [leadingCoeff_neg, neg_pos]
+        have hne : f.leadingCoeff ≠ 0 := by
+          intro he
+          rw [leadingCoeff_eq_zero] at he
+          subst he
+          simp at hn
+        exact lt_of_le_of_ne (not_lt.mp hlc) hne
+      have : (-f).natDegree = f.natDegree := by
+        rw [show (-f) = (-1 : R) • f from by ring]
+        rw [natDegree_smul _ (by norm_num : (-1 : R) ≠ 0)]
+      obtain ⟨c, hc⟩ := key (-f) this hlc'
+      refine ⟨c, ?_⟩
+      simp only [IsRoot, eval_neg, neg_eq_zero] at hc
+      exact hc
 
 /-- A real closed field has no nontrivial ordered algebraic extension: if `K` is an
 algebraic extension of the real closed field `R` and `K` can be ordered compatibly with
