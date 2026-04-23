@@ -272,23 +272,59 @@ theorem isSquare_of_finrank_base_eq_two
     simp only [map_add, map_pow, Polynomial.aeval_X, Polynomial.aeval_C, map_one] at haev
     linear_combination haev
   set j : K := pb.gen with hj_def
-  -- Build a basis of K indexed by Fin 2 from the power basis
-  have hcard : Fintype.card (Fin 2) = pb.dim := by rw [Fintype.card_fin, hpb_dim]
-  let B : Basis (Fin 2) R K :=
-    pb.basis.reindex (Fintype.equivFinOfCardEq hcard).symm
-  -- B 0 = 1, B 1 = j
+  -- Show {1, j} spans K (as an R-module)
+  -- Step A: Show 1 and j are linearly independent
+  have hInj_j : j ∉ Set.range (algebraMap R K) := by
+    -- If j = algebraMap R K s, then j^2 = algebraMap R K (s^2) = -1
+    -- So algebraMap R K (s^2 + 1) = 0, so s^2 + 1 = 0, so s^2 = -1 in R, contradicting IsSemireal
+    rintro ⟨s, hs⟩
+    have hs2 : (algebraMap R K s)^2 = -1 := by rw [hs]; exact hgen_sq
+    have hs2' : algebraMap R K (s^2 + 1) = 0 := by
+      rw [map_add, map_pow, map_one, hs2]; ring
+    have h1 : s^2 + 1 = 0 := hInj (by rw [hs2', map_zero])
+    have h2 : IsSumSq ((-1 : R)) := by
+      have : (-1 : R) = s * s := by linear_combination -h1
+      rw [this]
+      exact IsSumSq.mul_self s
+    exact IsSemireal.not_isSumSq_neg_one R h2
+  have hli : LinearIndependent R ![(1 : K), j] := by
+    rw [LinearIndependent.pair_iff]
+    intro r t hrt
+    by_cases ht : t = 0
+    · subst ht
+      simp only [zero_smul, add_zero] at hrt
+      rw [Algebra.smul_def, mul_one] at hrt
+      exact ⟨(map_eq_zero_iff _ hInj).mp hrt, rfl⟩
+    · exfalso
+      apply hInj_j
+      rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hrt
+      have htL : (algebraMap R K) t ≠ 0 := (map_ne_zero_iff _ hInj).mpr ht
+      refine ⟨-r / t, ?_⟩
+      rw [map_div₀, map_neg]
+      field_simp
+      linear_combination -hrt
+  have hcard : Fintype.card (Fin 2) = Module.finrank R K := by
+    rw [Fintype.card_fin, hK]
+  let B : Basis (Fin 2) R K := basisOfLinearIndependentOfCardEqFinrank hli hcard
   have hB0 : B 0 = 1 := by
-    show pb.basis _ = 1
-    rw [pb.basis_eq_pow]
-    show pb.gen ^ _ = 1
-    have : ((Fintype.equivFinOfCardEq hcard).symm 0 : Fin pb.dim).val = 0 := by
-      have h : ((Fintype.equivFinOfCardEq hcard).symm 0 : Fin pb.dim).val < pb.dim :=
-        ((Fintype.equivFinOfCardEq hcard).symm 0).isLt
-      -- Actually: (equivFinOfCardEq hcard).symm : Fin 2 → Fin pb.dim
-      -- We need to know its value at 0
-      sorry
-    sorry
-  sorry
+    show basisOfLinearIndependentOfCardEqFinrank hli hcard 0 = 1
+    rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
+    rfl
+  have hB1 : B 1 = j := by
+    show basisOfLinearIndependentOfCardEqFinrank hli hcard 1 = j
+    rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
+    rfl
+  set a : R := B.repr x 0 with ha_def
+  set b : R := B.repr x 1 with hb_def
+  have hx_decomp : x = algebraMap R K a + algebraMap R K b * j := by
+    have hsum : ∑ i, B.repr x i • B i = x := B.sum_repr x
+    have h_univ : (Finset.univ : Finset (Fin 2)) = {0, 1} := by
+      ext i
+      fin_cases i <;> simp
+    rw [h_univ, Finset.sum_insert (by simp), Finset.sum_singleton] at hsum
+    rw [hB0, hB1] at hsum
+    rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hsum
+    linear_combination -hsum
   -- Goal: IsSquare x, where x = algebraMap a + algebraMap b * j
   by_cases hb0 : b = 0
   · -- Case b = 0: x = algebraMap a; split by isSquare_or_isSquare_neg a
