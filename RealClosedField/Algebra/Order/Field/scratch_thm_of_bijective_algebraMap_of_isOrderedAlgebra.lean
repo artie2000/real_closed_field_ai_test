@@ -26,7 +26,7 @@ private lemma irreducible_X_sq_sub_C_of_not_isSquare
   have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
   have hdeg : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
   rw [Polynomial.Monic.irreducible_iff_roots_eq_zero_of_degree_le_three hmonic
-        (by rw [hdeg]) (by rw [hdeg])]
+        (by rw [hdeg]) (by rw [hdeg]; decide)]
   rw [Multiset.eq_zero_iff_forall_notMem]
   intro c hc
   rw [mem_roots hmonic.ne_zero] at hc
