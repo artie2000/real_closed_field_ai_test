@@ -88,23 +88,32 @@ theorem no_quadratic_ext_Ri
   set f : (Ri R)[X] := minpoly (Ri R) α with hf
   set a : Ri R := f.coeff 1
   set b : Ri R := f.coeff 0
+  have hcoeff2 : f.coeff 2 = 1 := by
+    have := hmonic.coeff_natDegree
+    rw [hnatdeg] at this
+    exact this
   have hab : f = X ^ 2 + C a * X + C b := by
     apply Polynomial.ext
     intro n
-    rcases lt_trichotomy n 1 with hn | rfl | hn
+    have hrhs_coeff : (X ^ 2 + C a * X + C b : (Ri R)[X]).coeff n =
+        (if n = 2 then 1 else 0) + (if n = 1 then a else 0) + (if n = 0 then b else 0) := by
+      simp only [coeff_add, coeff_X_pow, coeff_C_mul, coeff_X, coeff_C, mul_ite, mul_one, mul_zero]
+      congr 1
+      · congr 1
+        split_ifs <;> rfl
+      · split_ifs with h <;> rfl
+    rw [hrhs_coeff]
+    rcases lt_trichotomy n 2 with hn | rfl | hn
     · interval_cases n
-      simp [a, b]
-    · simp [a, b]
-    · rcases eq_or_lt_of_le (Nat.succ_le_iff.mpr hn) with h2 | h2
-      · simp [← h2, show (2 : ℕ) ≠ 0 from by decide, show (2 : ℕ) ≠ 1 from by decide,
-              hmonic.coeff_natDegree.trans rfl, hnatdeg]
-        rw [← hnatdeg]; exact hmonic.coeff_natDegree
-      · have hn_gt : n > f.natDegree := hnatdeg ▸ h2
-        rw [coeff_eq_zero_of_natDegree_lt hn_gt]
-        have hn2 : n ≠ 2 := Nat.ne_of_gt h2
-        have hn1 : n ≠ 1 := by omega
-        have hn0 : n ≠ 0 := by omega
-        simp [hn2, hn1, hn0]
+      · simp [b]
+      · simp [a]
+    · simp [hcoeff2]
+    · have hn_gt : n > f.natDegree := hnatdeg ▸ hn
+      rw [coeff_eq_zero_of_natDegree_lt hn_gt]
+      have hn2 : n ≠ 2 := Nat.ne_of_gt hn
+      have hn1 : n ≠ 1 := by omega
+      have hn0 : n ≠ 0 := by omega
+      simp [hn2, hn1, hn0]
   -- Ri_isSquare: find s with s^2 = (a/2)^2 - b
   obtain ⟨s, hs⟩ := Ri_isSquare ((a/2)^2 - b)
   -- Define root r = -a/2 + s
