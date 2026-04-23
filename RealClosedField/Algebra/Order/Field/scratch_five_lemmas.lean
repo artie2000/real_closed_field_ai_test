@@ -489,11 +489,11 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
         rw [Polynomial.Monic.natDegree_eq_zero_iff_eq_one hf] at heq
         rw [heq]; exact isUnit_one
       exact hf'.not_isUnit this
-  interval_cases f.natDegree
+  rcases (show f.natDegree = 1 ∨ f.natDegree = 2 by omega) with hdeg | hdeg
   · -- natDegree = 1
     left
     refine ⟨-(f.coeff 0), ?_⟩
-    have h1 : f = Polynomial.X + Polynomial.C (f.coeff 0) := hf.eq_X_add_C (by assumption)
+    have h1 : f = Polynomial.X + Polynomial.C (f.coeff 0) := hf.eq_X_add_C hdeg
     rw [h1, sub_eq_add_neg, ← Polynomial.C_neg, neg_neg]
   · -- natDegree = 2
     right
@@ -501,17 +501,14 @@ theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' 
     set a₀ := f.coeff 0
     have hfexp : f = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀ := by
       have hfeq : f = ∑ i ∈ Finset.range 3, Polynomial.C (f.coeff i) * Polynomial.X ^ i := by
-        have h3 : f.natDegree + 1 = 3 := by
-          have : f.natDegree = 2 := by assumption
-          omega
+        have h3 : f.natDegree + 1 = 3 := by omega
         conv_lhs => rw [f.as_sum_range_C_mul_X_pow]
         rw [h3]
       rw [hfeq]
       simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add]
       have hcoeff2 : f.coeff 2 = 1 := by
         have hlc : f.leadingCoeff = 1 := hf
-        have h2 : f.natDegree = 2 := by assumption
-        rw [Polynomial.leadingCoeff, h2] at hlc
+        rw [Polynomial.leadingCoeff, hdeg] at hlc
         exact hlc
       rw [hcoeff2, Polynomial.C_1, one_mul]
       show _ = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀
