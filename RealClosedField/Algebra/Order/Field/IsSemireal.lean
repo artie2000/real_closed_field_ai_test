@@ -112,11 +112,14 @@ theorem Rat.existsUnique_isStrictOrderedRing :
     set q : ℕ := x.den with hq
     have hqpos : (q : ℚ) ≠ 0 := by exact_mod_cast x.den_ne_zero
     have hnumcast : (x.num : ℚ) = (p : ℚ) := by
-      rw [hp, Int.toNat_of_nonneg hnum]
+      have : (x.num.toNat : ℤ) = x.num := Int.toNat_of_nonneg hnum
+      exact_mod_cast this.symm
     have hpq : x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
       rw [← Rat.num_div_den x, hnumcast]
       push_cast
       field_simp
+      ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  exact_mod_cast IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  have := IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  convert this
