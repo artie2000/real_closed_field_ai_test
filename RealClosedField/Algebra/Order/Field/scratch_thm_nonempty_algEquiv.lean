@@ -95,8 +95,9 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     rw [Polynomial.leadingCoeff, hdeg2] at hlc
     exact hlc
   have hroot : x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) b = 0 := by
+    have hlt : (minpoly R x).natDegree < 3 := by omega
     have haev := minpoly.aeval R x
-    rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)] at haev
+    rw [Polynomial.aeval_eq_sum_range' hlt] at haev
     simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
       Algebra.smul_def, pow_zero, mul_one, pow_one] at haev
     rw [hcoeff2, map_one, one_mul] at haev
