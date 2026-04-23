@@ -5,14 +5,19 @@ Authors: Artie Khovanov
 -/
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
 import Mathlib.RingTheory.Algebraic.Basic
+import Mathlib.RingTheory.PowerBasis
+import Mathlib.LinearAlgebra.LinearIndependent.Lemmas
 import Mathlib.Tactic.TFAE
+import Mathlib.Tactic.FinCases
 import RealClosedField.Algebra.Order.Algebra
 
 /-!
