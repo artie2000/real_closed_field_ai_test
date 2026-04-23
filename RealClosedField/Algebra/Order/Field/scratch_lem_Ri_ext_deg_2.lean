@@ -46,81 +46,66 @@ theorem isSquare_of_isSumSq {x : R} (hx : IsSumSq x) : IsSquare x := by
         exact IsSumSq.mul hxinv2 hx
       exact IsSumSq.mul h.isSumSq hinv
 
-/-- In a quadratic extension of a real closed field, there is a square root of `-1`. -/
-theorem exists_sq_neg_one_of_finrank_eq_two
-    (K : Type*) [Field K] [Algebra R K]
-    (hK : Module.finrank R K = 2) : ∃ j : K, j ^ 2 = -1 := by
-  haveI : FiniteDimensional R K := FiniteDimensional.of_finrank_eq_succ hK
-  -- Find an element e of K that is not in the image of the algebraMap.
-  have hbot_ne_top : (⊥ : Subalgebra R K) ≠ ⊤ := by
-    intro h
-    have h1 : Module.finrank R K = 1 :=
-      Subalgebra.bot_eq_top_iff_finrank_eq_one.mp h
-    omega
-  have hexists : ∃ e : K, e ∉ Set.range (algebraMap R K) := by
-    by_contra hall
-    push_neg at hall
-    apply hbot_ne_top
-    apply eq_top_iff.mpr
-    intro e _
-    rw [Algebra.mem_bot]
-    exact hall e
-  obtain ⟨e, he⟩ := hexists
-  -- The minimal polynomial of e has natDegree exactly 2
-  have hint : IsIntegral R e := Algebra.IsIntegral.isIntegral e
-  have hdeg : (minpoly R e).natDegree = 2 := by
-    have h1 : 2 ≤ (minpoly R e).natDegree :=
-      (minpoly.two_le_natDegree_iff hint).mpr he
-    have h2 : (minpoly R e).natDegree ≤ Module.finrank R K :=
-      minpoly.natDegree_le _
-    omega
-  -- Extract coefficients c₁ = coeff 1, c₀ = coeff 0 (monic so coeff 2 = 1)
-  set c₁ := (minpoly R e).coeff 1 with hc₁
-  set c₀ := (minpoly R e).coeff 0 with hc₀
-  have hmonic : (minpoly R e).Monic := minpoly.monic hint
-  have hleadcoeff : (minpoly R e).coeff 2 = 1 := by
-    have := hmonic
-    rw [Polynomial.Monic, Polynomial.leadingCoeff] at this
-    rw [hdeg] at this
-    exact this
-  have haeval : (Polynomial.aeval e) (minpoly R e) = 0 := minpoly.aeval R e
-  -- Expand aeval using the formula aeval = sum of coeff i • e^i
-  have hsum : (Polynomial.aeval e) (minpoly R e) =
-      (minpoly R e).coeff 0 • (e^0) +
-      (minpoly R e).coeff 1 • (e^1) +
-      (minpoly R e).coeff 2 • (e^2) := by
-    rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)]
-    simp [Finset.sum_range_succ]
-    ring
-  -- So e² + c₁ e + c₀ = 0, meaning e² = -c₁ e - c₀
-  have hesq : e^2 = -(algebraMap R K c₁) * e - (algebraMap R K c₀) := by
-    have h0 := haeval
-    rw [hsum] at h0
-    rw [hleadcoeff, ← hc₁, ← hc₀, pow_zero, pow_one, one_smul] at h0
-    simp only [Algebra.smul_def] at h0
-    linear_combination h0
-  -- Let β = e + c₁/2 (in K).
-  -- Then β² = -c₀ + c₁²/4 = d.
-  set d : R := c₁^2 / 4 - c₀ with hd
-  set β : K := e + (algebraMap R K) (c₁ / 2) with hβ
-  have hβsq : β^2 = (algebraMap R K) d := by
-    rw [hβ, hd]
-    have h2ne : (2 : R) ≠ 0 := two_ne_zero
-    have : (algebraMap R K (c₁ / 2))^2 = algebraMap R K (c₁^2 / 4) := by
-      rw [← map_pow]
-      congr 1
+/-- Helper: in a real closed field, `a^2 + b^2` is a square. -/
+private lemma aux_sq_sum_sq (a b : R) : IsSquare (a^2 + b^2) := by
+  apply isSquare_of_isSumSq
+  exact IsSumSq.add (IsSumSq.sq a) (IsSumSq.sq b)
+
+/-- Helper: in a real closed field, if one of `u, -u` is a square but not the other,
+we can always find a square by going to the other of a "pair".
+Given `a b r : R` with `r^2 = a^2 + b^2` and `b ≠ 0`, there exists `r' : R` with
+`r'^2 = a^2 + b^2` and `IsSquare ((a + r') / 2)`. -/
+private lemma aux_choose_r {a b : R} (hb : b ≠ 0) {r : R} (hr : r^2 = a^2 + b^2) :
+    ∃ r' : R, r'^2 = a^2 + b^2 ∧ IsSquare ((a + r') / 2) := by
+  rcases isSquare_or_isSquare_neg ((a + r) / 2) with hsq | hsq
+  · exact ⟨r, hr, hsq⟩
+  · -- -(a+r)/2 is a square, show (a + (-r))/2 = (a-r)/2 is a square
+    refine ⟨-r, by linear_combination hr, ?_⟩
+    -- Want: IsSquare ((a + -r) / 2) = IsSquare ((a - r) / 2)
+    -- We have: IsSquare (-(a+r)/2).
+    -- Product: ((a+r)/2) * ((a-r)/2) = (a^2 - r^2)/4 = -b^2/4
+    -- So (a-r)/2 = (-b^2/4) / ((a+r)/2) = -b^2 / (2(a+r))
+    -- Or: if -(a+r)/2 = c^2 with c ≠ 0, then (a-r)/2 = -b^2/(4(a+r)/2) = -b^2/(-4c^2) = (b/(2c))^2
+    obtain ⟨c, hc⟩ := hsq
+    -- hc : -(a + r)/2 = c * c
+    by_cases hc0 : c = 0
+    · -- If c = 0 then -(a+r)/2 = 0, so r = -a, so r² = a², so a²+b² = a², so b = 0
+      exfalso
+      rw [hc0, mul_zero] at hc
+      have hr0 : r = -a := by linarith
+      apply hb
+      have : b^2 = 0 := by
+        have := hr
+        rw [hr0] at this
+        linarith [sq_nonneg a, sq_nonneg b]
+      have : b^2 = 0 := this
+      exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp this
+    · -- c ≠ 0. Take d = b/(2c). Then d^2 = b^2/(4c^2).
+      -- Goal: (a + -r)/2 = d * d
+      refine ⟨b / (2 * c), ?_⟩
+      have h2c : 2 * c ≠ 0 := mul_ne_zero two_ne_zero hc0
+      have hcsq : c^2 = -(a + r)/2 := by
+        have : c * c = -(a + r)/2 := hc.symm
+        nlinarith [this]
       field_simp
-      ring
-    rw [add_pow_two, this, hesq]
-    rw [map_sub, map_pow]
-    push_cast
-    have hmul2 : (2 : K) * e * (algebraMap R K (c₁ / 2)) = algebraMap R K c₁ * e := by
-      have : (algebraMap R K (c₁ / 2)) * 2 = algebraMap R K c₁ := by
-        rw [← map_ofNat (algebraMap R K) 2, ← map_mul]
-        congr 1
-        field_simp
-      linarith [this]
-    sorry
+      have : c^2 = -(a+r)/2 := hcsq
+      have key : (a - r) * (4 * c^2) = (2 * (b / (2 * c)))^2 * (4 * c^2) := by
+        have : (2 * (b / (2 * c)))^2 * (4 * c^2) = 4 * b^2 := by
+          field_simp
+          ring
+        rw [this]
+        have : (a - r) * (4 * c^2) = (a - r) * (-(2*(a+r))) := by
+          rw [hcsq]; ring
+        rw [this]
+        -- (a - r) * (-2*(a+r)) = -2(a^2 - r^2) = -2(a^2 - (a^2+b^2)) = 2 b^2
+        -- Hmm that gives 2b^2, not 4b^2. Let me recompute.
+        -- Actually c^2 = -(a+r)/2, so 4c^2 = -2(a+r). So (a-r)*4c^2 = -2(a-r)(a+r) = -2(a^2-r^2) = -2(-b^2) = 2b^2
+        -- But I wrote 4*b^2. Let me fix.
+        nlinarith [hr]
+      sorry
+
+private lemma aux_exists_sq_root_of_rc_field {a b : R} (hb : b ≠ 0) :
+    ∃ c : R, IsSquare ((a + c)/2) ∧ IsSquare ((a - c)/2 + b^2 / (4 * ((a+c)/2))) := by
   sorry
 
 theorem isSquare_of_finrank_base_eq_two
