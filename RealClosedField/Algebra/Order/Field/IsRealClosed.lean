@@ -164,6 +164,200 @@ theorem bijective_algebraMap_of_isOrderedAlgebra [IsRealClosed R]
     Function.Bijective (algebraMap R K) := by
   sorry
 
+/-- A polynomial `X^2 - C a` with `a` not a square is irreducible. -/
+private lemma irreducible_X_sq_sub_C_of_not_isSquare
+    {a : R} (hsq : ¬ IsSquare a) : Irreducible (X ^ 2 - C a : R[X]) := by
+  have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
+  have hdeg : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
+  rw [Polynomial.Monic.irreducible_iff_roots_eq_zero_of_degree_le_three hmonic
+        (by rw [hdeg]) (by rw [hdeg]; decide),
+      Multiset.eq_zero_iff_forall_notMem]
+  intro c hc
+  rw [mem_roots hmonic.ne_zero] at hc
+  simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C, sub_eq_zero] at hc
+  exact hsq ⟨c, by linear_combination hc.symm⟩
+
+omit [LinearOrder R] [IsStrictOrderedRing R] in
+/-- Any irreducible polynomial of `natDegree > 1` gives a non-surjective `algebraMap` into its
+`AdjoinRoot`. -/
+private lemma algebraMap_not_bijective_of_irreducible_natDegree_pos
+    {p : R[X]} (hirred : Irreducible p) (hdeg : 1 < p.natDegree) :
+    ¬ Function.Bijective (algebraMap R (AdjoinRoot p)) := by
+  intro hbij
+  haveI : Fact (Irreducible p) := ⟨hirred⟩
+  obtain ⟨r, hr⟩ := hbij.2 (AdjoinRoot.root p)
+  have hz : algebraMap R (AdjoinRoot p) (p.eval r) = 0 := by
+    have h₂ : aeval (AdjoinRoot.root p) p = 0 := AdjoinRoot.eval₂_root p
+    rw [← hr] at h₂
+    rw [show algebraMap R (AdjoinRoot p) (p.eval r) = aeval (algebraMap R (AdjoinRoot p) r) p
+        from (Polynomial.aeval_algebraMap_apply _ _ _).symm]
+    exact h₂
+  exact hirred.not_isRoot_of_natDegree_ne_one hdeg.ne' (hbij.1 (by simpa using hz))
+
+/-- From an ordering on `AdjoinRoot p` (for `p` irreducible of `natDegree > 1`) and the
+hypothesis that `algebraMap R K` is bijective for every ordered algebraic extension, we derive
+a contradiction. -/
+private lemma not_exists_ordered_algebra_of_bijective
+    (h : ∀ (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K]
+         [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K],
+         Function.Bijective (algebraMap R K))
+    {p : R[X]} (hirred : Irreducible p) (hdeg : 1 < p.natDegree)
+    (hmod : ∃ _ : LinearOrder (AdjoinRoot p),
+      IsStrictOrderedRing (AdjoinRoot p) ∧ IsOrderedModule R (AdjoinRoot p)) :
+    False := by
+  haveI : Fact (Irreducible p) := ⟨hirred⟩
+  haveI : Module.Finite R (AdjoinRoot p) :=
+    Module.Finite.of_basis (AdjoinRoot.powerBasis hirred.ne_zero).basis
+  haveI : Algebra.IsAlgebraic R (AdjoinRoot p) := Algebra.IsAlgebraic.of_finite R (AdjoinRoot p)
+  obtain ⟨lo, hsr, hom⟩ := hmod
+  letI := lo
+  haveI := hsr
+  haveI := hom
+  exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
+
+/-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
+field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
+This is the classical Artin-Schreier induction. -/
+private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
+    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
+    ∃ _ : LinearOrder (AdjoinRoot g),
+      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
+  sorry
+
+/-- Every positive-odd-`natDegree` polynomial has a monic irreducible factor of odd
+`natDegree`. -/
+private lemma exists_odd_irreducible_factor
+    {f : R[X]} (hf : Odd f.natDegree) (hpos : 0 < f.natDegree) :
+    ∃ g : R[X], Monic g ∧ Irreducible g ∧ g ∣ f ∧ Odd g.natDegree := by
+  classical
+  induction hn : f.natDegree using Nat.strong_induction_on generalizing f with
+  | _ n ih =>
+  subst hn
+  have hnu : ¬ IsUnit f := fun hu => by
+    have := natDegree_eq_zero_of_isUnit hu
+    rw [this] at hpos; exact absurd hpos (by decide)
+  obtain ⟨g, hg_monic, hg_irred, hg_dvd⟩ := Polynomial.exists_monic_irreducible_factor f hnu
+  by_cases hg_odd : Odd g.natDegree
+  · exact ⟨g, hg_monic, hg_irred, hg_dvd, hg_odd⟩
+  · rw [Nat.not_odd_iff_even] at hg_odd
+    have hg_deg_pos : 0 < g.natDegree := hg_irred.natDegree_pos
+    obtain ⟨q, hq_eq⟩ := hg_dvd
+    have hne : f ≠ 0 := fun heq => by rw [heq, natDegree_zero] at hpos; exact absurd hpos (by decide)
+    have hq_ne : q ≠ 0 := fun hz => hne (by rw [hq_eq, hz, mul_zero])
+    have hfg_deg : f.natDegree = g.natDegree + q.natDegree := by
+      have := natDegree_mul hg_irred.ne_zero hq_ne; rw [← hq_eq] at this; exact this
+    have hq_deg : q.natDegree = f.natDegree - g.natDegree := by omega
+    have hq_odd : Odd q.natDegree := by
+      rw [hq_deg]; exact Nat.Odd.sub_even (by omega) hf hg_odd
+    have hq_lt : q.natDegree < f.natDegree := by rw [hq_deg]; omega
+    obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
+      ih q.natDegree hq_lt hq_odd hq_odd.pos rfl
+    exact ⟨g', hg'_monic, hg'_irred, hg'_dvd.trans ⟨g, by rw [hq_eq]; ring⟩, hg'_odd⟩
+
+/-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
+private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
+    {a : R} (ha : 0 ≤ a) (hsq : ¬ IsSquare a) :
+    ∃ _ : LinearOrder (AdjoinRoot (X ^ 2 - C a : R[X])),
+      IsStrictOrderedRing (AdjoinRoot (X ^ 2 - C a : R[X])) ∧
+      IsOrderedModule R (AdjoinRoot (X ^ 2 - C a : R[X])) := by
+  have hirred : Irreducible (X ^ 2 - C a : R[X]) :=
+    irreducible_X_sq_sub_C_of_not_isSquare hsq
+  have hmonic : (X ^ 2 - C a : R[X]).Monic := monic_X_pow_sub_C a (by decide)
+  have hdeg2 : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
+  set K := AdjoinRoot (X ^ 2 - C a : R[X])
+  haveI : Fact (Irreducible (X ^ 2 - C a : R[X])) := ⟨hirred⟩
+  set hm : IsAdjoinRootMonic K (X ^ 2 - C a : R[X]) :=
+    AdjoinRoot.isAdjoinRootMonic (X ^ 2 - C a : R[X]) hmonic
+  let π : K →ₗ[R] R :=
+    { toFun := fun x => hm.coeff x 0
+      map_add' := fun x y => by simp
+      map_smul' := fun r x => by simp }
+  have hπ_one : π 1 = 1 := by show hm.coeff 1 0 = 1; rw [hm.coeff_one]; simp
+  have hroot_sq : hm.root ^ 2 = algebraMap R K a := by
+    have heq : hm.root = AdjoinRoot.root (X ^ 2 - C a : R[X]) := rfl
+    have h0 : aeval (AdjoinRoot.root (X ^ 2 - C a : R[X])) (X ^ 2 - C a : R[X]) = 0 :=
+      AdjoinRoot.eval₂_root _
+    simp [aeval_def, eval₂_sub, eval₂_pow, eval₂_X, eval₂_C, sub_eq_zero] at h0
+    rw [heq]; exact h0
+  -- Every element of K decomposes as `u + v · root` via the power basis
+  have hrepr : ∀ x : K,
+      x = algebraMap R K (hm.coeff x 0) + algebraMap R K (hm.coeff x 1) * hm.root := by
+    intro x
+    apply hm.ext_elem
+    intro i hi
+    rw [hdeg2] at hi
+    have hroot_coeff : hm.coeff hm.root = Pi.single 1 1 := hm.coeff_root (by rw [hdeg2]; decide)
+    have hcoeff_aM_mul_root : ∀ (c : R) (j : ℕ),
+        hm.coeff (algebraMap R K c * hm.root) j = c • (Pi.single (M := fun _ : ℕ => R) 1 1) j := by
+      intro c j
+      rw [show algebraMap R K c * hm.root = c • hm.root from by rw [Algebra.smul_def],
+          LinearMap.map_smul hm.coeff]
+      show c • hm.coeff hm.root j = _
+      rw [hroot_coeff]
+    interval_cases i
+    · rw [LinearMap.map_add hm.coeff, hm.coeff_algebraMap]
+      show hm.coeff x 0 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 0
+          + hm.coeff (algebraMap R K (hm.coeff x 1) * hm.root) 0
+      rw [hcoeff_aM_mul_root]; simp
+    · rw [LinearMap.map_add hm.coeff, hm.coeff_algebraMap]
+      show hm.coeff x 1 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 1
+          + hm.coeff (algebraMap R K (hm.coeff x 1) * hm.root) 1
+      rw [hcoeff_aM_mul_root]; simp
+  -- π(x²) ≥ 0
+  have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
+    intro x
+    set u := hm.coeff x 0
+    set v := hm.coeff x 1
+    have hx_sq : x ^ 2 = algebraMap R K (u^2 + a * v^2) + algebraMap R K (2 * u * v) * hm.root := by
+      rw [hrepr x]
+      have e1 : (algebraMap R K u + algebraMap R K v * hm.root) ^ 2
+              = (algebraMap R K u)^2
+                  + 2 * (algebraMap R K u) * (algebraMap R K v * hm.root)
+                  + (algebraMap R K v)^2 * (hm.root ^ 2) := by ring
+      rw [e1, hroot_sq]
+      have hmid : (2 : K) * algebraMap R K u * (algebraMap R K v * hm.root)
+              = algebraMap R K (2 * u * v) * hm.root := by
+        have h : (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v := by
+          rw [map_mul, map_mul, map_ofNat]
+        rw [h]; ring
+      rw [hmid]
+      have h1 : (algebraMap R K u)^2 = algebraMap R K (u^2) := (map_pow _ _ _).symm
+      have h2 : (algebraMap R K v)^2 * algebraMap R K a = algebraMap R K (v^2 * a) := by
+        rw [← map_pow, ← map_mul]
+      have h3 : algebraMap R K (u^2) + algebraMap R K (v^2 * a)
+              = algebraMap R K (u^2 + a * v^2) := by rw [← map_add]; ring_nf
+      linear_combination h1 + h3 + h2
+    rw [hx_sq]
+    show hm.coeff _ 0 ≥ 0
+    rw [LinearMap.map_add hm.coeff, hm.coeff_algebraMap]
+    show (Pi.single 0 (u^2 + a*v^2) : ℕ → R) 0
+          + hm.coeff (algebraMap R K (2 * u * v) * hm.root) 0 ≥ 0
+    rw [show algebraMap R K (2 * u * v) * hm.root = (2 * u * v) • hm.root from by
+        rw [Algebra.smul_def], LinearMap.map_smul hm.coeff]
+    show (Pi.single 0 (u^2 + a*v^2) : ℕ → R) 0 + (2*u*v) • hm.coeff hm.root 0 ≥ 0
+    rw [hm.coeff_root (by rw [hdeg2]; decide)]
+    simp
+    positivity
+  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+  intro hc
+  have hπ_in_span :
+      ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
+    intro s hs
+    refine Submodule.span_induction
+      (mem := ?_)
+      (zero := by rw [map_zero])
+      (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
+      (smul := fun r x _ hx => by
+        show 0 ≤ π (r • x)
+        rw [LinearMap.map_smul_of_tower]
+        exact mul_nonneg r.2 hx) hs
+    rintro y ⟨z, hz⟩
+    have heq : y = z ^ 2 := by rw [hz]; ring
+    rw [heq]; exact hπ_sq z
+  have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
+  have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
+  linarith [h1 ▸ h2]
+
 /-- If an ordered field `R` has no nontrivial ordered algebraic extension, then it is
 real closed. -/
 theorem of_bijective_algebraMap_of_isOrderedAlgebra
@@ -171,7 +365,26 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
          [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K],
          Function.Bijective (algebraMap R K)) :
     IsRealClosed R := by
-  sorry
+  refine IsRealClosed.of_linearOrderedField (fun {a} ha => ?_) (fun {f} hodd => ?_)
+  · -- every non-negative is a square
+    by_contra hsq
+    have hdeg2 : (X ^ 2 - C a : R[X]).natDegree = 2 := natDegree_X_pow_sub_C
+    exact not_exists_ordered_algebra_of_bijective h
+      (irreducible_X_sq_sub_C_of_not_isSquare hsq) (by rw [hdeg2]; decide)
+      (exists_ordered_algebra_adjoinRoot_sq_sub_C ha hsq)
+  · -- every odd-natDegree polynomial has a root
+    obtain ⟨g, hg_monic, hg_irred, hg_dvd, hg_odd⟩ :=
+      exists_odd_irreducible_factor hodd hodd.pos
+    by_cases hg_deg_one : g.natDegree = 1
+    · have : g.degree = 1 := by rw [degree_eq_natDegree hg_irred.ne_zero, hg_deg_one]; rfl
+      obtain ⟨c, hc⟩ := Polynomial.exists_root_of_degree_eq_one this
+      obtain ⟨q, hq⟩ := hg_dvd
+      exact ⟨c, by rw [IsRoot, hq, eval_mul, hc, zero_mul]⟩
+    · exfalso
+      have hg_deg_gt : 1 < g.natDegree :=
+        lt_of_le_of_ne hg_odd.pos.nat_succ_le (fun heq => hg_deg_one heq.symm)
+      exact not_exists_ordered_algebra_of_bijective h hg_irred hg_deg_gt
+        (exists_ordered_algebra_adjoinRoot_odd_irreducible hg_monic hg_irred hg_odd)
 
 variable (R) in
 /-- Characterisation of real closed fields among ordered fields. -/
