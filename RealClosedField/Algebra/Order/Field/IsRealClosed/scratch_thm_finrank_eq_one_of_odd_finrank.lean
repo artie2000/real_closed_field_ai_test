@@ -83,7 +83,18 @@ theorem isSquare_of_isSumSq {s : R} (hs : IsSumSq s) : IsSquare s :=
 theorem finrank_eq_one_of_odd_finrank
     (K : Type u) [Field K] [Algebra R K] [Module.Finite R K]
     (h : Odd (Module.finrank R K)) : Module.finrank R K = 1 := by
-  sorry
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  have hint : IsIntegral R α := Algebra.IsIntegral.isIntegral α
+  have hrank : Module.finrank R K = (minpoly R α).natDegree := by
+    rw [← IntermediateField.finrank_top' (F := R) (E := K), ← hα,
+        IntermediateField.adjoin.finrank hint]
+  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  rw [hrank] at h
+  obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree h
+  have hdeg : (minpoly R α).degree = 1 :=
+    Polynomial.degree_eq_one_of_irreducible_of_root hirr hr
+  rw [hrank, Polynomial.natDegree_eq_of_degree_eq_some hdeg]
+  rfl
 
 /-- **S4.** Every element of `R[i]` is a square. -/
 theorem Ri_isSquare (z : Ri R) : IsSquare z := by
