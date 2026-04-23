@@ -1055,7 +1055,7 @@ private lemma exists_isRoot_of_odd_natDegree_of_noNontrivialOrderedAlgExt
   have hn_pos : 0 < n := by rcases hodd with ⟨k, hk⟩; omega
   have hf_deg_pos : 0 < f.natDegree := by rw [hn]; exact hn_pos
   have hf_not_unit : ¬ IsUnit f := Polynomial.not_isUnit_of_natDegree_pos f hf_deg_pos
-  obtain ⟨g, hgm, hgirr, h2, hghdvd⟩ := Polynomial.exists_monic_irreducible_factor f hf_not_unit
+  obtain ⟨g, hgm, hgirr, hghdvd⟩ := Polynomial.exists_monic_irreducible_factor f hf_not_unit
   obtain ⟨k, hk⟩ := hghdvd
   have hf_ne : f ≠ 0 := by
     intro hfz
