@@ -10,8 +10,12 @@ import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
+import Mathlib.LinearAlgebra.LinearIndependent.Lemmas
 import Mathlib.RingTheory.Algebraic.Basic
+import Mathlib.RingTheory.PowerBasis
+import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
 
