@@ -1047,7 +1047,83 @@ private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
 odd-degree polynomial in `R[X]` has a root in `R`. Corresponds to blueprint `lem:ext_ord_odd_deg`. -/
 private lemma exists_isRoot_of_odd_natDegree_of_noNontrivialOrderedAlgExt
     (h : NoNontrivialOrderedAlgExt R) {f : Polynomial R}
-    (hodd : Odd f.natDegree) : ∃ x, f.IsRoot x := sorry
+    (hodd : Odd f.natDegree) : ∃ x, f.IsRoot x := by
+  -- strong induction on natDegree
+  induction hn : f.natDegree using Nat.strong_induction_on generalizing f with
+  | _ n ih =>
+  rw [hn] at hodd
+  have hn_pos : 0 < n := by rcases hodd with ⟨k, hk⟩; omega
+  have hf_deg_pos : 0 < f.natDegree := by rw [hn]; exact hn_pos
+  have hf_not_unit : ¬ IsUnit f := Polynomial.not_isUnit_of_natDegree_pos f hf_deg_pos
+  obtain ⟨g, hgm, hgirr, h2, hghdvd⟩ := Polynomial.exists_monic_irreducible_factor f hf_not_unit
+  obtain ⟨k, hk⟩ := hghdvd
+  have hf_ne : f ≠ 0 := by
+    intro hfz
+    rw [hfz, Polynomial.natDegree_zero] at hn
+    omega
+  have hk_ne : k ≠ 0 := by
+    intro hkz; rw [hkz, mul_zero] at hk; exact hf_ne hk
+  have hg_ne : g ≠ 0 := hgm.ne_zero
+  have hnat_sum : f.natDegree = g.natDegree + k.natDegree := by
+    rw [hk]; exact Polynomial.natDegree_mul hg_ne hk_ne
+  -- Either g has odd degree, or k does
+  have hg_or_k_odd : Odd g.natDegree ∨ Odd k.natDegree := by
+    rw [hnat_sum] at hodd
+    rcases Nat.even_or_odd g.natDegree with hge | hgo
+    · right; rw [Nat.odd_add] at hodd; exact hodd.mpr (by simpa using hge)
+    · left; exact hgo
+  rcases hg_or_k_odd with hgodd | hkodd
+  · -- g has odd degree; If g is linear, done. Else use the ordering argument on AdjoinRoot g
+    by_cases hgd1 : g.natDegree = 1
+    · -- g = X + C c, so f has a root at -c
+      have hg_eq : g = Polynomial.X + Polynomial.C (g.coeff 0) := hgm.eq_X_add_C hgd1
+      refine ⟨-(g.coeff 0), ?_⟩
+      show f.eval (-(g.coeff 0)) = 0
+      rw [hk, Polynomial.eval_mul, hg_eq]
+      simp
+    · -- g has odd natDegree ≥ 3
+      exfalso
+      have hg_ge3 : g.natDegree ≥ 3 := by
+        rcases hgodd with ⟨m, hm⟩
+        have : g.natDegree ≠ 1 := hgd1
+        have : 0 < g.natDegree := hgirr.natDegree_pos
+        omega
+      -- Use AdjoinRoot g
+      haveI : Fact (Irreducible g) := ⟨hgirr⟩
+      haveI hFinAdj : FiniteDimensional R (AdjoinRoot g) := hgm.finite_adjoinRoot
+      haveI hIsAlg : Algebra.IsAlgebraic R (AdjoinRoot g) :=
+        Algebra.IsAlgebraic.of_finite R (AdjoinRoot g)
+      have hfr : Module.finrank R (AdjoinRoot g) = g.natDegree := by
+        rw [(AdjoinRoot.powerBasis hg_ne).finrank, AdjoinRoot.powerBasis_dim hg_ne]
+      have hodd_fr : Odd (Module.finrank R (AdjoinRoot g)) := by
+        rw [hfr]; exact hgodd
+      -- Admit an ordering
+      obtain ⟨hl, hSR, hOM⟩ := Field.exists_isOrderedAlgebra_of_odd_finrank hodd_fr
+      have hsurj := h (AdjoinRoot g) ⟨hl, hSR, hOM⟩
+      -- Then finrank R (AdjoinRoot g) = 1
+      have hfr1 : Module.finrank R (AdjoinRoot g) = 1 := by
+        have hbot_top : (⊥ : Subalgebra R (AdjoinRoot g)) = ⊤ := by
+          rw [eq_top_iff]; rintro y -
+          obtain ⟨r, hr⟩ := hsurj y
+          exact Algebra.mem_bot.mpr ⟨r, hr⟩
+        have : Module.finrank R (⊥ : Subalgebra R (AdjoinRoot g)) =
+            Module.finrank R (AdjoinRoot g) := by
+          rw [hbot_top]; exact Subalgebra.topEquiv.toLinearEquiv.finrank_eq
+        rw [Subalgebra.finrank_bot] at this
+        omega
+      rw [hfr] at hfr1
+      omega
+  · -- k has odd natDegree < n
+    have hk_lt : k.natDegree < n := by
+      rw [hn] at hnat_sum
+      have hg_ge1 : 1 ≤ g.natDegree := hgirr.natDegree_pos
+      omega
+    obtain ⟨x, hx⟩ := ih k.natDegree hk_lt k hkodd rfl
+    refine ⟨x, ?_⟩
+    show f.eval x = 0
+    rw [hk, Polynomial.eval_mul]
+    have : k.eval x = 0 := hx
+    rw [this, mul_zero]
 
 /-- An ordered field with no nontrivial ordered algebraic extensions is real closed. -/
 theorem isRealClosed_of_noNontrivialOrderedAlgExt (h : NoNontrivialOrderedAlgExt R) :
