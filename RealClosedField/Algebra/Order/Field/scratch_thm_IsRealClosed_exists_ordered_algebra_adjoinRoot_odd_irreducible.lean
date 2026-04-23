@@ -315,6 +315,44 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
       have h1 := hg_odd.pos
       rcases hg_odd with ⟨k, hk⟩
       omega
+    -- Unpack the span into a finite linear combination
+    obtain ⟨c, hc_supp, hc_sum⟩ := Submodule.mem_span_set.mp hc
+    -- For each y in support, y is a square; pick a square root and its polynomial lift.
+    have hy_sq : ∀ y ∈ c.support, IsSquare y := fun y hy => hc_supp hy
+    -- For each y ∈ c.support, choose a square root `sqRoot y` with y = sqRoot y ^ 2.
+    let sqRoot : K → K := fun y => if hy : IsSquare y then hy.choose else 0
+    have hsqRoot : ∀ y ∈ c.support, y = sqRoot y ^ 2 := by
+      intro y hy
+      have hsq := hy_sq y hy
+      have := hsq.choose_spec
+      simp only [sqRoot, hsq, dif_pos]
+      rw [this]; ring
+    -- Polynomial lift of sqRoot y, with degree < g.natDegree.
+    let p : K → R[X] := fun y => hm.modByMonicHom (sqRoot y)
+    have hg_ne_one : g ≠ 1 := fun he => by
+      have := hg_irred; rw [he] at this; exact this.not_unit isUnit_one
+    have hp_deg_lt : ∀ y : K, (p y).natDegree < g.natDegree := fun y =>
+      Polynomial.natDegree_modByMonic_lt _ hg_monic hg_ne_one
+    have hp_mk : ∀ y ∈ c.support, AdjoinRoot.mk g (p y) = sqRoot y := by
+      intro y _
+      show hm.map (hm.modByMonicHom (sqRoot y)) = sqRoot y
+      exact hm.map_modByMonicHom (sqRoot y)
+    -- Build the polynomial P := (∑ C (c y).val * (p y)^2) + 1.
+    set P : R[X] := (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1 with hP_def
+    -- Claim: g | P
+    have hg_dvd_P : g ∣ P := by
+      rw [← AdjoinRoot.mk_eq_zero]
+      simp only [hP_def, map_add, map_sum, map_mul, map_pow, map_one, AdjoinRoot.mk_C]
+      have hsum_eq :
+          ∑ y ∈ c.support, (algebraMap R K (c y : R)) * (AdjoinRoot.mk g (p y))^2 = -1 := by
+        rw [show (-1 : K) = -(1 : K) from rfl, ← hc_sum]
+        rw [Finsupp.sum]
+        rw [show -∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y =
+              ∑ y ∈ c.support, -((c y : ↥(Subsemiring.nonneg R)) • y) from by
+          rw [← Finset.sum_neg_distrib]]
+        -- this is wrong sign. hc_sum is : (∑...) = -1, so -1 = (∑...) directly.
+        sorry
+      rw [hsum_eq]; ring
     sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
