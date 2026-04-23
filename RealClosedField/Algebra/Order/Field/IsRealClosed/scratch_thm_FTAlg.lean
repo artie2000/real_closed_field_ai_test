@@ -6,6 +6,7 @@ import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
 import Mathlib.FieldTheory.Fixed
 import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+import Mathlib.FieldTheory.Relrank
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.IsAdjoinRoot
 import Mathlib.GroupTheory.Sylow
@@ -68,36 +69,30 @@ theorem finrank_eq_one_or_two_of_finite
   let AR : Type u := AlgebraicClosure R
   let φ : K →ₐ[R] AR := IsAlgClosed.lift
   have hφ_inj : Function.Injective φ := φ.toRingHom.injective
-  -- L = normalClosure of K over R inside AR
+  -- L = normalClosure of K over R inside AR, an IntermediateField
   let L : IntermediateField R AR := IntermediateField.normalClosure R K AR
   haveI hfin_L : FiniteDimensional R L := normalClosure.is_finiteDimensional R K AR
   haveI hgal_L : IsGalois R L := by
     haveI : Algebra.IsSeparable R K := Algebra.IsAlgebraic.isSeparable_of_perfectField
     exact IsGalois.normalClosure R K AR
-  -- The image of K under φ lies inside L, as intermediate field
+  -- The image of K under φ lies inside L
   have hrange_le : φ.fieldRange ≤ L := AlgHom.fieldRange_le_normalClosure φ
-  -- φ.fieldRange is an IntermediateField of AR sitting inside L; as a field it's ≃ₐ[R] K
   let K' : IntermediateField R AR := φ.fieldRange
-  have hK'_eq_range : Module.finrank R K = Module.finrank R K' := by
+  -- K' ≃ₐ[R] K
+  have hKK' : Module.finrank R K = Module.finrank R K' := by
     let eq : K ≃ₐ[R] φ.range := AlgEquiv.ofInjectiveField φ
-    have := LinearEquiv.finrank_eq eq.toLinearEquiv
-    -- φ.range (as subalgebra) and K' (as intermediate field) have the same carrier
-    -- Module.finrank R φ.range = Module.finrank R K'
-    have hEq : Module.finrank R φ.range = Module.finrank R K' :=
-      IntermediateField.finrank_eq_finrank_subalgebra K' |>.symm
-    rw [this, ← hEq]
-  -- K' ≤ L. Use restriction of scalars: K' is a subfield of L
-  -- Use IntermediateField.relfinrank for the tower: finrank R K' * relfinrank K' L = finrank R L.
-  have hdvd : Module.finrank R K ∣ Module.finrank R L := by
-    rw [hK'_eq_range]
-    -- finrank R K' * finrank K' L = finrank R L (tower law via IntermediateField inclusion)
-    -- K' as a field has Algebra K' L (after restricting scalars since K' ≤ L in AR)
-    -- Use relfinrank
-    have htower : IntermediateField.relfinrank K' L * Module.finrank R K' = Module.finrank R L := by
-      -- This is the main tower law. Let me use a different approach
-      sorry
-    exact ⟨IntermediateField.relfinrank K' L, by rw [mul_comm]; exact htower.symm⟩
-  -- Now use finrank_one_or_two_of_galois
+    have h1 : Module.finrank R K = Module.finrank R φ.range :=
+      LinearEquiv.finrank_eq eq.toLinearEquiv
+    have h2 : Module.finrank R K' = Module.finrank R φ.range :=
+      (IntermediateField.finrank_eq_finrank_subalgebra K').symm
+    rw [h1, ← h2]
+  -- Tower: finrank R K' ∣ finrank R AR (but we want finrank R L). Use the ≤ relation K' ≤ L.
+  have hdvd : Module.finrank R K' ∣ Module.finrank R L := by
+    -- Use IntermediateField.finrank_bot_mul_relfinrank
+    have htower := IntermediateField.finrank_bot_mul_relfinrank hrange_le
+    exact ⟨_, htower.symm⟩
+  -- Combine
+  rw [hKK']
   rcases finrank_one_or_two_of_galois L with hL1 | hL2
   · rw [hL1] at hdvd
     left; exact Nat.dvd_one.mp hdvd
