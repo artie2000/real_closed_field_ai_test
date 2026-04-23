@@ -48,15 +48,12 @@ theorem surjective_algebraMap_of_odd_finrank
     Function.Surjective (algebraMap R K) := by
   -- Primitive element theorem: `K = R⟮α⟯` for some `α`.
   obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
-  -- `α` is integral over `R`.
+  -- `α` is integral over `R`, and its minimal polynomial is irreducible
+  -- with degree equal to `finrank R K`.
   have hint : IsIntegral R α := .of_finite R α
-  -- The minimal polynomial of `α` is irreducible.
   have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
-  -- Its degree equals `finrank R K` because `α` generates `K`.
-  have hdeg : (minpoly R α).natDegree = Module.finrank R K := by
-    have h1 := (IntermediateField.adjoin.finrank hint).symm
-    rw [hα, IntermediateField.finrank_top'] at h1
-    exact h1
+  have hdeg : (minpoly R α).natDegree = Module.finrank R K :=
+    (Field.primitive_element_iff_minpoly_natDegree_eq R α).mp hα
   -- `(minpoly R α).natDegree` is odd, so it has a root in `R`.
   rw [← hdeg] at hodd
   obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd
