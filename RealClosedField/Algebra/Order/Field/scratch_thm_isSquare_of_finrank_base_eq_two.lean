@@ -403,19 +403,35 @@ theorem isSquare_of_finrank_base_eq_two
       -- Need c^2 - d^2 = a and 2cd = b
       have h2c_ne : (2 * c : R) ≠ 0 := mul_ne_zero two_ne_zero hc_ne
       have h2cd : 2 * c * d = b := by
-        rw [hd_def]
-        field_simp
+        rw [hd_def, mul_div_cancel₀ b h2c_ne]
       have hd2 : d ^ 2 = (t - a) / 2 := by
-        rw [hd_def, div_pow, mul_pow]
-        -- Goal: 2^2 * c^2 ≠ 0 → b^2 / ... = (t-a)/2
-        rw [hc2]
-        -- Goal: b^2 / (2^2 * ((a+t)/2)) = (t-a)/2
+        have hc2_ne : c ^ 2 ≠ 0 := pow_ne_zero 2 hc_ne
+        have hd_sq_eq : d ^ 2 * (2 * c) ^ 2 = b ^ 2 := by
+          rw [hd_def, div_pow, div_mul_cancel₀ _ (pow_ne_zero 2 h2c_ne)]
+        -- d^2 * 4c^2 = b^2
+        -- c^2 = (a+t)/2, so 4c^2 = 2(a+t), so d^2 * 2(a+t) = b^2
+        -- Then d^2 = b^2 / (2(a+t)) = (t-a)/2 since b^2 = t^2 - a^2 = (t-a)(t+a)
         have hat_ne : (a + t : R) ≠ 0 := by
           intro h
           have hc2_eq : c^2 = 0 := by rw [hc2, h]; ring
-          exact pow_ne_zero 2 hc_ne hc2_eq
-        field_simp
-        linear_combination ht_sq
+          exact hc2_ne hc2_eq
+        have h2at_ne : (2 * (a + t) : R) ≠ 0 := mul_ne_zero two_ne_zero hat_ne
+        -- Multiply both sides by 2(a+t):
+        -- LHS: d^2 * 2(a+t) = d^2 * 4c^2 = b^2
+        -- RHS: (t-a)/2 * 2(a+t) = (t-a)(a+t) = t^2 - a^2 = b^2
+        have key : d ^ 2 * (2 * (a + t)) = b ^ 2 := by
+          have : (2 * (a + t) : R) = (2 * c) ^ 2 := by
+            have : (2 * c) ^ 2 = 4 * c ^ 2 := by ring
+            rw [this, hc2]; ring
+          rw [this]; exact hd_sq_eq
+        have key2 : (t - a) / 2 * (2 * (a + t)) = b ^ 2 := by
+          have h2ne : (2 : R) ≠ 0 := two_ne_zero
+          have : (t - a) / 2 * (2 * (a + t)) = (t - a) * (a + t) := by
+            field_simp; ring
+          rw [this]
+          linear_combination ht_sq
+        have := key.trans key2.symm
+        exact mul_right_cancel₀ h2at_ne this
       -- Now expand (c + d·α)^2
       have expand : ((algebraMap R K) c + (algebraMap R K) d * α) *
           ((algebraMap R K) c + (algebraMap R K) d * α) =
