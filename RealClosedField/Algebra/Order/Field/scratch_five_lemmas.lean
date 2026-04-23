@@ -988,8 +988,8 @@ private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
       rcases (show (i : ℕ) = 0 ∨ (i : ℕ) = 1 by
         have hi : (i : ℕ) < pb.dim := i.isLt
         rw [hpb_dim] at hi; omega) with hi0 | hi1
-      · rw [hi0, pow_zero]; exact Set.mem_insert _ _
-      · rw [hi1, pow_one]; exact Set.mem_insert_of_mem _ rfl
+      · rw [hi0, pow_zero]; simp
+      · rw [hi1, pow_one]; simp
     rw [eq_top_iff, ← hbasis_span]
     exact Submodule.span_mono hrange
   -- K admits an ordering

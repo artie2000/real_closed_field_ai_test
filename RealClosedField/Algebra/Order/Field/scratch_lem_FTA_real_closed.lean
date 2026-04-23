@@ -96,8 +96,7 @@ private theorem no_quadratic_over_quadratic
     rw [map_neg]
     linear_combination -hd
 
--- A helper lemma: from surjective algebraMap and Function.Injective (always) and
--- FiniteDimensional, deduce finrank = 1.
+-- Helper: finrank = 1 when algebraMap is surjective.
 private theorem finrank_eq_one_of_surjective_algebraMap
     {R : Type*} [Field R] {M : Type*} [Field M] [Algebra R M] [FiniteDimensional R M]
     (hsurj : Function.Surjective (algebraMap R M)) : Module.finrank R M = 1 := by
@@ -115,28 +114,24 @@ private theorem finrank_eq_one_of_surjective_algebraMap
 private theorem finrank_le_two_of_isGalois
     (L : Type*) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L ≤ 2 := by
-  -- Let n = [L:R] = |Gal(L/R)|.
   have hcard : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
   have hp : Fact (Nat.Prime 2) := ⟨Nat.prime_two⟩
   -- Pick a Sylow 2-subgroup P of Gal(L/R).
   let P : Sylow 2 (L ≃ₐ[R] L) := Classical.arbitrary _
-  -- |P| = 2^m for some m.
   obtain ⟨m, hPcard⟩ : ∃ m, Nat.card (P : Subgroup (L ≃ₐ[R] L)) = 2 ^ m :=
     IsPGroup.iff_card.mp P.isPGroup'
-  -- M := fixedField P. [L:M] = |P| = 2^m.
+  -- [L:fixedField P] = |P| = 2^m
   set M := fixedField (P : Subgroup (L ≃ₐ[R] L)) with hM_def
   have hLM : Module.finrank M L = 2 ^ m := by
     rw [finrank_fixedField_eq_card, hPcard]
   have hmul : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
     Module.finrank_mul_finrank R M L
   have hMR_prod : Module.finrank R M * 2 ^ m = Module.finrank R L := hLM ▸ hmul
-  -- [M:R] is odd, so [M:R] = 1.
+  -- [M:R] is odd, so [M:R] = 1 by surjective_algebraMap_of_odd_finrank.
   have hMR_odd : Odd (Module.finrank R M) := by
-    -- (Nat.card P).Coprime (P.index)
     have hcoprime : (Nat.card (P : Subgroup (L ≃ₐ[R] L))).Coprime
         (P : Subgroup (L ≃ₐ[R] L)).index := P.card_coprime_index
     rw [hPcard] at hcoprime
-    -- P.index = [M:R]
     have hindex_eq : (P : Subgroup (L ≃ₐ[R] L)).index = Module.finrank R M := by
       have h1 : (P : Subgroup (L ≃ₐ[R] L)).index * Nat.card (P : Subgroup (L ≃ₐ[R] L))
           = Nat.card (L ≃ₐ[R] L) := (P : Subgroup (L ≃ₐ[R] L)).index_mul_card
@@ -145,8 +140,7 @@ private theorem finrank_le_two_of_isGalois
       exact (Nat.eq_of_mul_eq_mul_right h2m_pos h1).symm
     rw [← hindex_eq]
     rcases Nat.eq_zero_or_pos m with hm0 | hm_pos
-    · -- m = 0: Sylow has |P| = 1, so 2 ∤ |G|, so [L:R] odd, so [M:R] = [L:R]/1 odd.
-      have hmult := P.card_eq_multiplicity
+    · have hmult := P.card_eq_multiplicity
       rw [hPcard, hm0, pow_zero] at hmult
       have hfact_zero : Nat.factorization (Nat.card (L ≃ₐ[R] L)) 2 = 0 := by
         by_contra hne
@@ -164,8 +158,7 @@ private theorem finrank_le_two_of_isGalois
       apply h2_not_dvd
       rw [hcard, ← hMR_prod, hm0, pow_zero, mul_one]
       exact heven.two_dvd
-    · -- m ≥ 1: 2 ∣ 2^m, coprime to index, so 2 coprime to index.
-      have h2_dvd : (2 : ℕ) ∣ 2 ^ m := dvd_pow_self 2 (Nat.pos_iff_ne_zero.mp hm_pos)
+    · have h2_dvd : (2 : ℕ) ∣ 2 ^ m := dvd_pow_self 2 (Nat.pos_iff_ne_zero.mp hm_pos)
       have h2_cop : Nat.Coprime 2 (P : Subgroup (L ≃ₐ[R] L)).index :=
         hcoprime.coprime_dvd_left h2_dvd
       rw [Nat.odd_iff_not_even]
@@ -174,43 +167,39 @@ private theorem finrank_le_two_of_isGalois
       have hgcd : Nat.gcd 2 (P : Subgroup (L ≃ₐ[R] L)).index = 2 := Nat.gcd_eq_left h2div
       rw [Nat.Coprime] at h2_cop
       omega
-  -- Apply surjective_algebraMap_of_odd_finrank: [M:R] = 1.
   have hMR_one : Module.finrank R M = 1 :=
     finrank_eq_one_of_surjective_algebraMap
       (IsRealClosed.surjective_algebraMap_of_odd_finrank R M hMR_odd)
-  -- So [L:R] = 2^m.
   have hLR_pow : Module.finrank R L = 2 ^ m := by
     rw [← hMR_prod, hMR_one, one_mul]
-  -- Show m ≤ 1.
   rcases Nat.lt_or_ge m 2 with hm | hm
   · rw [hLR_pow]
     interval_cases m <;> norm_num
-  · -- m ≥ 2: contradiction via no_quadratic_over_quadratic.
+  · -- m ≥ 2: derive contradiction by finding tower of dim-2 extensions.
     exfalso
-    -- [L:R] = 2^m with m ≥ 2. Find subgroups H' ⊆ H of G with |H|=2^(m-1), |H'|=2^(m-2).
-    have h2m1_dvd : (2 : ℕ) ^ (m - 1) ∣ Nat.card (L ≃ₐ[R] L) := by
-      rw [hcard, hLR_pow]; exact pow_dvd_pow 2 (by omega)
+    -- |G| = 2^m, so G is a 2-group.
+    have hG_card : Nat.card (L ≃ₐ[R] L) = 2 ^ m := by rw [hcard, hLR_pow]
+    have hG_pgroup : IsPGroup 2 (L ≃ₐ[R] L) := IsPGroup.of_card hG_card
+    -- Find H subgroup of G with |H| = 2^(m-1).
+    have h2m1_le : (2 : ℕ) ^ (m - 1) ≤ Nat.card (L ≃ₐ[R] L) := by
+      rw [hG_card]
+      exact Nat.pow_le_pow_right (by norm_num) (by omega)
     obtain ⟨H, hH⟩ : ∃ H : Subgroup (L ≃ₐ[R] L), Nat.card H = 2 ^ (m - 1) :=
-      Sylow.exists_subgroup_card_pow_prime 2 h2m1_dvd
-    -- Within H (which is a 2-group), find H' ≤ H with |H'| = 2^(m-2).
-    have hH_pgroup : IsPGroup 2 H := by
-      rw [IsPGroup.iff_card]
-      exact ⟨m - 1, hH⟩
-    have hH_card_ge : (2 : ℕ) ^ (m - 2) ≤ Nat.card H := by
-      rw [hH]; exact Nat.pow_le_pow_right (by norm_num) (by omega)
-    obtain ⟨H', hH'_le_H, hH'_card⟩ :
-        ∃ H' ≤ H, Nat.card H' = 2 ^ (m - 2) :=
-      Subgroup.exists_subgroup_le_card_pow_prime_of_le_card Nat.prime_two hH_pgroup hH_card_ge
-    -- M1 := fixedField H (= the dim-2 subfield); M2 := fixedField H' (dim-4).
+      Sylow.exists_subgroup_card_pow_prime_of_le_card Nat.prime_two hG_pgroup h2m1_le
+    -- Find H' ≤ H with |H'| = 2^(m-2).
+    have h2m2_le : (2 : ℕ) ^ (m - 2) ≤ Nat.card H := by
+      rw [hH]
+      exact Nat.pow_le_pow_right (by norm_num) (by omega)
+    obtain ⟨H', hH'_le_H, hH'⟩ : ∃ H' ≤ H, Nat.card H' = 2 ^ (m - 2) :=
+      Sylow.exists_subgroup_le_card_pow_prime_of_le_card Nat.prime_two hG_pgroup h2m2_le
+    -- M1 = fixedField H, M2 = fixedField H'. M1 ≤ M2 (contravariant).
     set M1 : IntermediateField R L := fixedField H with hM1_def
     set M2 : IntermediateField R L := fixedField H' with hM2_def
-    -- [L:M1] = 2^(m-1)
+    have hM1_le_M2 : M1 ≤ M2 := fixedField_le hH'_le_H
     have hLM1 : Module.finrank M1 L = 2 ^ (m - 1) := by
       rw [finrank_fixedField_eq_card, hH]
-    -- [L:M2] = 2^(m-2)
     have hLM2 : Module.finrank M2 L = 2 ^ (m - 2) := by
-      rw [finrank_fixedField_eq_card, hH'_card]
-    -- [M1:R] = 2^m / 2^(m-1) = 2
+      rw [finrank_fixedField_eq_card, hH']
     have hM1R : Module.finrank R M1 = 2 := by
       have := Module.finrank_mul_finrank R M1 L
       rw [hLM1, hLR_pow] at this
@@ -221,57 +210,47 @@ private theorem finrank_le_two_of_isGalois
       have hpos : (0 : ℕ) < 2 ^ (m - 1) :=
         Nat.pos_of_ne_zero (pow_ne_zero _ (by norm_num))
       exact Nat.eq_of_mul_eq_mul_right hpos (by linarith)
-    -- M1 ≤ M2 (since H' ≤ H implies fixedField H ≤ fixedField H'... wait, reversed).
-    -- Actually, H' ≤ H implies fixedField H ≤ fixedField H' (antitone).
-    have hM1_le_M2 : M1 ≤ M2 := fixedField_le hH'_le_H
-    -- [M2:M1] = ? Use inclusion and tower.
-    -- Set up Algebra M1 M2 via IntermediateField.inclusion.
+    -- Algebra M1 M2 via inclusion.
     letI : Algebra M1 M2 := (IntermediateField.inclusion hM1_le_M2).toAlgebra
-    haveI : IsScalarTower R M1 M2 := by
-      apply IsScalarTower.of_algebraMap_eq
-      intro x
-      rfl
-    haveI : IsScalarTower M1 M2 L := by
-      apply IsScalarTower.of_algebraMap_eq
-      intro x
-      rfl
-    haveI hFinM2L : FiniteDimensional M2 L := .of_finrank_eq_succ hLM2 |>.elim (fun _ => inferInstance)
-    -- Want [M2:M1] = 2.
+    haveI hST_RM1M2 : IsScalarTower R M1 M2 := IsScalarTower.of_algebraMap_eq (fun _ => rfl)
+    haveI hST_M1M2L : IsScalarTower M1 M2 L := IsScalarTower.of_algebraMap_eq (fun _ => rfl)
+    haveI hFinM2L : FiniteDimensional M2 L := FiniteDimensional.of_finrank_eq_succ hLM2
     have hM2M1 : Module.finrank M1 M2 = 2 := by
-      have hfmfm := Module.finrank_mul_finrank M1 M2 L
-      rw [hLM2, hLM1] at hfmfm
-      -- Module.finrank M1 M2 * 2^(m-2) = 2^(m-1)
+      have := Module.finrank_mul_finrank M1 M2 L
+      rw [hLM2, hLM1] at this
       have heq : (2 : ℕ) ^ (m - 1) = 2 * 2 ^ (m - 2) := by
         conv_lhs => rw [show m - 1 = (m - 2) + 1 from by omega]
         rw [pow_succ]; ring
-      rw [heq] at hfmfm
+      rw [heq] at this
       have hpos : (0 : ℕ) < 2 ^ (m - 2) :=
         Nat.pos_of_ne_zero (pow_ne_zero _ (by norm_num))
       exact Nat.eq_of_mul_eq_mul_right hpos (by linarith)
     exact no_quadratic_over_quadratic R hM1R hM2M1
 
 /-- FTA for real closed fields: any finite extension of R has dimension at most 2. -/
-theorem finrank_le_two_of_finiteDimensional
+theorem finrank_le_two_of_finiteDimensional'
     (K : Type*) [Field K] [Algebra R K] [FiniteDimensional R K] :
     Module.finrank R K ≤ 2 := by
-  -- Strategy: embed K into AlgebraicClosure R, take normal closure L.
-  -- L/R is finite Galois. [K:R] ≤ [L:R] ≤ 2.
   haveI : Algebra.IsAlgebraic R K := Algebra.IsIntegral.isAlgebraic
   let φ : K →ₐ[R] AlgebraicClosure R := IsAlgClosed.lift
-  -- K ≃ₐ[R] φ.fieldRange
   let K' : IntermediateField R (AlgebraicClosure R) := φ.fieldRange
   let L : IntermediateField R (AlgebraicClosure R) := normalClosure R K' (AlgebraicClosure R)
   haveI : FiniteDimensional R K' := φ.toLinearMap.finiteDimensional_range
-  haveI : FiniteDimensional R L := normalClosure.is_finiteDimensional R K' (AlgebraicClosure R)
+  -- FiniteDimensional R L is an instance.
+  haveI : FiniteDimensional R L := inferInstance
   haveI : Algebra.IsAlgebraic R L := Algebra.IsAlgebraic.of_finite R L
   haveI : Algebra.IsSeparable R L := Algebra.IsAlgebraic.isSeparable_of_perfectField
-  haveI : Normal R L := normalClosure.normal R K' (AlgebraicClosure R)
+  haveI : Normal R L := inferInstance
   haveI : IsGalois R L := ⟨⟩
   have hL_le_two : Module.finrank R L ≤ 2 := finrank_le_two_of_isGalois R L
-  -- [K:R] = [K':R] ≤ [L:R] ≤ 2.
   have hKK'_eq : Module.finrank R K = Module.finrank R K' := by
-    have e : K ≃ₐ[R] K' := AlgEquiv.ofInjectiveField φ
-    exact (LinearEquiv.finrank_eq e.toLinearEquiv)
+    have e : K ≃ₐ[R] φ.range := AlgEquiv.ofInjectiveField φ
+    have h1 : Module.finrank R K = Module.finrank R φ.range := LinearEquiv.finrank_eq e.toLinearEquiv
+    have h2 : Module.finrank R (φ.range : Subalgebra R (AlgebraicClosure R)) = Module.finrank R K' := by
+      -- φ.range and K'.toSubalgebra have the same carrier and same finrank.
+      -- Actually φ.fieldRange.toSubalgebra = φ.range (by @[simps toSubalgebra]).
+      rfl
+    exact h1.trans h2
   have hK'L : Module.finrank R K' ≤ Module.finrank R L :=
     IntermediateField.finrank_le_of_le_right (IntermediateField.le_normalClosure K')
   linarith
