@@ -38,24 +38,14 @@ universe u
 
 variable {R : Type u} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
-/-- `Ri R` is the adjoinment of a square root of `-1` to `R`, i.e. `R[i]`.
-It is modelled as `AdjoinRoot (X^2 + 1)`. -/
-private def Ri (R : Type u) [Field R] : Type u := AdjoinRoot (X ^ 2 + 1 : R[X])
-
-section RiInstances
-
-variable [IsRealClosed R]
-
 /-- `X^2 + 1` has no root in an RCF because `-1` is not a square. -/
-private lemma not_isSquare_neg_one : ¬ IsSquare (-1 : R) := by
+private lemma not_isSquare_neg_one [IsRealClosed R] : ¬ IsSquare (-1 : R) := by
   intro hsq
-  have h1 : (1 : R) = 0 := by
-    have hn1 : IsSquare (1 : R) := ⟨1, (one_mul _).symm⟩
-    have h := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -1)).mpr hsq
-    linarith
-  exact one_ne_zero h1
+  have h : (0 : R) ≤ -1 := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -1)).mpr hsq
+  linarith
 
-private lemma irreducible_X_sq_add_one : Irreducible (X ^ 2 + 1 : R[X]) := by
+private lemma irreducible_X_sq_add_one [IsRealClosed R] :
+    Irreducible (X ^ 2 + 1 : R[X]) := by
   have h : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by simp [map_neg, map_one, sub_neg_eq_add]
   have hmonic : (X ^ 2 - C (-1 : R)).Monic := monic_X_pow_sub_C _ (by decide)
   have hdeg : (X ^ 2 - C (-1 : R)).natDegree = 2 := natDegree_X_pow_sub_C
@@ -69,18 +59,17 @@ private lemma irreducible_X_sq_add_one : Irreducible (X ^ 2 + 1 : R[X]) := by
   have hsq : IsSquare (-1 : R) := ⟨c, by linear_combination hc.symm - sq c⟩
   exact not_isSquare_neg_one hsq
 
-private noncomputable instance : Field (Ri R) :=
-  haveI : Fact (Irreducible (X ^ 2 + 1 : R[X])) := ⟨irreducible_X_sq_add_one⟩
-  AdjoinRoot.instField
+/-- `Ri R` is the adjoinment of a square root of `-1` to `R`, i.e. `R[i]`.
+It is modelled as `AdjoinRoot (X^2 + 1)`. Marked `abbrev` so instance resolution
+fires automatically via `AdjoinRoot`. -/
+private abbrev Ri (R : Type u) [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+    [IsRealClosed R] : Type u := AdjoinRoot (X ^ 2 + 1 : R[X])
 
-private noncomputable instance : Algebra R (Ri R) := AdjoinRoot.instAlgebra
-private instance : Module R (Ri R) := Algebra.toModule
+private instance [IsRealClosed R] : Fact (Irreducible (X ^ 2 + 1 : R[X])) :=
+  ⟨irreducible_X_sq_add_one⟩
 
-private noncomputable instance : Module.Finite R (Ri R) :=
-  haveI : Fact (Irreducible (X ^ 2 + 1 : R[X])) := ⟨irreducible_X_sq_add_one⟩
+private noncomputable instance [IsRealClosed R] : Module.Finite R (Ri R) :=
   Module.Finite.of_basis (AdjoinRoot.powerBasis (irreducible_X_sq_add_one).ne_zero).basis
-
-end RiInstances
 
 section FTA
 
