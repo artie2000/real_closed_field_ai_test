@@ -6,5 +6,6 @@
     "def:RCF"
   ],
   "statement": "$R$ has no nontrivial real algebraic extensions.",
-  "proof": "The field $R(i)$ is not real since $-1$ is a square in it. We are done by Corollary \\ref{cor:FTAlg_alg}."
+  "proof": "\\leanok\n  The field $R(i)$ is not real since $-1$ is a square in it. We are done by Corollary \\ref{cor:FTAlg_alg}.",
+  "leanDeclaration": "IsRealClosed.finite_of_isAlgebraic, IsRealClosed.finrank_eq_one_or_two_of_finite"
 }
