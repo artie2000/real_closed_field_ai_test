@@ -302,7 +302,7 @@ theorem isSquare_of_finrank_base_eq_two
       have htL : (algebraMap R K) t ≠ 0 := (map_ne_zero_iff _ hInj).mpr ht
       refine ⟨-r / t, ?_⟩
       rw [map_div₀, map_neg]
-      field_simp
+      rw [div_eq_iff htL]
       linear_combination -hrt
   have hcard : Fintype.card (Fin 2) = Module.finrank R K := by
     rw [Fintype.card_fin, hK]
@@ -315,14 +315,14 @@ theorem isSquare_of_finrank_base_eq_two
     show basisOfLinearIndependentOfCardEqFinrank hli hcard 1 = j
     rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
     simp
-  set a : R := B.repr x 0 with ha_def
-  set b : R := B.repr x 1 with hb_def
-  have hx_decomp : x = algebraMap R K a + algebraMap R K b * j := by
+  have hx_decomp : x = algebraMap R K (B.repr x 0) + algebraMap R K (B.repr x 1) * j := by
     have hsum : ∑ i, B.repr x i • B i = x := B.sum_repr x
     rw [Fin.sum_univ_two] at hsum
     rw [hB0, hB1] at hsum
     rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hsum
     linear_combination -hsum
+  set a : R := B.repr x 0 with ha_def
+  set b : R := B.repr x 1 with hb_def
   -- Goal: IsSquare x, where x = algebraMap a + algebraMap b * j
   by_cases hb0 : b = 0
   · -- Case b = 0: x = algebraMap a; split by isSquare_or_isSquare_neg a
