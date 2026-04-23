@@ -61,8 +61,7 @@ theorem of_ivp
         ∃ c, g.IsRoot c := by
       intro g hgdeg hlc
       set n := f.natDegree
-      have hgn : g.natDegree = n := hgdeg
-      set B : R := ∑ i ∈ Finset.range n, |g.coeff i| with hB
+      set B : R := ∑ i ∈ Finset.range n, |g.coeff i|
       have hB_nonneg : 0 ≤ B := Finset.sum_nonneg (fun i _ => abs_nonneg _)
       set aₙ := g.leadingCoeff with haₙ
       set M : R := (B + 1) / aₙ + 1 with hM
@@ -107,9 +106,9 @@ theorem of_ivp
       have hg_pos : 0 < g.eval M := by
         have hexp : g.eval M = aₙ * M ^ n + ∑ i ∈ Finset.range n, g.coeff i * M ^ i := by
           have := eval_eq_sum_range (p := g) M
-          rw [hgn] at this
+          rw [hgdeg] at this
           rw [this, Finset.sum_range_succ,
-              show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgn]]
+              show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgdeg]]
           ring
         rw [hexp]
         have htb := tail_bound M hM_ge
@@ -126,9 +125,9 @@ theorem of_ivp
         have hexp :
             g.eval (-M) = aₙ * (-M) ^ n + ∑ i ∈ Finset.range n, g.coeff i * (-M) ^ i := by
           have := eval_eq_sum_range (p := g) (-M)
-          rw [hgn] at this
+          rw [hgdeg] at this
           rw [this, Finset.sum_range_succ,
-              show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgn]]
+              show g.coeff n = aₙ from by rw [haₙ, leadingCoeff, hgdeg]]
           ring
         rw [hexp, Odd.neg_pow (hgdeg ▸ hodd : Odd n) M]
         have htb := tail_bound_neg M hM_ge
