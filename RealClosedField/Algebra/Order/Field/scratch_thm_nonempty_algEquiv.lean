@@ -97,14 +97,13 @@ theorem nonempty_algEquiv_of_finrank_eq_two
   have hroot : x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) b = 0 := by
     have haev := minpoly.aeval R x
     rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)] at haev
-    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add] at haev
-    -- haev : coeff 0 • x^0 + coeff 1 • x^1 + coeff 2 • x^2 = 0
-    -- Fold in the coeff defs and simplify powers/scalars.
-    rw [show (minpoly R x).coeff 0 = b from rfl,
-        show (minpoly R x).coeff 1 = a from rfl,
-        hcoeff2] at haev
-    simp only [Algebra.smul_def, pow_zero, mul_one, pow_one, one_mul, map_one] at haev
-    -- haev : algebraMap b + algebraMap a * x + x^2 = 0
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add,
+      Algebra.smul_def, pow_zero, mul_one, pow_one] at haev
+    rw [hcoeff2, map_one, one_mul] at haev
+    -- haev : algebraMap (coeff 0) + algebraMap (coeff 1) * x + x^2 = 0
+    -- The local defs `a` and `b` for `coeff 1` and `coeff 0` unfold definitionally.
+    show x ^ 2 + (algebraMap R L) ((minpoly R x).coeff 1) * x +
+      (algebraMap R L) ((minpoly R x).coeff 0) = 0
     linear_combination haev
   -- Step 3: y = x + algebraMap(a/2); y^2 = algebraMap(a^2/4 - b).
   set c : R := a ^ 2 / 4 - b with hc_def
