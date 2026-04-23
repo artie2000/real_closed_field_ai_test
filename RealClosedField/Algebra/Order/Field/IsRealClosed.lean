@@ -246,10 +246,37 @@ private lemma exists_odd_irreducible_factor
       ih q.natDegree hq_lt hq_odd hq_odd.pos rfl
     exact ⟨g', hg'_monic, hg'_irred, hg'_dvd.trans ⟨g, by rw [hq_eq]; ring⟩, hg'_odd⟩
 
+/-- Given a field extension `K/R` (where `R` is ordered), a linear functional `π : K →ₗ[R] R`
+with `π 1 = 1` and `π (x^2) ≥ 0` for all `x` induces an ordering on `K` making `K/R` an
+ordered `R`-algebra. This realises the blueprint lemma `lem:ext_ord_functional_suff`. -/
+theorem exists_isOrderedAlgebra_of_linearFunctional
+    {K : Type u} [Field K] [Algebra R K]
+    (π : K →ₗ[R] R) (hπ_one : π 1 = 1) (hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2)) :
+    ∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule R K := by
+  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+  intro hc
+  have hπ_in_span :
+      ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
+    intro s hs
+    refine Submodule.span_induction
+      (mem := ?_)
+      (zero := by rw [map_zero])
+      (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
+      (smul := fun r x _ hx => by
+        show 0 ≤ π (r • x)
+        rw [LinearMap.map_smul_of_tower]
+        exact mul_nonneg r.2 hx) hs
+    rintro y ⟨z, hz⟩
+    have heq : y = z ^ 2 := by rw [hz]; ring
+    rw [heq]; exact hπ_sq z
+  have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
+  have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
+  linarith [h1 ▸ h2]
+
 /-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
 field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
 This is the classical Artin-Schreier induction. -/
-private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
+lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
     {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
     ∃ _ : LinearOrder (AdjoinRoot g),
       IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
@@ -682,7 +709,7 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
       exact hno hneg_one_in_span
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
-private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
+lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
     {a : R} (ha : 0 ≤ a) (hsq : ¬ IsSquare a) :
     ∃ _ : LinearOrder (AdjoinRoot (X ^ 2 - C a : R[X])),
       IsStrictOrderedRing (AdjoinRoot (X ^ 2 - C a : R[X])) ∧
