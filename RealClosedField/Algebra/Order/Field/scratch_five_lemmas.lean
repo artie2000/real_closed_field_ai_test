@@ -965,11 +965,9 @@ private lemma isSquare_of_nonneg_of_noNontrivialOrderedAlgExt
   set α : K := AdjoinRoot.root p with hα_def
   -- α² = algebraMap R K x
   have hα_eq : α ^ 2 = algebraMap R K x := by
-    have h_eval : AdjoinRoot.mk p p = 0 := AdjoinRoot.mk_self
     have h_root : Polynomial.aeval α p = 0 := by
-      show (AdjoinRoot.mk p) p = 0
-      exact AdjoinRoot.mk_self
-    simp only [map_sub, map_pow, Polynomial.aeval_X, Polynomial.aeval_C] at h_root
+      rw [hα_def, AdjoinRoot.aeval_eq, AdjoinRoot.mk_self]
+    simp only [hp_def, map_sub, map_pow, Polynomial.aeval_X, Polynomial.aeval_C] at h_root
     linear_combination h_root
   -- finrank R K = 2
   have hp_deg : p.natDegree = 2 := by
