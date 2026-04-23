@@ -6,5 +6,7 @@
     "def:RCF"
   ],
   "statement": "$\\bar{R}=R(i)$.",
-  "proof": ""
+  "proof": "\\leanok",
+  "leanDeclaration": "IsRealClosed.isAlgClosure_adjoinRoot_X_sq_add_one",
+  "status": "proved"
 }
