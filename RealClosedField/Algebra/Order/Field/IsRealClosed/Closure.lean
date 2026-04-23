@@ -512,7 +512,7 @@ private theorem finrank_pow_two_of_galois
 private theorem finrank_le_two_of_galois
     (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L ≤ 2 := by
-  obtain ⟨k, hkeq⟩ := finrank_pow_two_of_galois L
+  obtain ⟨k, hkeq⟩ := finrank_pow_two_of_galois (R := R) L
   rw [hkeq]
   by_contra hcontra
   push_neg at hcontra
@@ -599,7 +599,7 @@ private theorem finrank_le_two_of_galois
 private theorem finrank_one_or_two_of_galois
     (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L = 1 ∨ Module.finrank R L = 2 := by
-  have h : Module.finrank R L ≤ 2 := finrank_le_two_of_galois L
+  have h : Module.finrank R L ≤ 2 := finrank_le_two_of_galois (R := R) L
   have hpos : 0 < Module.finrank R L := Module.finrank_pos
   interval_cases (Module.finrank R L) <;> simp_all
 
@@ -630,7 +630,7 @@ theorem finrank_eq_one_or_two_of_finite
     have htower := IntermediateField.finrank_bot_mul_relfinrank hrange_le
     exact ⟨_, htower.symm⟩
   rw [hKK']
-  rcases finrank_one_or_two_of_galois L with hL1 | hL2
+  rcases finrank_one_or_two_of_galois (R := R) L with hL1 | hL2
   · rw [hL1] at hdvd
     left; exact Nat.dvd_one.mp hdvd
   · rw [hL2] at hdvd
