@@ -215,15 +215,6 @@ private lemma not_exists_ordered_algebra_of_bijective
   haveI := hom
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
-/-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
-field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
-This is the classical Artin-Schreier induction. -/
-private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
-    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
-    ∃ _ : LinearOrder (AdjoinRoot g),
-      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
-  sorry
-
 /-- Every positive-odd-`natDegree` polynomial has a monic irreducible factor of odd
 `natDegree`. -/
 private lemma exists_odd_irreducible_factor
@@ -253,6 +244,441 @@ private lemma exists_odd_irreducible_factor
     obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
       ih q.natDegree hq_lt hq_odd hq_odd.pos rfl
     exact ⟨g', hg'_monic, hg'_irred, hg'_dvd.trans ⟨g, by rw [hq_eq]; ring⟩, hg'_odd⟩
+
+/-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
+field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
+This is the classical Artin-Schreier induction. -/
+private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
+    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
+    ∃ _ : LinearOrder (AdjoinRoot g),
+      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
+  classical
+  induction hn : g.natDegree using Nat.strong_induction_on generalizing g with
+  | _ n ih =>
+  subst hn
+  haveI : Fact (Irreducible g) := ⟨hg_irred⟩
+  set K := AdjoinRoot g
+  let hm : IsAdjoinRootMonic K g := AdjoinRoot.isAdjoinRootMonic g hg_monic
+  -- Define the projection π : K →ₗ[R] R via the 0th coefficient.
+  let π : K →ₗ[R] R :=
+    { toFun := fun x => hm.coeff x 0
+      map_add' := fun x y => by simp
+      map_smul' := fun r x => by simp }
+  have hπ_algebraMap : ∀ r : R, π (algebraMap R K r) = r := by
+    intro r
+    show hm.coeff (algebraMap R K r) 0 = r
+    rw [hm.coeff_algebraMap]; simp
+  have hπ_one : π 1 = 1 := by
+    show hm.coeff 1 0 = 1; rw [hm.coeff_one]; simp
+  -- Use the characterization of ordered algebras
+  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+  intro hc
+  -- Case on the degree of g: either g.natDegree = 1, or g.natDegree ≥ 3.
+  by_cases hdeg1 : g.natDegree = 1
+  · -- Base case: g.natDegree = 1. Every x ∈ K equals algebraMap R K (π x), so π is a
+    -- surjective ring hom and we can transport.
+    have hrepr : ∀ x : K, x = algebraMap R K (π x) := by
+      intro x
+      apply hm.ext_elem
+      intro i hi
+      rw [hdeg1] at hi
+      interval_cases i
+      rw [hm.coeff_algebraMap]
+      simp [π]
+    have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
+      intro x
+      have h1 : x ^ 2 = algebraMap R K ((π x) ^ 2) := by
+        conv_lhs => rw [hrepr x]
+        rw [← map_pow]
+      rw [h1, hπ_algebraMap]
+      positivity
+    -- Then the span argument: π of any element in the span is ≥ 0.
+    have hπ_in_span :
+        ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
+      intro s hs
+      refine Submodule.span_induction
+        (mem := ?_)
+        (zero := by rw [map_zero])
+        (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
+        (smul := fun r x _ hx => by
+          show 0 ≤ π (r • x)
+          rw [LinearMap.map_smul_of_tower]
+          exact mul_nonneg r.2 hx) hs
+      rintro y ⟨z, hz⟩
+      have heq : y = z ^ 2 := by rw [hz]; ring
+      rw [heq]; exact hπ_sq z
+    have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
+    have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
+    linarith [h1 ▸ h2]
+  · -- Inductive case: g.natDegree ≥ 3.
+    have hn_ge : 3 ≤ g.natDegree := by
+      have h1 := hg_odd.pos
+      rcases hg_odd with ⟨k, hk⟩
+      omega
+    -- Unpack the span into a finite linear combination
+    obtain ⟨c, hc_supp, hc_sum⟩ := Submodule.mem_span_set.mp hc
+    -- For each y in support, y is a square; pick a square root and its polynomial lift.
+    have hy_sq : ∀ y ∈ c.support, IsSquare y := fun y hy => hc_supp hy
+    -- For each y ∈ c.support, choose a square root `sqRoot y` with y = sqRoot y ^ 2.
+    let sqRoot : K → K := fun y => if hy : IsSquare y then hy.choose else 0
+    have hsqRoot : ∀ y ∈ c.support, y = sqRoot y ^ 2 := by
+      intro y hy
+      have hsq := hy_sq y hy
+      have hspec : y = hsq.choose * hsq.choose := hsq.choose_spec
+      show y = (if hy' : IsSquare y then hy'.choose else 0) ^ 2
+      rw [dif_pos hsq, sq]; exact hspec
+    -- Polynomial lift of sqRoot y, with degree < g.natDegree.
+    let p : K → R[X] := fun y => hm.modByMonicHom (sqRoot y)
+    have hg_ne_one : g ≠ 1 := fun he => by
+      have hgi := hg_irred
+      rw [he] at hgi
+      exact hgi.not_isUnit isUnit_one
+    have hp_deg_lt : ∀ y : K, (p y).natDegree < g.natDegree := fun y =>
+      Polynomial.natDegree_modByMonic_lt _ hg_monic hg_ne_one
+    have hp_mk : ∀ y ∈ c.support, AdjoinRoot.mk g (p y) = sqRoot y := by
+      intro y _
+      show hm.map (hm.modByMonicHom (sqRoot y)) = sqRoot y
+      exact hm.map_modByMonicHom (sqRoot y)
+    -- Build the polynomial P := (∑ C (c y).val * (p y)^2) + 1.
+    set P : R[X] := (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1 with hP_def
+    -- Claim: g | P
+    have hg_dvd_P : g ∣ P := by
+      rw [← AdjoinRoot.mk_eq_zero]
+      have key : AdjoinRoot.mk g P = (∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y) + 1 := by
+        rw [hP_def, map_add, map_sum, map_one]
+        congr 1
+        refine Finset.sum_congr rfl fun y hy => ?_
+        rw [map_mul, map_pow, AdjoinRoot.mk_C, hp_mk y hy, ← hsqRoot y hy]
+        show (algebraMap R K (c y : R)) * y = (c y : ↥(Subsemiring.nonneg R)) • y
+        rw [Subsemiring.smul_def, Algebra.smul_def]
+      rw [key]
+      have hsum_eq : c.sum (fun mi r => r • mi) = ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y := rfl
+      rw [← hsum_eq, hc_sum]; ring
+    -- Extract h with P = h * g
+    obtain ⟨h, hhg⟩ := hg_dvd_P
+    -- Analyze degrees
+    -- First: P ≠ 0 because P has constant term > 0 (the +1 at the end after C coefficients)
+    -- Actually we need to argue more carefully. Let's bound natDegree P.
+    -- Each summand C (c y) * (p y)^2 has natDegree ≤ 2 * (p y).natDegree < 2 * g.natDegree.
+    -- So natDegree P < 2 * g.natDegree.
+    have hP_deg_lt : P.natDegree < 2 * g.natDegree := by
+      have hbound : ∀ y : K, (C ((c y : R)) * (p y)^2).natDegree < 2 * g.natDegree := by
+        intro y
+        have h1 : (C ((c y : R)) * (p y)^2).natDegree ≤ (p y ^ 2).natDegree := by
+          calc (C ((c y : R)) * (p y)^2).natDegree
+              ≤ (C ((c y : R))).natDegree + (p y ^ 2).natDegree := Polynomial.natDegree_mul_le
+            _ ≤ 0 + (p y ^ 2).natDegree := by simp
+            _ = (p y ^ 2).natDegree := by rw [zero_add]
+        have h2 : (p y ^ 2).natDegree ≤ 2 * (p y).natDegree := by
+          have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
+        have := hp_deg_lt y; omega
+      have hsum_deg : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree < 2 * g.natDegree := by
+        have h1 := Polynomial.natDegree_sum_le c.support (fun y => C ((c y : R)) * (p y)^2)
+        have h2 : Finset.fold max 0 (Polynomial.natDegree ∘ (fun y => C ((c y : R)) * (p y)^2))
+                    c.support < 2 * g.natDegree := by
+          rw [Finset.fold_max_lt]
+          refine ⟨?_, fun y _ => hbound y⟩
+          linarith [hg_odd.pos]
+        exact lt_of_le_of_lt h1 h2
+      have : P.natDegree ≤
+          max (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree (1 : R[X]).natDegree :=
+        Polynomial.natDegree_add_le _ _
+      simp [Polynomial.natDegree_one] at this
+      omega
+    -- P ≠ 0 because evaluating at 0 gives a positive value.
+    have hP_ne : P ≠ 0 := by
+      intro hP0
+      have h1 : P.eval 0 = 0 := by rw [hP0, Polynomial.eval_zero]
+      have h2 : P.eval 0 = (∑ y ∈ c.support, (c y : R) * ((p y).eval 0)^2) + 1 := by
+        rw [hP_def]
+        simp [Polynomial.eval_add, Polynomial.eval_finset_sum, Polynomial.eval_mul,
+              Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_one]
+      have h3 : (0 : R) ≤ ∑ y ∈ c.support, (c y : R) * ((p y).eval 0)^2 := by
+        apply Finset.sum_nonneg
+        intro y _
+        have := (c y).2
+        have : (0 : R) ≤ (c y : R) := this
+        positivity
+      linarith
+    -- P = g * h, extract h.
+    have hh_ne : h ≠ 0 := by
+      intro hh0; apply hP_ne; rw [hhg, hh0, mul_zero]
+    -- Compute h.natDegree.
+    have hh_deg : h.natDegree = P.natDegree - g.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne]; omega
+    -- Now show h.natDegree is odd.
+    -- First argue P.natDegree ≥ g.natDegree (since h*g = P, h ≠ 0).
+    have hP_deg_ge : g.natDegree ≤ P.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne]; omega
+    -- Now P = ∑ + 1. Look at the leading term more carefully.
+    -- Key: P = (sumSq) + 1 where sumSq has even degree when non-constant.
+    -- Alternative approach: since g.natDegree is odd ≥ 3, g.natDegree is ≥ 3.
+    -- h.natDegree < g.natDegree because P.natDegree < 2 * g.natDegree means
+    -- h.natDegree + g.natDegree < 2 * g.natDegree, so h.natDegree < g.natDegree.
+    have hh_deg_lt : h.natDegree < g.natDegree := by
+      rw [hhg, Polynomial.natDegree_mul hg_irred.ne_zero hh_ne] at hP_deg_lt
+      omega
+    -- Now we need to show h.natDegree is odd, i.e., not 0 mod 2.
+    -- Strategy: show P.natDegree is even. This follows from analyzing the leading coefficient.
+    -- Let d := max natDegree of p y in support (taking only those with p y ≠ 0 and c y > 0).
+    -- First consider the case where ∑ C (c y) * (p y)^2 = 0.
+    have hcase := Classical.em (∀ y ∈ c.support, p y = 0)
+    rcases hcase with hall_zero | hnot_all_zero
+    · -- All p y = 0, so sum is 0, so P = 1, so h * g = 1. But g is not a unit. Contradiction.
+      have hsum0 : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) = 0 := by
+        apply Finset.sum_eq_zero
+        intro y hy
+        rw [hall_zero y hy]; ring
+      have hP1 : P = 1 := by rw [hP_def, hsum0, zero_add]
+      rw [hP1] at hhg
+      have : IsUnit g := IsUnit.of_mul_eq_one _ hhg.symm
+      exact hg_irred.not_isUnit this
+    · -- Not all p y are zero. Show that P.natDegree is even, so h.natDegree is odd.
+      push_neg at hnot_all_zero
+      obtain ⟨y₀, hy₀, hpy₀⟩ := hnot_all_zero
+      -- Let d := maximum of (p y).natDegree over y ∈ c.support (those with p y ≠ 0)
+      let d : ℕ := c.support.sup (fun y => (p y).natDegree)
+      -- d ≥ (p y₀).natDegree ≥ 0; and d ≤ g.natDegree - 1.
+      have hd_ge : (p y₀).natDegree ≤ d := Finset.le_sup (f := fun y => (p y).natDegree) hy₀
+      have hd_lt : d < g.natDegree := by
+        rw [Finset.sup_lt_iff hg_odd.pos]
+        intro y _; exact hp_deg_lt y
+      -- coeff of ∑ at index 2d is ∑ y, (c y) * (leadingCoeff (p y))^2 if (p y).natDegree = d, else 0.
+      have hsum_coeff_2d :
+          (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).coeff (2 * d) =
+          ∑ y ∈ c.support, if (p y).natDegree = d then (c y : R) * ((p y).leadingCoeff)^2 else 0 := by
+        rw [Polynomial.finset_sum_coeff]
+        refine Finset.sum_congr rfl fun y _ => ?_
+        rw [Polynomial.coeff_C_mul]
+        by_cases hpy_ne : p y = 0
+        · rw [hpy_ne]
+          simp
+        · -- (p y)^2 has natDegree 2 * (p y).natDegree
+          have hdp : (p y)^2 = (p y) * (p y) := sq (p y)
+          have hdeg_sq : ((p y)^2).natDegree = 2 * (p y).natDegree := by
+            rw [hdp, Polynomial.natDegree_mul hpy_ne hpy_ne]; ring
+          by_cases hdp_eq : (p y).natDegree = d
+          · rw [if_pos hdp_eq]
+            have : ((p y) ^ 2).coeff (2 * d) = ((p y).leadingCoeff)^2 := by
+              rw [← hdp_eq, ← hdeg_sq, Polynomial.coeff_natDegree]
+              rw [hdp, Polynomial.leadingCoeff_mul]; ring
+            rw [this]
+          · rw [if_neg hdp_eq]
+            have hlt : ((p y)^2).natDegree < 2 * d := by
+              rw [hdeg_sq]
+              have hle : (p y).natDegree ≤ d :=
+                Finset.le_sup (f := fun y => (p y).natDegree) ‹y ∈ c.support›
+              omega
+            rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt]; ring
+      -- The RHS of hsum_coeff_2d: show it's > 0
+      have hsum_coeff_2d_pos :
+          0 < (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).coeff (2 * d) := by
+        rw [hsum_coeff_2d]
+        -- Each term is nonneg; at least one is positive (for y₀ if (p y₀).natDegree = d, else
+        -- for some y with max).
+        -- Find some y with (p y).natDegree = d.
+        -- Since d = sup over c.support of (p y).natDegree, d is attained by some y ∈ c.support.
+        have hex : ∃ y ∈ c.support, (p y).natDegree = d := by
+          obtain ⟨y, hy, hymax⟩ :=
+            Finset.exists_mem_eq_sup c.support ⟨y₀, hy₀⟩ (fun y => (p y).natDegree)
+          exact ⟨y, hy, hymax.symm⟩
+        obtain ⟨y₁, hy₁_mem, hy₁_eq⟩ := hex
+        -- To get y₁ with p y₁ ≠ 0: if (p y₁).natDegree = d ≥ 0, then either p y₁ = 0 (degree 0), or nonzero.
+        -- If d = 0 and p y₁ = 0, that's fine, but then for positivity we need (p y₁).leadingCoeff ≠ 0.
+        -- If p y₁ = 0, leadingCoeff is 0 so term is 0. So we need y₁ with p y₁ ≠ 0.
+        -- Pick d such that (p y).natDegree = d AND p y ≠ 0. We know p y₀ ≠ 0 so (p y₀).natDegree is one candidate.
+        by_cases hpy1_ne : p y₁ ≠ 0
+        · -- Then leadingCoeff p y₁ ≠ 0, (c y₁) > 0.
+          have hpos_term : 0 < (c y₁ : R) * ((p y₁).leadingCoeff)^2 := by
+            have hc_pos : 0 < (c y₁ : R) := by
+              have hne : c y₁ ≠ 0 := Finsupp.mem_support_iff.mp hy₁_mem
+              have hnn : 0 ≤ (c y₁ : R) := (c y₁).2
+              have : (c y₁ : R) ≠ 0 := fun he => hne (Subtype.ext he)
+              exact lt_of_le_of_ne hnn (Ne.symm this)
+            have hlc_ne : (p y₁).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hpy1_ne
+            have hlc_sq : 0 < ((p y₁).leadingCoeff)^2 := by positivity
+            exact mul_pos hc_pos hlc_sq
+          refine lt_of_lt_of_le hpos_term ?_
+          have : ∀ y ∈ c.support,
+              (0 : R) ≤ if (p y).natDegree = d then (c y : R) * ((p y).leadingCoeff)^2 else 0 := by
+            intro y _
+            by_cases hf : (p y).natDegree = d
+            · rw [if_pos hf]
+              have := (c y).2
+              have : (0 : R) ≤ (c y : R) := this
+              positivity
+            · rw [if_neg hf]
+          -- Decompose the sum: singleton {y₁} + rest
+          rw [← Finset.sum_erase_add _ _ hy₁_mem]
+          rw [if_pos hy₁_eq]
+          have hnn_rest :
+              (0 : R) ≤ ∑ x ∈ c.support.erase y₁,
+                if (p x).natDegree = d then (c x : R) * ((p x).leadingCoeff)^2 else 0 := by
+            apply Finset.sum_nonneg
+            intro y hy
+            have hy' : y ∈ c.support := Finset.mem_of_mem_erase hy
+            exact this y hy'
+          linarith
+        · -- p y₁ = 0 means (p y₁).natDegree = 0 = d. So d = 0.
+          push_neg at hpy1_ne
+          rw [hpy1_ne] at hy₁_eq
+          simp at hy₁_eq
+          -- d = 0, but (p y₀).natDegree ≤ d = 0, so (p y₀).natDegree = 0. But p y₀ ≠ 0, so that's fine.
+          -- Recompute using y₀ as the distinguished term.
+          have hd0 : d = 0 := hy₁_eq.symm
+          have hpy0_deg : (p y₀).natDegree = 0 := by
+            have : (p y₀).natDegree ≤ d :=
+              Finset.le_sup (f := fun y => (p y).natDegree) hy₀
+            omega
+          have hc0_pos : 0 < (c y₀ : R) := by
+            have hne : c y₀ ≠ 0 := Finsupp.mem_support_iff.mp hy₀
+            have hnn : 0 ≤ (c y₀ : R) := (c y₀).2
+            have : (c y₀ : R) ≠ 0 := fun he => hne (Subtype.ext he)
+            exact lt_of_le_of_ne hnn (Ne.symm this)
+          have hlc0 : 0 < ((p y₀).leadingCoeff)^2 := by
+            have hlc_ne : (p y₀).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hpy₀
+            positivity
+          have hpos_term : 0 < (c y₀ : R) * ((p y₀).leadingCoeff)^2 := mul_pos hc0_pos hlc0
+          rw [← Finset.sum_erase_add _ _ hy₀]
+          have hpy0_deg_d : (p y₀).natDegree = d := by rw [hd0]; exact hpy0_deg
+          rw [if_pos hpy0_deg_d]
+          have hnn_rest :
+              (0 : R) ≤ ∑ x ∈ c.support.erase y₀,
+                if (p x).natDegree = d then (c x : R) * ((p x).leadingCoeff)^2 else 0 := by
+            apply Finset.sum_nonneg
+            intro y hy
+            by_cases hf : (p y).natDegree = d
+            · rw [if_pos hf]
+              have := (c y).2
+              have : (0 : R) ≤ (c y : R) := this
+              positivity
+            · rw [if_neg hf]
+          linarith
+      -- Now the natDegree of sumSq is exactly 2 * d.
+      have hsum_natDeg :
+          (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree = 2 * d := by
+        apply le_antisymm
+        · -- ≤ 2 * d: because each term has natDegree ≤ 2 * (p y).natDegree ≤ 2 * d.
+          apply Polynomial.natDegree_sum_le_of_forall_le
+          intro y _
+          calc (C ((c y : R)) * (p y)^2).natDegree
+              ≤ (p y ^ 2).natDegree := by
+                calc (C ((c y : R)) * (p y)^2).natDegree
+                    ≤ (C ((c y : R))).natDegree + (p y ^ 2).natDegree := Polynomial.natDegree_mul_le
+                  _ ≤ 0 + (p y ^ 2).natDegree := by simp
+                  _ = (p y ^ 2).natDegree := by rw [zero_add]
+            _ ≤ 2 * (p y).natDegree := by
+                have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
+            _ ≤ 2 * d := by
+                have hle : (p y).natDegree ≤ d :=
+                  Finset.le_sup (f := fun y => (p y).natDegree) ‹y ∈ c.support›
+                omega
+        · -- ≥ 2 * d: because coeff (2*d) ≠ 0.
+          apply Polynomial.le_natDegree_of_ne_zero
+          exact ne_of_gt hsum_coeff_2d_pos
+      -- Derive d ≥ 2. If d = 0, sum has degree 0, so P has degree ≤ 0,
+      -- contradicting g.natDegree ≥ 3 ≤ P.natDegree.
+      have hd_pos : 2 ≤ d := by
+        by_contra hd_bad
+        push_neg at hd_bad
+        -- d ≤ 1. Then 2*d ≤ 2, so sum.natDegree ≤ 2, so P.natDegree ≤ 2.
+        -- but g.natDegree ≤ P.natDegree and g.natDegree ≥ 3. Contradiction.
+        have hsum_le : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree ≤ 2 := by
+          rw [hsum_natDeg]; omega
+        have hP_le : P.natDegree ≤ 2 := by
+          have h1 : P.natDegree ≤
+              max (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree (1 : R[X]).natDegree :=
+            by rw [hP_def]; exact Polynomial.natDegree_add_le _ _
+          simp [Polynomial.natDegree_one] at h1
+          omega
+        omega
+      -- P.natDegree = 2*d (since sum has natDegree 2*d > 0, and 1 has natDegree 0)
+      have hP_natDeg : P.natDegree = 2 * d := by
+        rw [hP_def]
+        rw [show (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1 =
+            (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + C 1 by simp]
+        rw [Polynomial.natDegree_add_C, hsum_natDeg]
+      -- h.natDegree is odd
+      have hh_deg_val : h.natDegree = 2 * d - g.natDegree := by
+        rw [hh_deg, hP_natDeg]
+      have hh_deg_pos : 0 < h.natDegree := by
+        rw [hh_deg_val]
+        -- 2*d - g.natDegree > 0 iff 2*d > g.natDegree iff d ≥ ⌈g.natDegree/2⌉
+        -- We have g.natDegree ≤ P.natDegree = 2*d, and g.natDegree is odd so g.natDegree < 2*d
+        have : g.natDegree < 2 * d := by
+          rcases hg_odd with ⟨k, hk⟩
+          have hge := hP_deg_ge
+          rw [hP_natDeg] at hge
+          omega
+        omega
+      have hh_deg_odd : Odd h.natDegree := by
+        rw [hh_deg_val]
+        rcases hg_odd with ⟨k, hk⟩
+        rw [hk]
+        have h1 : 2 * k + 1 < 2 * d := by
+          have hge := hP_deg_ge
+          rw [hP_natDeg, hk] at hge
+          omega
+        -- 2*d - (2*k+1) = 2*d - 2*k - 1 = 2*(d - k) - 1; since d > k, d - k ≥ 1,
+        -- so 2*(d-k) - 1 = 2*(d-k-1) + 1 which is odd.
+        have hdk : k < d := by omega
+        refine ⟨d - k - 1, ?_⟩
+        omega
+      -- Extract odd irreducible factor g' of h
+      obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
+        exists_odd_irreducible_factor hh_deg_odd hh_deg_pos
+      -- g'.natDegree ≤ h.natDegree < g.natDegree, so IH applies.
+      have hg'_lt : g'.natDegree < g.natDegree := by
+        obtain ⟨q, hq⟩ := hg'_dvd
+        have hq_ne : q ≠ 0 := fun hz => by
+          apply hh_ne; rw [hq, hz, mul_zero]
+        have : h.natDegree = g'.natDegree + q.natDegree := by
+          rw [hq, Polynomial.natDegree_mul hg'_irred.ne_zero hq_ne]
+        omega
+      -- g' ∣ P: because g' ∣ h ∣ P.
+      have hg'_dvd_P : g' ∣ P := hg'_dvd.trans ⟨g, by rw [hhg]; ring⟩
+      -- Now descend to AdjoinRoot g' and derive -1 ∈ span of squares.
+      haveI : Fact (Irreducible g') := ⟨hg'_irred⟩
+      set K' := AdjoinRoot g'
+      have hmk'_P : AdjoinRoot.mk g' P = 0 := AdjoinRoot.mk_eq_zero.mpr hg'_dvd_P
+      -- mk g' (sum) = -1 in K'
+      have hsum_eq_neg_one :
+          AdjoinRoot.mk g' (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) = (-1 : K') := by
+        have hsum : AdjoinRoot.mk g' ((∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1) = 0 := by
+          rw [← hP_def]; exact hmk'_P
+        rw [map_add, map_one] at hsum
+        linear_combination hsum
+      -- Build element in span of squares.
+      -- For each y, (mk g' (p y))^2 is a square in K'.
+      -- The coefficient (c y : nonneg R) acts via smul.
+      -- So mk g' (sum) = ∑ (c y) • (mk g' (p y))^2.
+      have hsum_expand :
+          AdjoinRoot.mk g' (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) =
+          ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • (AdjoinRoot.mk g' (p y))^2 := by
+        rw [map_sum]
+        refine Finset.sum_congr rfl fun y _ => ?_
+        rw [map_mul, map_pow, AdjoinRoot.mk_C]
+        show (algebraMap R K' (c y : R)) * (AdjoinRoot.mk g' (p y))^2 =
+          (c y : ↥(Subsemiring.nonneg R)) • (AdjoinRoot.mk g' (p y))^2
+        rw [Subsemiring.smul_def, Algebra.smul_def]
+      have hneg_one_in_span : (-1 : K') ∈
+          Submodule.span (Subsemiring.nonneg R) {x : K' | IsSquare x} := by
+        rw [← hsum_eq_neg_one, hsum_expand]
+        apply Submodule.sum_mem
+        intro y _
+        apply Submodule.smul_mem
+        apply Submodule.subset_span
+        exact ⟨AdjoinRoot.mk g' (p y), by ring⟩
+      -- Apply IH to g': get ordered structure on K'
+      obtain ⟨lo, hsr, hom⟩ := ih g'.natDegree hg'_lt hg'_monic hg'_irred hg'_odd rfl
+      -- By the characterization, -1 ∉ span. Contradiction.
+      letI := lo
+      haveI := hsr
+      haveI := hom
+      have hno : (-1 : K') ∉ Submodule.span (Subsemiring.nonneg R) {x : K' | IsSquare x} := by
+        rw [← Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+        exact ⟨lo, hsr, hom⟩
+      exact hno hneg_one_in_span
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
