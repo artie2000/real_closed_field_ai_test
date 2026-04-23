@@ -36,6 +36,26 @@ theorem exists_isOrderedAlgebra_of_linearProj_nonneg_sq
   rw [map_neg, hπ1] at h1
   linarith
 
+/-!
+## Odd-degree extension
+
+We now prove that any odd-degree finite field extension `K/F` of an ordered field `F`
+admits an ordering making it ordered. The idea is to prove by strong induction on the
+degree that `-1` is not in the span of squares of `K` over the non-negative cone in `F`.
+-/
+
+/-- Helper: the statement we'll prove by strong induction on `n`. -/
+private def OddDegreeStatement (n : ℕ) : Prop :=
+    ∀ (F K : Type) [Field F] [LinearOrder F] [IsStrictOrderedRing F]
+      [Field K] [Algebra F K] [FiniteDimensional F K],
+      Module.finrank F K = n → Odd n →
+      ∃ _ : LinearOrder K, IsStrictOrderedRing K ∧ IsOrderedModule F K
+
+-- The key polynomial-theoretic lemma we will use.
+-- Setting: F is an ordered field, and suppose -1 ∈ span_{F≥0}(squares(K)) where
+-- K = F(α) with minpoly f of degree n (odd, > 1). We derive a polynomial h of odd degree
+-- strictly less than n such that the same property holds in F[X]/(h).
+
 /-- Any odd-degree finite field extension `K/F` of an ordered field `F` admits an ordering
 making it ordered. -/
 theorem exists_isOrderedAlgebra_of_odd_finrank
