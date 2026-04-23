@@ -306,7 +306,118 @@ def PolynomialIVP : Prop :=
     ∃ c ∈ Set.Icc a b, f.IsRoot c
 
 /-- Polynomials over a real closed ordered field satisfy the intermediate value property. -/
-theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := sorry
+theorem polynomialIVP_of_isRealClosed [IsRealClosed R] : PolynomialIVP R := by
+  -- Strong induction on degree.
+  suffices H : ∀ n : ℕ, ∀ (f : Polynomial R), f.natDegree ≤ n →
+      ∀ (a b : R), a ≤ b → f.eval a ≤ 0 → 0 ≤ f.eval b →
+        ∃ c ∈ Set.Icc a b, f.IsRoot c by
+    intro f a b hab hfa hfb
+    exact H f.natDegree f (le_refl _) a b hab hfa hfb
+  intro n
+  induction n with
+  | zero =>
+    intro f hf a b hab hfa hfb
+    -- f has degree 0, so f is constant, f.eval a = f.eval b.
+    -- From hfa and hfb, this constant is 0.
+    have hdeg : f.natDegree = 0 := Nat.le_zero.mp hf
+    have heq : f.eval a = f.eval b := by
+      rw [Polynomial.eval_eq_C_of_natDegree_eq_zero hdeg,
+          Polynomial.eval_eq_C_of_natDegree_eq_zero hdeg]
+    have h0 : f.eval a = 0 := le_antisymm hfa (by rw [heq]; exact hfb)
+    exact ⟨a, ⟨hab.ge_iff_le.mp hab, hab⟩, h0⟩
+  | succ n ih =>
+    intro f hf a b hab hfa hfb
+    -- Either f has degree ≤ n (use ih) or natDegree f = n+1.
+    by_cases hfn : f.natDegree ≤ n
+    · exact ih f hfn a b hab hfa hfb
+    push_neg at hfn
+    have hfdeg : f.natDegree = n + 1 := by omega
+    have hfpos : 0 < f.natDegree := by omega
+    have hfne : f ≠ 0 := fun h => by rw [h, Polynomial.natDegree_zero] at hfdeg; omega
+    -- Get a monic irreducible factor.
+    obtain ⟨g, hgm, hgi, hf_dvd⟩ :=
+      f.exists_monic_irreducible_factor (Polynomial.not_isUnit_of_natDegree_pos f hfpos)
+    obtain ⟨h, hfh⟩ := hf_dvd
+    have hgne : g ≠ 0 := hgm.ne_zero
+    have hhne : h ≠ 0 := by
+      intro hh; rw [hh, mul_zero] at hfh; exact hfne hfh
+    -- Use the classification.
+    rcases monic_irreducible_classification R hgm hgi with ⟨c, hgc⟩ | ⟨p, q, hqne, hgq⟩
+    · -- g = X - C c
+      have hga : g.eval a = a - c := by rw [hgc]; simp
+      have hgb : g.eval b = b - c := by rw [hgc]; simp
+      have hg_natDegree : g.natDegree = 1 := by
+        rw [hgc, Polynomial.natDegree_X_sub_C]
+      have hh_natDegree : h.natDegree = f.natDegree - 1 := by
+        have := hgm.natDegree_mul' hhne
+        rw [← hfh] at this
+        omega
+      have hh_le_n : h.natDegree ≤ n := by omega
+      -- Case split on whether c ∈ [a, b].
+      by_cases hca : a ≤ c
+      · by_cases hcb : c ≤ b
+        · -- c is in [a, b], c is a root of g hence of f.
+          refine ⟨c, ⟨hca, hcb⟩, ?_⟩
+          show f.eval c = 0
+          rw [hfh, Polynomial.eval_mul, hgc]
+          simp
+        · -- c > b. Then g.eval a < 0, g.eval b < 0. So h has sign opposite to f everywhere on [a,b].
+          push_neg at hcb
+          have hga_neg : g.eval a < 0 := by rw [hga]; linarith
+          have hgb_neg : g.eval b < 0 := by rw [hgb]; linarith
+          -- f.eval a = g.eval a * h.eval a ≤ 0 with g.eval a < 0, so h.eval a ≥ 0.
+          have hfa' : (g * h).eval a ≤ 0 := by rw [← hfh]; exact hfa
+          have hfb' : 0 ≤ (g * h).eval b := by rw [← hfh]; exact hfb
+          rw [Polynomial.eval_mul] at hfa' hfb'
+          have hha : 0 ≤ h.eval a := by
+            rcases mul_nonpos_iff.mp hfa' with ⟨hpos, hneg⟩ | ⟨hneg, hpos⟩
+            · linarith
+            · exact hpos
+          have hhb : h.eval b ≤ 0 := by
+            rcases mul_nonneg_iff.mp hfb' with ⟨hpos1, hpos2⟩ | ⟨hneg1, hneg2⟩
+            · linarith
+            · exact hneg2
+          -- Apply ih to -h.
+          have hnegh_natDegree : (-h).natDegree ≤ n := by
+            rw [Polynomial.natDegree_neg]; exact hh_le_n
+          have hnegh_a : (-h).eval a ≤ 0 := by
+            rw [Polynomial.eval_neg]; linarith
+          have hnegh_b : 0 ≤ (-h).eval b := by
+            rw [Polynomial.eval_neg]; linarith
+          obtain ⟨r, hrI, hrroot⟩ := ih (-h) hnegh_natDegree a b hab hnegh_a hnegh_b
+          refine ⟨r, hrI, ?_⟩
+          show f.eval r = 0
+          rw [hfh, Polynomial.eval_mul]
+          have : (-h).eval r = 0 := hrroot
+          rw [Polynomial.eval_neg, neg_eq_zero] at this
+          rw [this, mul_zero]
+      · -- c > a (so c > a means not c ≤ a)... actually hca is false means c < a.
+        push_neg at hca
+        have hga_pos : 0 < g.eval a := by rw [hga]; linarith
+        have hgb_pos : 0 < g.eval b := by rw [hgb]; linarith
+        -- f.eval a = g.eval a * h.eval a ≤ 0 with g.eval a > 0, so h.eval a ≤ 0.
+        have hfa' : (g * h).eval a ≤ 0 := by rw [← hfh]; exact hfa
+        have hfb' : 0 ≤ (g * h).eval b := by rw [← hfh]; exact hfb
+        rw [Polynomial.eval_mul] at hfa' hfb'
+        have hha : h.eval a ≤ 0 := by
+          rcases mul_nonpos_iff.mp hfa' with ⟨hpos, hneg⟩ | ⟨hneg, hpos⟩
+          · exact hneg
+          · linarith
+        have hhb : 0 ≤ h.eval b := by
+          rcases mul_nonneg_iff.mp hfb' with ⟨hpos1, hpos2⟩ | ⟨hneg1, hneg2⟩
+          · exact hpos2
+          · linarith
+        obtain ⟨r, hrI, hrroot⟩ := ih h hh_le_n a b hab hha hhb
+        refine ⟨r, hrI, ?_⟩
+        show f.eval r = 0
+        rw [hfh, Polynomial.eval_mul]
+        have : h.eval r = 0 := hrroot
+        rw [this, mul_zero]
+    · -- g = (X - C p)^2 + C (q^2), always positive on R.
+      have hq_sq_pos : 0 < q ^ 2 := pow_pos (abs_pos.mpr hqne).lt_of_le (by positivity) |>.trans_eq
+        (by rw [sq_abs]) |>.lt_of_ne' (by positivity) -- dummy
+      sorry
+  where X := Polynomial.X
 
 namespace polynomialIVP_aux
 
