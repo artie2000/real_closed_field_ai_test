@@ -11,96 +11,122 @@ four helper lemmas:
 - **[PROVED]** `IsRealClosed.of_ivp` (`thm:IVP_poly_imp_RCF`)
 - **[PROVED]** `IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra` (`thm:ord_max_imp_RCF`)
 - **[sorry]** `IsRealClosed.exists_isRoot_of_nonpos_of_nonneg` (`lem:IVP_poly`)
+  — still sorry in main file at line 41. Will become `exact ivp_poly hab ha hb`
+  once S10 is merged.
 - **[sorry]** `IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra` (`lem:RCF_max_ord`)
+  — still sorry in main file at line 165. Will become
+  `exact bijective_algebraMap_of_isOrderedAlgebra' K` once S8 is proved.
 
-Both sorries require FTA for RCF. Mathlib does NOT provide this (confirmed: only
-ℂ-specific FTA exists; `Irreducible.natDegree_le_two` and
-`Polynomial.IsMonicOfDegree.eq_isMonicOfDegree_two_mul_isMonicOfDegree` are
-both ℝ-only with TODOs to generalise to RCF).
+The supporting FTA-for-RCF development lives in
+`RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean`.
 
-## Session 3 progress: FTA-for-RCF scaffold
-
-Created new file `RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean`.
-Import added to `RealClosedField.lean`.
-
-Compiles cleanly with remaining sorries. The file defines:
-
-```
-private abbrev Ri (R : Type u) ... : Type u := AdjoinRoot (X^2 + 1 : R[X])
-```
-
-plus local `Fact (Irreducible (X^2+1))` and `Module.Finite R (Ri R)` instances.
-
-### Sub-lemmas in Closure.lean (plan S1–S10, S7 folded into S8)
+## Sub-lemma status (S1–S10)
 
 | Code | Name | Status |
 |------|------|--------|
-| S1 | `isSquare_of_isSumSq` | **[PROVED]** (2-line inline) |
-| S2 | `finrank_eq_one_of_odd_finrank` | **[PROVED]** (prover subagent) |
-| S3 | `nonempty_algEquiv_Ri_of_finrank_eq_two` | sorry |
-| S4 | `Ri_isSquare` | sorry |
-| — | `no_quadratic_ext_Ri` | sorry |
-| S5 | `finrank_eq_one_or_two_of_finite` | sorry |
-| S6 | `finite_of_isAlgebraic` | sorry |
-| S9 | `natDegree_eq_one_or_forall_eval_pos_of_irreducible` | sorry |
-| S10 | `ivp_poly` | sorry |
-| S8 | `bijective_algebraMap_of_isOrderedAlgebra'` | sorry |
+| S1 | `isSquare_of_isSumSq` | **[PROVED]** (inline, 2 lines) |
+| S2 | `finrank_eq_one_of_odd_finrank` | **[PROVED]** |
+| S3 | `nonempty_algEquiv_Ri_of_finrank_eq_two` | **[PROVED]** |
+| S4 | `Ri_isSquare` | **[PROVED]** (~150 lines) |
+| — | `no_quadratic_ext_Ri` | **[PROVED]** |
+| — | `finrank_pow_two_of_galois` (private) | **[PROVED]** |
+| — | `finrank_le_two_of_galois` (private) | **[PROVED]** |
+| — | `finrank_one_or_two_of_galois` (private) | **[PROVED]** |
+| S5 | `finrank_eq_one_or_two_of_finite` | **[PROVED]** |
+| S6 | `finite_of_isAlgebraic` | **[PROVED]** |
+| S9 | `natDegree_eq_one_or_forall_eval_pos_of_irreducible` | **[PROVED]** |
+| S10 | `ivp_poly` | **[proved, NOT YET MERGED]** body in `scratch_s10.lean` |
+| S8 | `bijective_algebraMap_of_isOrderedAlgebra'` | **[sorry]** |
 
-### Dependency order
+Current Closure.lean sorries: two (lines 729 and 736), for S10 and S8
+respectively. The S10 sorry is ready to be replaced; S8 still needs a
+proof.
+
+## Unmerged S10 proof
+
+File `scratch_s10.lean` at the repo root contains a verified proof of
+`IsRealClosed.ivp_poly` built over an axiom for S9. To merge:
+
+1. Replace the `sorry` at `Closure.lean:729` (body of `theorem ivp_poly`)
+   with the tactic block from `scratch_s10.lean` lines 19–114 (everything
+   after `:= by`, starting with
+   `induction hn : f.natDegree using Nat.strong_induction_on generalizing f a b with`).
+2. Re-verify via `lean_diagnostic_messages` on Closure.lean — expect a
+   single remaining sorry (S8).
+3. Delete `scratch_s10.lean`.
+
+The proof uses strong induction on `f.natDegree`, extracts a monic
+irreducible factor via `Polynomial.exists_monic_irreducible_factor`,
+applies S9 to split `g` into linear vs always-positive, and for the linear
+case trichotomises on whether the root `r = -g.coeff 0` lies before `a`,
+after `b`, or inside `[a, b]`.
+
+## Outstanding: S8 (`bijective_algebraMap_of_isOrderedAlgebra'`)
+
+Located at `Closure.lean:732`. Signature:
 
 ```
-S1 ──────────┐
-             ↓
-S2 ─────→ S5 (keystone) ──┬─→ S6 ──┐
-             ↑            │         │
-S3 ──────────┤            │         │
-             │            ├─→ S9 ──→ S10  (⇒ fills main sorry #1)
-S4 → no_q_R  ┘            │
-                          └─→ S8   (⇒ fills main sorry #2)
-                              (uses S3, S5, S6)
+theorem bijective_algebraMap_of_isOrderedAlgebra'
+    (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K]
+    [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K] :
+    Function.Bijective (algebraMap R K)
 ```
 
-### Lemmas used in S2 (reference for subsequent proofs)
+Proof strategy (depends on S3, S5, S6):
 
-- `Field.exists_primitive_element` (char-0 separability auto-inferred via `Algebra.IsSeparable.of_integral`)
-- `Algebra.IsIntegral.isIntegral`
-- `IntermediateField.finrank_top'`
-- `IntermediateField.adjoin.finrank`
-- `minpoly.irreducible`
-- `IsRealClosed.exists_isRoot_of_odd_natDegree`
-- `Polynomial.degree_eq_one_of_irreducible_of_root`
-- `Polynomial.natDegree_eq_of_degree_eq_some`
+1. Take a primitive element `α : K` over `R` (use `Field.exists_primitive_element`
+   via `Algebra.IsSeparable` which holds in char 0).
+2. Let `L = R⟮α⟯` as an intermediate field; by S6 it is finite-dimensional.
+3. By S5, `finrank R L ∈ {1, 2}`.
+4. If `finrank = 1`, `algebraMap R L` is bijective, hence `algebraMap R K`
+   is surjective (and always injective for a field hom); conclude.
+5. If `finrank = 2`, by S3 there is `φ : L ≃ₐ[R] Ri R`. Transport
+   `AdjoinRoot.root (X^2 + 1)` back to `L` to get `i : L` with `i^2 = -1`.
+   This contradicts `sq_nonneg` in the ordered field `K ⊇ L`.
+6. Conclude `K = R` and `algebraMap R K` is bijective.
 
-## Plan to resume
+Delegate to a prover subagent with a scratch file axiomatising S3, S5, S6,
+plus `Ri R`, `not_isSquare_neg_one`, etc. See `scratch_s10.lean` for the
+shim pattern.
 
-Proceed in dependency order:
+## Wiring to main file (after S8)
 
-1. **S4** `Ri_isSquare`: every `z : Ri R` is a square. Computational (~80-150 lines).
-   Explicit formula: `(u+vi)² = z` with `u² = (a + √(a²+b²))/2`, `v = b/(2u)`
-   (case `b ≠ 0`) or handle `b = 0` directly via `isSquare_or_isSquare_neg`.
-   Mimic style of `exists_ordered_algebra_adjoinRoot_sq_sub_C` in the main file
-   (line ~684-785) for the `hrepr` structure using `IsAdjoinRootMonic.coeff`.
-2. **S3** `nonempty_algEquiv_Ri_of_finrank_eq_two`: complete-the-square + explicit
-   `AdjoinRoot.liftHom` to build `K ≃ₐ[R] Ri R`.
-3. **`no_quadratic_ext_Ri`**: follows from S4 (quadratic over `Ri R` splits since
-   discriminant is a square in `Ri R`).
-4. **S5** `finrank_eq_one_or_two_of_finite`: Galois + Sylow. Take Galois closure,
-   use 2-Sylow to extract odd-degree subfield (= R by S2), deduce finrank is 2^k.
-   Use S3 + `no_quadratic_ext_Ri` to eliminate k > 1.
-5. **S6** `finite_of_isAlgebraic`: short; use
-   `IntermediateField.exists_lt_finrank_of_infinite_dimensional` + S5.
-6. **S9** `natDegree_eq_one_or_forall_eval_pos_of_irreducible`: over a monic
-   irreducible `g`, `AdjoinRoot g` is finite of degree `g.natDegree`; by S5 that's
-   1 or 2. For degree-2, complete the square and show `g.eval x > 0`.
-7. **S10** `ivp_poly`: strong induction on `f.natDegree`, monic irreducible factor,
-   case analysis via S9 on linear vs always-positive.
-8. **S8** `bijective_algebraMap_of_isOrderedAlgebra'`: combine S6 + S5; for `finrank = 2`
-   use S3 to get `K ≃ₐ[R] Ri R`, transport `i` to `K` to get `i²=-1`, contradict
-   `sq_nonneg` in ordered `K`.
-9. **Wire up** in `IsRealClosed.lean`: replace the two sorry bodies with thin
-   proxies `exact ivp_poly hab ha hb` and
-   `exact bijective_algebraMap_of_isOrderedAlgebra' K`.
-10. Update blueprint statuses for the intermediate lemmas and final theorem.
+Two final edits in `RealClosedField/Algebra/Order/Field/IsRealClosed.lean`:
+
+- Line 41 (`exists_isRoot_of_nonpos_of_nonneg` body):
+  replace `sorry` with `exact ivp_poly hab ha hb`.
+- Line 165 (`bijective_algebraMap_of_isOrderedAlgebra` body):
+  replace `sorry` with `exact bijective_algebraMap_of_isOrderedAlgebra' K`
+  (signature may need `(R := R)` or similar explicit args — verify via LSP).
+
+Then `lean_diagnostic_messages` on both files should report zero sorries,
+and `IsRealClosed.tfae_ord` is complete.
+
+## Files touched this session
+
+- `RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean` — heavy work.
+  Added sorry-free proofs for S2, S3, S4, no_quadratic_ext_Ri, S5 (+ 3 private
+  helpers), S6, S9. Added imports:
+  ```
+  import Mathlib.FieldTheory.Fixed
+  import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+  import Mathlib.FieldTheory.Relrank
+  import Mathlib.GroupTheory.SpecificGroups.Cyclic
+  ```
+- `scratch_s10.lean` — NEW, still at repo root. Delete after merging S10.
+- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean` — untouched.
+  Still has the two sorries at lines 41 and 165.
+
+## Blueprint metadata
+
+Not yet updated. After wiring completes, refresh blueprint statuses for:
+`isSquare_of_isSumSq`, `finrank_eq_one_of_odd_finrank`, `Ri_isSquare`,
+`nonempty_algEquiv_Ri_of_finrank_eq_two`, `no_quadratic_ext_Ri`,
+`finrank_eq_one_or_two_of_finite`, `finite_of_isAlgebraic`,
+`natDegree_eq_one_or_forall_eval_pos_of_irreducible`, `ivp_poly`,
+`bijective_algebraMap_of_isOrderedAlgebra'`,
+`exists_isRoot_of_nonpos_of_nonneg`, `bijective_algebraMap_of_isOrderedAlgebra`,
+and `tfae_ord` itself.
 
 ## Known Mathlib path issues
 
@@ -109,17 +135,27 @@ Proceed in dependency order:
   `Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra` (both already in the
   imports of Closure.lean).
 
-## Files touched
+## Operational notes
 
-- `RealClosedField/Algebra/Order/Field/IsRealClosed.lean` — untouched this session.
-  Still has the two sorries at lines 38 and 161.
-- `RealClosedField/Algebra/Order/Field/IsRealClosed/Closure.lean` — NEW.
-  Skeleton + S1 + S2 proved.
-- `RealClosedField.lean` — added import for Closure.lean.
+- Bash cannot run `lake env lean` directly; delegate build/verification to
+  prover subagents or use MCP `lean_diagnostic_messages` for inspection.
+- Run at most one prover subagent at a time per user instruction.
+- API 529 overload was observed when dispatching large prover jobs; back off
+  via `ScheduleWakeup` (~240s) and retry.
 
 ## Resume prompt
 
-To resume: re-read `NUMINA_PROGRESS.md` and `Closure.lean`. Next subagent task
-is S4 (`Ri_isSquare`), the computational keystone. Detailed spec for S4 was
-drafted this session; search prior context or re-derive from the explicit
-formula above.
+To resume in a fresh context:
+
+1. Re-read `NUMINA_PROGRESS.md` and `Closure.lean` (specifically around
+   lines 725–740 for the two remaining sorries).
+2. Merge `scratch_s10.lean` into `Closure.lean` (replace sorry at 729),
+   delete scratch, verify via `lean_diagnostic_messages`.
+3. Dispatch a prover subagent for S8 (`bijective_algebraMap_of_isOrderedAlgebra'`).
+   Provide axiomatised shims for S3, S5, S6, `Ri R`, and
+   `not_isSquare_neg_one`. Follow strategy outlined above.
+4. Merge S8 proof body.
+5. Wire the two sorries in the main `IsRealClosed.lean` (lines 41, 165) to
+   the proved lemmas. Verify via `lean_diagnostic_messages`.
+6. Update blueprint metadata (use `mcp__blueprint-tools__refresh_blueprint_metadata`
+   then `mcp__blueprint-tools__set_declaration_status` per-declaration).
