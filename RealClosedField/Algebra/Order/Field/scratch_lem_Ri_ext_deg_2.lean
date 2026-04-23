@@ -355,10 +355,16 @@ theorem isSquare_of_finrank_base_eq_two
           · -- Set β := b / (2α); claim (a - r)/2 = β²
             refine ⟨b / (2 * α), ?_⟩
             have h2α_ne : (2 : R) * α ≠ 0 := mul_ne_zero two_ne_zero hα_ne
-            have h2_ne : (2 : R) ≠ 0 := two_ne_zero
+            have hα2_ne : α ≠ 0 := hα_ne
+            have h4α2_ne : (2 * α) * (2 * α) ≠ 0 := mul_ne_zero h2α_ne h2α_ne
             -- Goal: (-r + a) / 2 = b / (2 * α) * (b / (2 * α))
-            have := mul_ne_zero h2α_ne h2α_ne
-            field_simp
+            -- Multiply both sides by 2 * (2α)²:
+            -- (-r + a) * (2α)² = b * b * 2 ?? no, 2 * (-r+a)/2 * (2α)² = 2 * b²/(2α)² * (2α)²
+            -- Actually let's just manipulate directly
+            have hgoal_eq : (-r + a) / 2 = b / (2 * α) * (b / (2 * α)) ↔
+                (-r + a) * ((2 * α) * (2 * α)) = 2 * (b * b) := by
+              rw [div_mul_div_comm, div_eq_div_iff (by norm_num : (2 : R) ≠ 0) h4α2_ne]
+            rw [hgoal_eq]
             linear_combination 4 * (r - a) * hα + 2 * hr_sq
 
     obtain ⟨s, hs_sq, hcsq⟩ := hexists_sign
