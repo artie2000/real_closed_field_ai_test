@@ -9,9 +9,13 @@ import Mathlib.FieldTheory.Galois.Basic
 import Mathlib.FieldTheory.Normal.Closure
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
+import Mathlib.FieldTheory.Fixed
+import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+import Mathlib.FieldTheory.Relrank
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.IsAdjoinRoot
 import Mathlib.GroupTheory.Sylow
+import Mathlib.GroupTheory.SpecificGroups.Cyclic
 import Mathlib.Algebra.Polynomial.SpecificDegree
 import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
