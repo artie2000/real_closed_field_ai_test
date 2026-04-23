@@ -74,35 +74,29 @@ theorem finrank_eq_one_or_two_of_finite
   haveI hgal_L : IsGalois R L := by
     haveI : Algebra.IsSeparable R K := Algebra.IsAlgebraic.isSeparable_of_perfectField
     exact IsGalois.normalClosure R K AR
-  -- The image of K under φ lies inside L
+  -- The image of K under φ lies inside L, as intermediate field
   have hrange_le : φ.fieldRange ≤ L := AlgHom.fieldRange_le_normalClosure φ
-  -- Define ψ : K →ₐ[R] L (Algebra K L via φ and inclusion)
-  let ψ : K →ₐ[R] L :=
-    { toFun := fun x => ⟨φ x, hrange_le ⟨x, rfl⟩⟩
-      map_one' := by ext; simp
-      map_zero' := by ext; simp
-      map_add' := fun _ _ => by ext; simp
-      map_mul' := fun _ _ => by ext; simp
-      commutes' := fun r => by
-        apply Subtype.ext
-        change φ (algebraMap R K r) = algebraMap R L r
-        rw [AlgHom.commutes]; rfl }
-  have hψ_inj : Function.Injective ψ := by
-    intro a b h
-    have h1 : (ψ a : AR) = (ψ b : AR) := by rw [h]
-    exact hφ_inj h1
-  -- ψ.range ⊆ L as subalgebra
-  -- finrank R K = finrank R ψ.range
-  let eq : K ≃ₐ[R] ψ.range := AlgEquiv.ofInjectiveField ψ
-  have hK_eq_range : Module.finrank R K = Module.finrank R ψ.range :=
-    LinearEquiv.finrank_eq eq.toLinearEquiv
-  -- ψ.range is a subalgebra of L. L is finite-dim over R, hence free, so we can apply tower law
-  -- via Subalgebra.finrank_left_dvd_finrank_sup_of_free or similar; easier: use ψ.range has Algebra to L
+  -- φ.fieldRange is an IntermediateField of AR sitting inside L; as a field it's ≃ₐ[R] K
+  let K' : IntermediateField R AR := φ.fieldRange
+  have hK'_eq_range : Module.finrank R K = Module.finrank R K' := by
+    let eq : K ≃ₐ[R] φ.range := AlgEquiv.ofInjectiveField φ
+    have := LinearEquiv.finrank_eq eq.toLinearEquiv
+    -- φ.range (as subalgebra) and K' (as intermediate field) have the same carrier
+    -- Module.finrank R φ.range = Module.finrank R K'
+    have hEq : Module.finrank R φ.range = Module.finrank R K' :=
+      IntermediateField.finrank_eq_finrank_subalgebra K' |>.symm
+    rw [this, ← hEq]
+  -- K' ≤ L. Use restriction of scalars: K' is a subfield of L
+  -- Use IntermediateField.relfinrank for the tower: finrank R K' * relfinrank K' L = finrank R L.
   have hdvd : Module.finrank R K ∣ Module.finrank R L := by
-    rw [hK_eq_range]
-    -- We need to use that K embeds as subalgebra of L, L is a module over ψ.range
-    refine ⟨Module.finrank ψ.range L, ?_⟩
-    exact (Module.finrank_mul_finrank R ψ.range L).symm
+    rw [hK'_eq_range]
+    -- finrank R K' * finrank K' L = finrank R L (tower law via IntermediateField inclusion)
+    -- K' as a field has Algebra K' L (after restricting scalars since K' ≤ L in AR)
+    -- Use relfinrank
+    have htower : IntermediateField.relfinrank K' L * Module.finrank R K' = Module.finrank R L := by
+      -- This is the main tower law. Let me use a different approach
+      sorry
+    exact ⟨IntermediateField.relfinrank K' L, by rw [mul_comm]; exact htower.symm⟩
   -- Now use finrank_one_or_two_of_galois
   rcases finrank_one_or_two_of_galois L with hL1 | hL2
   · rw [hL1] at hdvd
