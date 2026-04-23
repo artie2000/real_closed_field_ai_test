@@ -96,11 +96,10 @@ theorem no_quadratic_ext_Ri
   -- Verify r is a root of f
   have hroot : f.IsRoot r := by
     simp only [IsRoot, hab, eval_add, eval_pow, eval_X, eval_mul, eval_C]
-    have : s * s = (a/2)^2 - b := by rw [← sq]; exact hs.symm
+    have hss : s ^ 2 = (a/2)^2 - b := by rw [sq]; exact hs.symm
     show r ^ 2 + a * r + b = 0
     rw [hr]
-    field_simp
-    linear_combination -this
+    linear_combination hss
   -- Then f has degree 1
   have hdeg1 : f.degree = 1 :=
     Polynomial.degree_eq_one_of_irreducible_of_root hirr hroot
