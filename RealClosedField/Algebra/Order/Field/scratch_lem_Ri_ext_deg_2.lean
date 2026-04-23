@@ -363,8 +363,7 @@ theorem isSquare_of_finrank_base_eq_two
           -- hsq : IsSquare (-((r+a)/2))
           obtain ⟨α, hα⟩ := hsq
           -- hα : -((r+a)/2) = α * α
-          have hα0_or : α = 0 ∨ α ≠ 0 := em _
-          rcases hα0_or with hα0 | hα_ne
+          by_cases hα0 : α = 0
           · -- Then -(r+a)/2 = 0, so r = -a, then r² = a², a² + b² = a², b² = 0, b = 0, contra
             exfalso
             rw [hα0] at hα
@@ -375,6 +374,7 @@ theorem isSquare_of_finrank_base_eq_two
             apply hb0
             exact (pow_eq_zero_iff two_ne_zero).mp h3
           · -- Set β := b / (2α); claim (a - r)/2 = β²
+            have hα_ne : α ≠ 0 := hα0
             refine ⟨b / (2 * α), ?_⟩
             have h2α_ne : (2 : R) * α ≠ 0 := mul_ne_zero two_ne_zero hα_ne
             have hα2_ne : α ≠ 0 := hα_ne
