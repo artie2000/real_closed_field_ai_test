@@ -102,7 +102,180 @@ theorem finrank_eq_one_of_odd_finrank
 
 /-- **S4.** Every element of `R[i]` is a square. -/
 theorem Ri_isSquare (z : Ri R) : IsSquare z := by
-  sorry
+  have hirred : Irreducible (X ^ 2 + 1 : R[X]) := irreducible_X_sq_add_one
+  have hmonic : (X ^ 2 + 1 : R[X]).Monic := by
+    have h : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1 : R) := by simp [sub_neg_eq_add]
+    rw [h]; exact monic_X_pow_sub_C _ (by decide)
+  have hdeg2 : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
+    have h : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1 : R) := by simp [sub_neg_eq_add]
+    rw [h]; exact natDegree_X_pow_sub_C
+  set hm : IsAdjoinRootMonic (Ri R) (X ^ 2 + 1 : R[X]) :=
+    AdjoinRoot.isAdjoinRootMonic (X ^ 2 + 1 : R[X]) hmonic
+  have hroot_sq : hm.root ^ 2 = -1 := by
+    have heq : hm.root = AdjoinRoot.root (X ^ 2 + 1 : R[X]) := rfl
+    have h0 : aeval (AdjoinRoot.root (X ^ 2 + 1 : R[X])) (X ^ 2 + 1 : R[X]) = 0 :=
+      AdjoinRoot.eval₂_root _
+    simp [aeval_def, eval₂_add, eval₂_pow, eval₂_X, eval₂_one,
+          add_eq_zero_iff_eq_neg] at h0
+    rw [heq]; exact h0
+  have hrepr : ∀ x : Ri R,
+      x = algebraMap R (Ri R) (hm.coeff x 0) +
+          algebraMap R (Ri R) (hm.coeff x 1) * hm.root := by
+    intro x
+    apply hm.ext_elem
+    intro i hi
+    rw [hdeg2] at hi
+    have hroot_coeff : hm.coeff hm.root = Pi.single 1 1 :=
+      hm.coeff_root (by rw [hdeg2]; decide)
+    have hcoeff_aM_mul_root : ∀ (c : R) (j : ℕ),
+        hm.coeff (algebraMap R (Ri R) c * hm.root) j =
+          c • (Pi.single (M := fun _ : ℕ => R) 1 1) j := by
+      intro c j
+      rw [show algebraMap R (Ri R) c * hm.root = c • hm.root from by rw [Algebra.smul_def],
+          LinearMap.map_smul hm.coeff]
+      show c • hm.coeff hm.root j = _
+      rw [hroot_coeff]
+    interval_cases i
+    · rw [LinearMap.map_add hm.coeff, hm.coeff_algebraMap]
+      show hm.coeff x 0 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 0
+          + hm.coeff (algebraMap R (Ri R) (hm.coeff x 1) * hm.root) 0
+      rw [hcoeff_aM_mul_root]; simp
+    · rw [LinearMap.map_add hm.coeff, hm.coeff_algebraMap]
+      show hm.coeff x 1 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 1
+          + hm.coeff (algebraMap R (Ri R) (hm.coeff x 1) * hm.root) 1
+      rw [hcoeff_aM_mul_root]; simp
+  set a : R := hm.coeff z 0
+  set b : R := hm.coeff z 1
+  have hz : z = algebraMap R (Ri R) a + algebraMap R (Ri R) b * hm.root := hrepr z
+  have hnn : (0 : R) ≤ a ^ 2 + b ^ 2 := by positivity
+  obtain ⟨r, hr⟩ :=
+    (IsRealClosed.nonneg_iff_isSquare (R := R) (x := a ^ 2 + b ^ 2)).mp hnn
+  set r' : R := |r|
+  have hr'_nn : 0 ≤ r' := abs_nonneg r
+  have hr'_sq : r' * r' = a ^ 2 + b ^ 2 := by
+    rw [show r' * r' = r * r from by rcases abs_choice r with h | h <;>
+      rw [show r' = _ from h] <;> ring]
+    exact hr.symm
+  have hr'_ge_abs_a : |a| ≤ r' := by
+    have : a ^ 2 ≤ r' ^ 2 := by
+      rw [show r' ^ 2 = r' * r' from sq r', hr'_sq]
+      nlinarith [sq_nonneg b]
+    have habs_a : 0 ≤ |a| := abs_nonneg a
+    nlinarith [sq_abs a, sq_nonneg (|a| - r'), sq_nonneg (|a| + r')]
+  have hr'_ge_a : a ≤ r' := le_trans (le_abs_self a) hr'_ge_abs_a
+  have hr'_ge_neg_a : -a ≤ r' := le_trans (neg_le_abs a) hr'_ge_abs_a
+  by_cases hb0 : b = 0
+  · rw [hb0] at hz
+    simp only [map_zero, zero_mul, add_zero] at hz
+    by_cases ha_nn : 0 ≤ a
+    · obtain ⟨s, hs⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := a)).mp ha_nn
+      refine ⟨algebraMap R (Ri R) s, ?_⟩
+      rw [hz, hs]; simp [map_mul]
+    · push_neg at ha_nn
+      have hna_nn : 0 ≤ -a := by linarith
+      obtain ⟨s, hs⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -a)).mp hna_nn
+      refine ⟨algebraMap R (Ri R) s * hm.root, ?_⟩
+      have step1 :
+          (algebraMap R (Ri R) s * hm.root) * (algebraMap R (Ri R) s * hm.root)
+          = (algebraMap R (Ri R) s * algebraMap R (Ri R) s) * (hm.root * hm.root) := by
+        ring
+      have hmul : algebraMap R (Ri R) s * algebraMap R (Ri R) s
+                    = algebraMap R (Ri R) (-a) := by
+        rw [← map_mul, ← hs]
+      have hii : hm.root * hm.root = -1 := by rw [← sq]; exact hroot_sq
+      rw [step1, hmul, hii, hz]
+      rw [show algebraMap R (Ri R) (-a) * (-1 : Ri R) = algebraMap R (Ri R) a from by
+        rw [map_neg]; ring]
+  · have hb2_pos : 0 < b ^ 2 := by positivity
+    have hr'2_pos : 0 < r' ^ 2 := by
+      rw [show r' ^ 2 = r' * r' from sq r', hr'_sq]; nlinarith [sq_nonneg a]
+    have hr'_pos : 0 < r' := by
+      rcases lt_or_eq_of_le hr'_nn with h | h
+      · exact h
+      · exfalso; rw [← h] at hr'2_pos; norm_num at hr'2_pos
+    have hapr_pos : 0 < a + r' := by
+      by_contra h
+      push_neg at h
+      have happ_le : a + r' ≤ 0 := h
+      have : -a = r' := by linarith [hr'_ge_neg_a, happ_le]
+      have ha_sq : a ^ 2 = r' ^ 2 := by nlinarith
+      have : b ^ 2 = 0 := by
+        have := hr'_sq
+        have hr'sq : r' ^ 2 = a ^ 2 + b ^ 2 := by rw [sq]; exact this
+        linarith
+      have : b = 0 := pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0) |>.mp this
+      exact hb0 this
+    have hu_nn : 0 ≤ (a + r') / 2 := by linarith
+    obtain ⟨u, hu⟩ :=
+      (IsRealClosed.nonneg_iff_isSquare (R := R) (x := (a + r') / 2)).mp hu_nn
+    set u' : R := |u|
+    have hu'_nn : 0 ≤ u' := abs_nonneg u
+    have hu'_sq : u' * u' = (a + r') / 2 := by
+      rw [show u' * u' = u * u from by rcases abs_choice u with h | h <;>
+        rw [show u' = _ from h] <;> ring]
+      exact hu.symm
+    have hu'_pos : 0 < u' := by
+      rcases lt_or_eq_of_le hu'_nn with h | h
+      · exact h
+      · exfalso; rw [← h] at hu'_sq; linarith
+    have hu'_ne : u' ≠ 0 := ne_of_gt hu'_pos
+    let v : R := b / (2 * u')
+    have h2u'_ne : (2 * u' : R) ≠ 0 := by positivity
+    have hv_rel : 2 * u' * v = b := by
+      show 2 * u' * (b / (2 * u')) = b
+      field_simp
+    have hu'2 : u' ^ 2 = (a + r') / 2 := by rw [sq]; exact hu'_sq
+    have hv2 : v ^ 2 = b ^ 2 / (4 * u' ^ 2) := by
+      show (b / (2 * u')) ^ 2 = b ^ 2 / (4 * u' ^ 2)
+      field_simp; ring
+    have hu'2_sub_v2 : u' ^ 2 - v ^ 2 = a := by
+      have hr'_sq' : r' ^ 2 = a ^ 2 + b ^ 2 := by rw [sq]; exact hr'_sq
+      have hapr_ne : (a + r' : R) ≠ 0 := ne_of_gt hapr_pos
+      have h4u'2 : 4 * u' ^ 2 = 2 * (a + r') := by rw [hu'2]; ring
+      have hv2' : v ^ 2 = b ^ 2 / (2 * (a + r')) := by rw [hv2, h4u'2]
+      have h2ne : (2 * (a + r') : R) ≠ 0 := by
+        exact mul_ne_zero (by norm_num) hapr_ne
+      rw [hu'2, hv2']
+      rw [div_sub_div _ _ (by norm_num : (2:R) ≠ 0) h2ne]
+      rw [div_eq_iff (mul_ne_zero (by norm_num : (2:R) ≠ 0) h2ne)]
+      linear_combination 2 * hr'_sq'
+    refine ⟨algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root, ?_⟩
+    rw [hz]
+    set i : Ri R := hm.root
+    set A : Ri R := algebraMap R (Ri R) u'
+    set B : Ri R := algebraMap R (Ri R) v
+    have hi2 : i * i = -1 := by
+      show hm.root * hm.root = -1
+      rw [← sq]; exact hroot_sq
+    have hsq :
+        (A + B * i) * (A + B * i)
+        = (A * A - B * B) + (A * B + A * B) * i := by
+      have : B * i * (B * i) = -(B * B) := by
+        calc B * i * (B * i) = (B * B) * (i * i) := by ring
+          _ = (B * B) * (-1) := by rw [hi2]
+          _ = -(B * B) := by ring
+      calc (A + B * i) * (A + B * i)
+          = A * A + A * (B * i) + B * i * A + B * i * (B * i) := by ring
+        _ = A * A + A * B * i + A * B * i + (-(B * B)) := by rw [this]; ring
+        _ = (A * A - B * B) + (A * B + A * B) * i := by ring
+    rw [hsq]
+    have hAA : A * A = algebraMap R (Ri R) (u' * u') := by
+      show algebraMap R (Ri R) u' * algebraMap R (Ri R) u' = _
+      rw [← map_mul]
+    have hBB : B * B = algebraMap R (Ri R) (v * v) := by
+      show algebraMap R (Ri R) v * algebraMap R (Ri R) v = _
+      rw [← map_mul]
+    have hAB : A * B + A * B = algebraMap R (Ri R) (2 * u' * v) := by
+      show algebraMap R (Ri R) u' * algebraMap R (Ri R) v
+          + algebraMap R (Ri R) u' * algebraMap R (Ri R) v = _
+      rw [← map_mul, ← map_add]
+      congr 1; ring
+    rw [hAA, hBB, hAB, ← map_sub]
+    have heq_a : u' * u' - v * v = a := by
+      have h1 : u' * u' = u' ^ 2 := by rw [sq]
+      have h2 : v * v = v ^ 2 := by rw [sq]
+      rw [h1, h2]; exact hu'2_sub_v2
+    rw [heq_a, hv_rel]
 
 /-- **S3.** Every degree-2 extension of an RCF is isomorphic to `R[i]`. -/
 theorem nonempty_algEquiv_Ri_of_finrank_eq_two
