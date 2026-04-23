@@ -674,9 +674,10 @@ theorem eq_linear_or_eq_sq_add_sq_of_irreducible
   rcases finrank_eq_one_or_two_of_finite (R := R) (AdjoinRoot g) with h1 | h2
   · left
     rw [hfinrank] at h1
-    have hg_eq : g = X + C (g.coeff 0) := hmonic.eq_X_add_C h1
     refine ⟨-g.coeff 0, ?_⟩
-    rw [hg_eq, map_neg, sub_neg_eq_add]
+    have hg_eq : g = X + C (g.coeff 0) := hmonic.eq_X_add_C h1
+    rw [map_neg, sub_neg_eq_add]
+    exact hg_eq
   · right
     rw [hfinrank] at h2
     set a : R := g.coeff 1
@@ -720,18 +721,25 @@ theorem eq_linear_or_eq_sq_add_sq_of_irreducible
     have hnegδ_pos : 0 < -δ := by linarith
     obtain ⟨b', hb'⟩ :=
       (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -δ)).mp hnegδ_pos.le
+    have hb'_sq : b' ^ 2 = -δ := by rw [sq]; exact hb'.symm
     set a' : R := -a/2 with ha'def
     have hb'_ne : b' ≠ 0 := by
       intro h0
-      rw [h0] at hb'
-      have : -δ = 0 := by rw [← hb']; ring
+      rw [h0] at hb'_sq
+      have : (0 : R) ^ 2 = 0 := by ring
+      rw [this] at hb'_sq
       linarith
     refine ⟨a', b', hb'_ne, ?_⟩
-    rw [hab]
     have hbeq : b = (a/2)^2 + b'^2 := by
-      have : b'^2 = -δ := by rw [← hb']; ring
-      rw [this, hδdef]; ring
-    rw [hbeq, ha'def, map_neg, map_div₀, map_ofNat]
+      rw [hb'_sq, hδdef]; ring
+    rw [hab, hbeq]
+    have hCadd : (C ((a/2)^2 + b'^2) : R[X]) = C ((a/2)^2) + C (b'^2) := map_add C _ _
+    have hCsq : (C ((a/2)^2) : R[X]) = (C (a/2))^2 := (map_pow C _ _).symm
+    have hCdiv : (C (a/2) : R[X]) = C a / 2 := by rw [map_div₀, map_ofNat]
+    have hCa' : (C a' : R[X]) = -(C a / 2) := by
+      show C (-a/2) = -(C a / 2)
+      rw [show (-a/2 : R) = -(a/2) from by ring, map_neg, hCdiv]
+    rw [hCa', hCadd, hCsq, hCdiv]
     ring
     {g : R[X]} (hmonic : g.Monic) (hirred : Irreducible g) :
     g.natDegree = 1 ∨ ∀ x : R, 0 < g.eval x := by
