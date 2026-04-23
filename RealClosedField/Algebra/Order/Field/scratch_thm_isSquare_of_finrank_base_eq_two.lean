@@ -277,7 +277,152 @@ theorem nonempty_algEquiv_of_finrank_eq_two
 extension `K` of `R` is a square in `K`. -/
 theorem isSquare_of_finrank_base_eq_two
     (K : Type*) [Field K] [Algebra R K]
-    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := sorry
+    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := by
+  obtain ⟨pb, hmin⟩ := exists_powerBasis_of_finrank_eq_two_aux R K hK
+  have hdim : pb.dim = 2 := by
+    have : pb.dim = Module.finrank R K := pb.finrank
+    omega
+  -- α is the generator, with α^2 = -1
+  set α : K := pb.gen with hα_def
+  have hα_sq : α ^ 2 = -1 := by
+    have hev : Polynomial.aeval α (minpoly R α) = 0 := minpoly.aeval R α
+    rw [hmin] at hev
+    have : α ^ 2 + 1 = 0 := by
+      have := hev
+      simp at this
+      linear_combination this
+    linear_combination this
+  -- Representation of x in the basis
+  have hInj : Function.Injective (algebraMap R K) := (algebraMap R K).injective
+  -- Use Basis.sum_repr to decompose x
+  have hxsum : ∑ i, pb.basis.repr x i • pb.basis i = x := pb.basis.sum_repr x
+  -- Reindex through the dimension = 2
+  -- pb.basis : Basis (Fin pb.dim) R K, with pb.dim = 2
+  -- We want to write x = a + b * α where a = pb.basis.repr x ⟨0, _⟩ etc.
+  set a : R := pb.basis.repr x ⟨0, by omega⟩ with ha_def
+  set b : R := pb.basis.repr x ⟨1, by omega⟩ with hb_def
+  -- The basis element at i is α^i by basis_eq_pow
+  have hbas0 : pb.basis ⟨0, by omega⟩ = 1 := by
+    rw [pb.basis_eq_pow]; simp
+  have hbas1 : pb.basis ⟨1, by omega⟩ = α := by
+    rw [pb.basis_eq_pow]; simp [hα_def]
+  -- Expand x = a*1 + b*α
+  have hx_eq : x = (algebraMap R K) a + (algebraMap R K) b * α := by
+    rw [← hxsum]
+    -- Sum over Fin pb.dim = Fin 2
+    have : (∑ i, pb.basis.repr x i • pb.basis i) =
+        pb.basis.repr x ⟨0, by omega⟩ • pb.basis ⟨0, by omega⟩ +
+        pb.basis.repr x ⟨1, by omega⟩ • pb.basis ⟨1, by omega⟩ := by
+      have : Fintype.card (Fin pb.dim) = 2 := by rw [Fintype.card_fin]; omega
+      -- Use Fin.sum_univ_two after reindexing
+      rw [show pb.dim = 2 from hdim] at *
+      exact Fin.sum_univ_two _
+    rw [this, hbas0, hbas1]
+    rw [Algebra.smul_def, Algebra.smul_def, mul_one]
+    rfl
+  -- a^2 + b^2 is a sum of squares in R, hence a square in R
+  have hsumsq : IsSumSq (a ^ 2 + b ^ 2) := by
+    refine IsSumSq.sq_add ?_ _
+    exact IsSumSq.sq _
+  obtain ⟨t, ht⟩ := isSquare_of_isSumSq R hsumsq
+  -- t^2 = a^2 + b^2
+  have ht_sq : t ^ 2 = a ^ 2 + b ^ 2 := by rw [sq, ← ht]
+  by_cases hb0 : b = 0
+  · -- x = a, reduces to `a` or `-a` is a square in R
+    rcases isSquare_or_isSquare_neg a with ⟨c, hc⟩ | ⟨c, hc⟩
+    · -- a = c * c
+      refine ⟨(algebraMap R K) c, ?_⟩
+      rw [hx_eq, hb0, map_zero, zero_mul, add_zero, ← map_mul]
+      congr 1
+      exact hc
+    · -- -a = c * c, so a = -(c * c)
+      refine ⟨(algebraMap R K) c * α, ?_⟩
+      have ha_eq : a = -(c * c) := by linear_combination -hc
+      rw [hx_eq, hb0, map_zero, zero_mul, add_zero]
+      have := hα_sq
+      have : ((algebraMap R K) c * α) * ((algebraMap R K) c * α) =
+          (algebraMap R K) (c * c) * α ^ 2 := by
+        rw [map_mul]; ring
+      rw [this, hα_sq, ha_eq, map_neg]
+      ring
+  · -- b ≠ 0 case
+    -- One of (a + t)/2 or (a - t)/2 is a square in R
+    have h_product : (a + t) / 2 * ((a - t) / 2) = -(b ^ 2) / 4 := by
+      have : (a + t) / 2 * ((a - t) / 2) = (a^2 - t^2) / 4 := by ring
+      rw [this, ht_sq]; ring
+    -- Check: one of (a+t)/2 or (a-t)/2 is a square
+    have h_one_sq : IsSquare ((a + t) / 2) ∨ IsSquare ((a - t) / 2) := by
+      by_contra hcon
+      push_neg at hcon
+      obtain ⟨hp, hq⟩ := hcon
+      -- Both negations are squares
+      have hpn : IsSquare (-((a + t) / 2)) := (isSquare_or_isSquare_neg _).resolve_left hp
+      have hqn : IsSquare (-((a - t) / 2)) := (isSquare_or_isSquare_neg _).resolve_left hq
+      obtain ⟨u, hu⟩ := hpn
+      obtain ⟨v, hv⟩ := hqn
+      -- Then (a+t)/2 * (a-t)/2 = (-u^2)(-v^2) = (uv)^2 = -b^2/4
+      have hprod_sq : (a + t) / 2 * ((a - t) / 2) = (u * v) ^ 2 := by
+        have h1 : (a + t) / 2 = -(u * u) := by linear_combination -hu
+        have h2 : (a - t) / 2 = -(v * v) := by linear_combination -hv
+        rw [h1, h2]; ring
+      rw [h_product] at hprod_sq
+      -- So (uv)^2 = -b^2/4, i.e., (2uv/b)^2 = -1
+      have hbne : (b : R) ≠ 0 := hb0
+      have h2uv_b : (2 * (u * v) / b) ^ 2 = -1 := by
+        have h4 : (4 : R) = 2 * 2 := by norm_num
+        have h2b_ne : (2 * b : R) ≠ 0 := by
+          simp [hbne]
+        field_simp
+        linear_combination (-4 : R) * hprod_sq
+      -- But -1 is not a square in R
+      have : IsSquare (-1 : R) := ⟨2 * (u * v) / b, by rw [← sq]; exact h2uv_b⟩
+      -- real closed field has -1 not a square (since sum of squares -1 is impossible)
+      obtain ⟨w, hw⟩ := this
+      -- (-1 = w^2), but 0 = 1 + w^2 is a sum of squares, contradicting IsSemireal
+      apply IsSemireal.not_isSumSq_neg_one R
+      exact ⟨w, by linear_combination -hw⟩
+    -- Now in either case, construct y = c + d·α with y^2 = x
+    rcases h_one_sq with ⟨c, hc⟩ | ⟨c, hc⟩
+    · -- Case: (a + t)/2 = c^2
+      have hc2 : c ^ 2 = (a + t) / 2 := by rw [sq, ← hc]
+      -- Note: we need c ≠ 0 so we can define d = b/(2c)
+      have hc_ne : c ≠ 0 := by
+        intro hc0
+        -- If c = 0, then (a+t)/2 = 0, so a = -t
+        -- Then t^2 = a^2 + b^2 = t^2 + b^2, so b^2 = 0, so b = 0, contradiction
+        have : (a + t) / 2 = 0 := by rw [← hc2, hc0]; ring
+        have hat : a + t = 0 := by linarith [this]
+        have hat' : a = -t := by linarith
+        have : a ^ 2 = t ^ 2 := by rw [hat']; ring
+        have : b ^ 2 = 0 := by linear_combination -this + ht_sq
+        have : b = 0 := by
+          exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp this
+        exact hb0 this
+      set d : R := b / (2 * c) with hd_def
+      -- Claim: (algebraMap R K c + algebraMap R K d * α)^2 = x
+      refine ⟨(algebraMap R K) c + (algebraMap R K) d * α, ?_⟩
+      -- Expand the square
+      -- (c + d·α)^2 = c^2 - d^2 + 2cd·α  (using α^2 = -1)
+      -- Need c^2 - d^2 = a and 2cd = b
+      have h2cd : 2 * c * d = b := by
+        rw [hd_def]; field_simp
+      have hd2 : d ^ 2 = (a - t) / 2 := by
+        -- d = b/(2c), so d^2 = b^2/(4c^2)
+        -- From h_product: (a+t)/2 * (a-t)/2 = -b^2/4
+        -- c^2 * (a-t)/2 = -b^2/4
+        -- So (a-t)/2 = -b^2/(4c^2) = -d^2 * c^2 / c^2  -- wait
+        -- Actually we have c^2 = (a+t)/2, so (a+t)/2 * (a-t)/2 = c^2 * (a-t)/2 = -b^2/4
+        -- => (a-t)/2 = -b^2/(4c^2) -- but we want d^2 = (a-t)/2...
+        -- Hmm, this gives d^2 = -(a-t)/2 instead. Let me recheck.
+        -- (c + dα)^2 = c^2 + 2cdα + d^2 α^2 = (c^2 - d^2) + 2cd α.
+        -- Need c^2 - d^2 = a.
+        -- c^2 = (a+t)/2.  If d^2 = (a-t)/2, then c^2 - d^2 = t. No!
+        -- Let me recompute. We need c^2 - d^2 = a. c^2 = (a+t)/2.
+        -- So d^2 = c^2 - a = (a+t)/2 - a = (t-a)/2 = -(a-t)/2.
+        -- So d^2 = -(a-t)/2 = (t-a)/2.
+        sorry
+      sorry
+    · sorry
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
 of `R` are `R` itself and the quadratic extension `R(i)`. -/

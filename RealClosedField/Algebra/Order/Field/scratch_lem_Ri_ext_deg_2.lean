@@ -46,7 +46,7 @@ theorem isSquare_of_isSumSq {x : R} (hx : IsSumSq x) : IsSquare x := by
         exact IsSumSq.mul hxinv2 hx
       exact IsSumSq.mul h.isSumSq hinv
 
-/-- Helper: in a real closed field, every element of the form `a^2 + b^2` is a square. -/
+/-- In a real closed field, every element of the form `a^2 + b^2` is a square. -/
 private lemma aux_isSquare_sum_two_sq (a b : R) : IsSquare (a^2 + b^2) :=
   isSquare_of_isSumSq (IsSumSq.add (IsSumSq.sq a) (IsSumSq.sq b))
 
@@ -57,68 +57,53 @@ private lemma aux_choose_sqrt
     ∃ r' : R, r'^2 = a^2 + b^2 ∧ IsSquare ((a + r') / 2) := by
   rcases isSquare_or_isSquare_neg ((a + r) / 2) with h | h
   · exact ⟨r, hr, h⟩
-  · -- Use -r instead of r
-    refine ⟨-r, ?_, ?_⟩
-    · linear_combination hr
-    · -- Need: IsSquare ((a + -r) / 2).
-      -- We have: (a+r)/2 + (a-r)/2 = a and ((a+r)/2)·((a-r)/2) = (a²-r²)/4 = -b²/4.
-      -- If -(a+r)/2 = c² with c ≠ 0, then (a-r)/2 = -b²/(4·(a+r)/2) = -b²/(-4c²) = (b/(2c))²
-      obtain ⟨c, hc⟩ := h  -- hc : -(a+r)/2 = c * c
-      -- First handle c = 0 case: then a = -r, so r² = a², so b² = 0, contradicting b ≠ 0.
-      by_cases hc0 : c = 0
-      · exfalso
-        rw [hc0, mul_zero] at hc
-        have har : a + r = 0 := by linarith
-        have hr_eq : r = -a := by linarith
-        have : a^2 + b^2 = a^2 := by
-          rw [← hr, hr_eq]; ring
-        have hb0 : b^2 = 0 := by linarith
-        exact hb (pow_eq_zero_iff (two_ne_zero)).mp hb0
-      · -- c ≠ 0
-        refine ⟨b / (2 * c), ?_⟩
-        have h2c_ne : (2 * c) ≠ 0 := mul_ne_zero two_ne_zero hc0
-        have h2c2_ne : (2 * c)^2 ≠ 0 := pow_ne_zero _ h2c_ne
-        -- Goal: (a + -r) / 2 = (b / (2c)) * (b / (2c))
-        -- From hc: -(a+r)/2 = c*c, i.e., a+r = -2c²
-        have har_eq : a + r = -(2 * c^2) := by
-          have : c * c = c^2 := by ring
-          rw [this] at hc
-          linarith
-        -- From hr: r² = a²+b², so b² = r² - a² = (r-a)(r+a) = -(a+r)(a-r)
-        -- Wait: r² - a² = (r-a)(r+a). So b² = (r-a)(r+a) = (-(a-r))(a+r) = -(a-r)(a+r)
-        -- Hmm let me recompute: b² = r² - a² = (r-a)(r+a).
-        -- So (a-r) = -(r-a), so b² = -(a-r)(r+a) = -(a-r)(a+r). Yes.
-        -- Now a-r = a+(-r), and a+r = -2c². So b² = -(a-r)·(-2c²) = 2c²·(a-r).
-        -- So (a + -r) = a - r = b²/(2c²).
-        -- Goal: (a + -r)/2 = b²/(4c²) = b²/(2c)².
-        have hkey : a + -r = b^2 / c^2 - 0 := by
-          -- (a-r)(a+r) = a² - r² = -b². So (a-r) = -b²/(a+r) = -b²/(-2c²) = b²/(2c²).
-          -- Hmm wait: we'd need a ≠ r for this. a+r = -2c² ≠ 0 (since c ≠ 0).
-          have hc2_ne : c^2 ≠ 0 := pow_ne_zero _ hc0
-          have h_prod : (a - r) * (a + r) = -(b^2) := by
-            have : a^2 - r^2 = -(b^2) := by linarith [hr]
-            linear_combination this
-          have : a + r ≠ 0 := by
-            intro heq
-            rw [heq] at har_eq
-            have : c^2 = 0 := by linarith
-            exact hc0 ((pow_eq_zero_iff two_ne_zero).mp this)
-          have h_amr : a - r = -(b^2) / (a + r) := by
-            field_simp
-            linear_combination h_prod
-          rw [har_eq] at h_amr
-          have : a - r = b^2 / (2 * c^2) := by
-            rw [h_amr]
-            field_simp
-            ring
-          have : a + -r = b^2 / (2 * c^2) := by linarith [this]
-          rw [this]
+  · refine ⟨-r, by linear_combination hr, ?_⟩
+    -- Goal: IsSquare ((a + -r) / 2). We have: -(a+r)/2 = c*c for some c.
+    obtain ⟨c, hc⟩ := h
+    by_cases hc0 : c = 0
+    · -- c = 0 gives a contradiction with b ≠ 0.
+      exfalso
+      rw [hc0, mul_zero] at hc
+      -- hc : -((a+r)/2) = 0
+      have har : a + r = 0 := by linarith
+      have hr_eq : r = -a := by linarith
+      have hab : a^2 + b^2 = a^2 := by
+        calc a^2 + b^2 = r^2 := hr.symm
+          _ = (-a)^2 := by rw [hr_eq]
+          _ = a^2 := by ring
+      have hb0 : b^2 = 0 := by linarith
+      exact hb ((pow_eq_zero_iff two_ne_zero).mp hb0)
+    · refine ⟨b / (2 * c), ?_⟩
+      -- Goal: (a + -r)/2 = (b/(2c)) * (b/(2c))
+      have h2c : (2 * c) ≠ 0 := mul_ne_zero two_ne_zero hc0
+      have hc_sq : c^2 = -((a + r) / 2) := by
+        have hcc : c * c = -((a + r) / 2) := hc.symm
+        linear_combination hcc
+      -- From hc_sq: a + r = -2c²
+      have har_eq : a + r = -2 * c^2 := by linarith
+      -- b² = r² - a² = (r-a)(r+a), and r+a = -2c², so r - a = -b²/(2c²) (or a - r = b²/(2c²))
+      have hc2_ne : c^2 ≠ 0 := pow_ne_zero _ hc0
+      have h_prod : (a + r) * (a - r) = -(b^2) := by
+        have : a^2 - r^2 = -(b^2) := by linarith [hr]
+        linear_combination this
+      have h_amr : a - r = b^2 / (2 * c^2) := by
+        have h1 : a + r ≠ 0 := by
+          rw [har_eq]
+          intro heq
+          have : c^2 = 0 := by linarith
+          exact hc2_ne this
+        have h2 : a - r = -(b^2) / (a + r) := by
           field_simp
-          ring
-        -- Now goal: (a + -r)/2 = (b/(2c)) * (b/(2c))
-        rw [hkey]
+          linear_combination h_prod
+        rw [h2, har_eq]
         field_simp
-        ring
+      have h_amr' : a + -r = b^2 / (2 * c^2) := by
+        have : a + -r = a - r := by ring
+        rw [this, h_amr]
+      -- Goal: (a + -r)/2 = (b/(2c))*(b/(2c))
+      rw [h_amr']
+      field_simp
+      ring
 
 /-- In a quadratic extension `K` of a real closed field `R`, there exists
 `j : K` with `j^2 = -1`. -/
@@ -140,7 +125,7 @@ theorem exists_sq_neg_one_of_finrank_eq_two
     intro e _
     rw [Algebra.mem_bot]
     exact hall e
-  -- Step 2: minpoly e has natDegree exactly 2
+  -- Step 2: minpoly e has natDegree = 2
   have hint : IsIntegral R e := Algebra.IsIntegral.isIntegral e
   have hdeg : (minpoly R e).natDegree = 2 := by
     have h1 : 2 ≤ (minpoly R e).natDegree :=
@@ -154,91 +139,83 @@ theorem exists_sq_neg_one_of_finrank_eq_two
   have hleadcoeff : (minpoly R e).coeff 2 = 1 := by
     rw [← hdeg]; exact hmonic.coeff_natDegree
   have haeval : (Polynomial.aeval e) (minpoly R e) = 0 := minpoly.aeval R e
-  -- Convert aeval to explicit form
+  -- Get the equation: e² + (algebraMap c₁) * e + (algebraMap c₀) = 0
   have hesq_eq : e^2 + (algebraMap R K c₁) * e + (algebraMap R K c₀) = 0 := by
     have hexpand :
         (Polynomial.aeval e) (minpoly R e) =
           ∑ i ∈ Finset.range 3, (minpoly R e).coeff i • e^i :=
       Polynomial.aeval_eq_sum_range' (by omega) e
     rw [haeval] at hexpand
-    -- hexpand : 0 = sum_{i=0..2} coeff i • e^i
-    simp [Finset.sum_range_succ, Finset.sum_range_zero] at hexpand
-    rw [hleadcoeff, ← hc₁_def, ← hc₀_def] at hexpand
-    -- hexpand now: c₀ • 1 + c₁ • e + 1 • e^2 = 0 (or 0 = ... depending on direction)
-    -- Convert scalar actions
-    have h_e0 : e^0 = (1 : K) := pow_zero e
-    have h_e1 : e^1 = e := pow_one e
-    -- Let me use Algebra.smul_def: r • x = algebraMap r * x
-    have : c₀ • (1 : K) + c₁ • e + (1 : R) • (e^2) = 0 := by
-      convert hexpand using 1
-      simp [h_e0, h_e1]
-      ring
-    rw [one_smul] at this
-    rw [Algebra.smul_def, Algebra.smul_def, mul_one] at this
-    linear_combination this
-  -- Define β = e + algebraMap(c₁/2), d = c₁²/4 - c₀
+    -- hexpand : 0 = ∑ i ∈ range 3, coeff i • e^i
+    rw [show (3 : ℕ) = 2 + 1 from rfl, Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_one] at hexpand
+    -- hexpand : 0 = coeff 0 • e^0 + coeff 1 • e^1 + coeff 2 • e^2
+    rw [hleadcoeff, ← hc₁_def, ← hc₀_def, pow_zero, pow_one, one_smul,
+        Algebra.smul_def, Algebra.smul_def, mul_one] at hexpand
+    -- hexpand : 0 = algebraMap c₀ + algebraMap c₁ * e + e^2
+    linear_combination -hexpand
+  -- Define A = algebraMap c₁, B = algebraMap c₀ in K.
+  set A : K := algebraMap R K c₁ with hA_def
+  set B : K := algebraMap R K c₀ with hB_def
+  -- β² = A²/4 - B = algebraMap(c₁²/4 - c₀) = algebraMap d
   set d : R := c₁^2 / 4 - c₀ with hd_def
-  set β : K := e + (algebraMap R K) (c₁ / 2) with hβ_def
-  have hβsq : β^2 = (algebraMap R K) d := by
-    rw [hβ_def, hd_def, add_pow_two]
-    -- β^2 = e^2 + 2·e·(c₁/2) + (c₁/2)^2
-    -- Substitute e² = -algebraMap c₁ · e - algebraMap c₀
-    have he2 : e^2 = -(algebraMap R K c₁) * e - (algebraMap R K c₀) := by
-      linear_combination hesq_eq
-    rw [he2]
-    rw [map_sub, map_pow]
-    have h2c : (2 : K) * e * (algebraMap R K (c₁ / 2)) = (algebraMap R K c₁) * e := by
-      have : (2 : K) * (algebraMap R K (c₁ / 2)) = algebraMap R K c₁ := by
-        rw [show (2 : K) = algebraMap R K 2 from (map_ofNat (algebraMap R K) 2).symm,
-            ← map_mul]
-        congr 1
-        field_simp
-      ring_nf
-      rw [mul_assoc, this]
-    rw [h2c]
-    have hquarter : (algebraMap R K (c₁ / 2))^2 = algebraMap R K (c₁^2 / 4) := by
-      rw [← map_pow]
-      congr 1
+  set β : K := e + A / 2 with hβ_def
+  have h2K : (2 : K) ≠ 0 := two_ne_zero
+  have h4K : (4 : K) ≠ 0 := four_ne_zero
+  have hβsq : β^2 = algebraMap R K d := by
+    rw [hβ_def]
+    -- β² = e² + 2·e·(A/2) + (A/2)² = e² + A·e + A²/4
+    have h_exp : (e + A / 2)^2 = e^2 + A*e + A^2/4 := by
       field_simp
       ring
-    rw [hquarter]
-    have : (algebraMap R K (c₁^2)) / 4 = algebraMap R K (c₁^2 / 4) := by
-      rw [show (4 : K) = algebraMap R K 4 from (map_ofNat (algebraMap R K) 4).symm,
-          ← map_div₀]
-    rw [this]
-    ring
-  -- d is not a square: if d = s², then β = ±algebraMap s, so e ∈ R, contradiction.
+    rw [h_exp]
+    -- Substitute e² = -A·e - B
+    have he2 : e^2 = -(A * e) - B := by
+      have := hesq_eq
+      rw [hA_def, hB_def] at this ⊢
+      linear_combination this
+    rw [he2]
+    -- -A·e - B + A·e + A²/4 = A²/4 - B
+    have hsimp : -(A * e) - B + A * e + A^2/4 = A^2/4 - B := by ring
+    rw [hsimp]
+    -- A²/4 = algebraMap (c₁²/4), B = algebraMap c₀, so A²/4 - B = algebraMap(c₁²/4 - c₀) = algebraMap d
+    rw [hA_def, hB_def, hd_def]
+    rw [map_sub, map_div₀, map_pow]
+    congr 1
+    -- Goal: algebraMap R K (c₁^2) / algebraMap R K 4 = (algebraMap R K c₁)^2 / 4
+    · rw [map_pow]
+    · rw [show (4 : K) = algebraMap R K 4 from (map_ofNat _ 4).symm]
+  -- d is not a square
   have hd_not_sq : ¬ IsSquare d := by
     rintro ⟨s, hs⟩
     apply he
-    -- From hβsq and hs: β² = algebraMap(s²) = (algebraMap s)²
-    have hβ2 : β^2 = (algebraMap R K s)^2 := by
+    -- β² = (algebraMap s)²
+    have hβ2' : β^2 = (algebraMap R K s)^2 := by
       rw [hβsq, hs]
-      push_cast
-      rw [← map_mul]
-      congr 1
-      rw [sq]
-    -- So (β - algebraMap s)(β + algebraMap s) = 0
+      rw [← map_mul, sq]
+    -- (β - algebraMap s)(β + algebraMap s) = 0
     have hfac : (β - algebraMap R K s) * (β + algebraMap R K s) = 0 := by
-      have : (β - algebraMap R K s) * (β + algebraMap R K s) = β^2 - (algebraMap R K s)^2 := by
-        ring
-      rw [this, hβ2]
-      ring
-    -- In a field, either β = algebraMap s or β = -algebraMap s
+      have : (β - algebraMap R K s) * (β + algebraMap R K s) =
+          β^2 - (algebraMap R K s)^2 := by ring
+      rw [this, hβ2', sub_self]
     rcases mul_eq_zero.mp hfac with h1 | h1
-    · have hβs : β = algebraMap R K s := by linarith
-      -- e = β - algebraMap(c₁/2) = algebraMap(s - c₁/2)
+    · have hβs : β = algebraMap R K s := by
+        have := h1
+        linear_combination this
       refine ⟨s - c₁/2, ?_⟩
-      have : e = β - (algebraMap R K) (c₁ / 2) := by rw [hβ_def]; ring
-      rw [this, hβs, map_sub]
-    · have hβs : β = -algebraMap R K s := by linarith
+      have he_eq : e = β - A/2 := by rw [hβ_def]; ring
+      rw [he_eq, hβs]
+      rw [hA_def, map_sub, map_div₀]
+      rw [show (2 : K) = algebraMap R K 2 from (map_ofNat _ 2).symm]
+    · have hβs : β = -algebraMap R K s := by
+        have := h1
+        linear_combination this
       refine ⟨-s - c₁/2, ?_⟩
-      have : e = β - (algebraMap R K) (c₁ / 2) := by rw [hβ_def]; ring
-      rw [this, hβs]
-      push_cast
-      rw [map_sub]
-      ring
-  -- So -d is a square: -d = u²
+      have he_eq : e = β - A/2 := by rw [hβ_def]; ring
+      rw [he_eq, hβs]
+      rw [hA_def, map_sub, map_neg, map_div₀]
+      rw [show (2 : K) = algebraMap R K 2 from (map_ofNat _ 2).symm]
+  -- -d is a square
   have hneg_d_sq : IsSquare (-d) := by
     rcases isSquare_or_isSquare_neg d with h | h
     · exact absurd h hd_not_sq
@@ -247,26 +224,29 @@ theorem exists_sq_neg_one_of_finrank_eq_two
   have hu_ne : u ≠ 0 := by
     intro heq
     rw [heq, mul_zero] at hu
+    -- hu : -d = 0
     have hd_zero : d = 0 := by linarith
     apply hd_not_sq
     exact ⟨0, by rw [hd_zero]; ring⟩
-  -- j = β / algebraMap u. Then j² = β² / (algebraMap u)² = algebraMap d / algebraMap(u²)
-  -- = algebraMap(d/u²) = algebraMap(d/-d) = algebraMap(-1) = -1.
+  -- j = β / algebraMap u
   refine ⟨β / (algebraMap R K u), ?_⟩
-  rw [div_pow, hβsq]
   have hu_ne_K : algebraMap R K u ≠ 0 := by
     intro heq
-    exact hu_ne ((FaithfulSMul.algebraMap_injective R K) (by simpa using heq))
-  have hu2_K : (algebraMap R K u)^2 = algebraMap R K (u^2) := (map_pow _ _ _).symm
-  rw [hu2_K]
-  have hdu2 : d / u^2 = -1 := by
-    have hu2_ne : u^2 ≠ 0 := pow_ne_zero _ hu_ne
-    have : u^2 = -d := by rw [sq]; linarith [hu]
-    rw [this]
-    field_simp
-  rw [← map_div₀, hdu2]
-  push_cast
-  rfl
+    exact hu_ne (FaithfulSMul.algebraMap_injective R K (by rw [heq]; simp))
+  rw [div_pow]
+  rw [hβsq]
+  rw [show (algebraMap R K u)^2 = algebraMap R K (u^2) from (map_pow _ _ _).symm]
+  have hu2 : u^2 = -d := by rw [sq]; linarith [hu]
+  rw [hu2]
+  -- Goal: algebraMap R K d / algebraMap R K (-d) = -1
+  rw [← map_div₀]
+  have hd_ne : d ≠ 0 := by
+    intro heq
+    apply hd_not_sq
+    exact ⟨0, by rw [heq]; ring⟩
+  have hdd : d / (-d) = -1 := by field_simp
+  rw [hdd]
+  rw [map_neg, map_one]
 
 theorem isSquare_of_finrank_base_eq_two
     (K : Type*) [Field K] [Algebra R K]
