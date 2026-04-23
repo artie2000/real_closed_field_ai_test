@@ -83,7 +83,22 @@ theorem isSquare_of_isSumSq {s : R} (hs : IsSumSq s) : IsSquare s :=
 theorem finrank_eq_one_of_odd_finrank
     (K : Type u) [Field K] [Algebra R K] [Module.Finite R K]
     (h : Odd (Module.finrank R K)) : Module.finrank R K = 1 := by
-  sorry
+  haveI : CharZero R := IsStrictOrderedRing.toCharZero
+  haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
+  haveI : Algebra.IsSeparable R K := Algebra.IsAlgebraic.isSeparable_of_perfectField
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  have hint : IsIntegral R α := Algebra.IsIntegral.isIntegral α
+  have hfinrank_top : Module.finrank R (⊤ : IntermediateField R K) = Module.finrank R K :=
+    IntermediateField.finrank_top'
+  rw [← hα] at hfinrank_top
+  have heq : Module.finrank R K = (minpoly R α).natDegree := by
+    rw [← hfinrank_top, IntermediateField.adjoin.finrank hint]
+  have hodd : Odd (minpoly R α).natDegree := heq ▸ h
+  obtain ⟨x, hx⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd
+  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  have hdeg : (minpoly R α).degree = 1 := Polynomial.degree_eq_one_of_irreducible_of_root hirr hx
+  have hnatdeg : (minpoly R α).natDegree = 1 := Polynomial.natDegree_eq_of_degree_eq_some hdeg
+  rw [heq, hnatdeg]
 
 /-- **S4.** Every element of `R[i]` is a square. -/
 theorem Ri_isSquare (z : Ri R) : IsSquare z := by
