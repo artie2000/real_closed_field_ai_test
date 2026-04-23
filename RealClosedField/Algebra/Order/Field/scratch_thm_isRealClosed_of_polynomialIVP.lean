@@ -120,10 +120,11 @@ private lemma exists_sign_change
   have hMpos : 0 < M := by linarith
   have hM1 : 1 ≤ M := by linarith
   have hM0 : (0 : R) ≤ M := hMpos.le
+  have hne : f.leadingCoeff ≠ 0 := ne_of_gt hlc
   have hkey : f.leadingCoeff * M - B = f.leadingCoeff := by
-    have hne : f.leadingCoeff ≠ 0 := ne_of_gt hlc
-    field_simp [hM_def]
-    ring
+    have hMexpand : f.leadingCoeff * M = f.leadingCoeff + B := by
+      rw [hM_def, mul_add, mul_one, mul_div_cancel₀ B hne]
+    linarith
   have hMpow_pos : (0 : R) < M ^ (n - 1) := pow_pos hMpos _
   have hMpow_ge_one : (1 : R) ≤ M ^ (n - 1) := one_le_pow₀ hM1
   have hn_split : n = (n - 1) + 1 := by omega
