@@ -256,7 +256,66 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
   induction hn : g.natDegree using Nat.strong_induction_on generalizing g with
   | _ n ih =>
   subst hn
-  sorry
+  haveI : Fact (Irreducible g) := ⟨hg_irred⟩
+  set K := AdjoinRoot g
+  let hm : IsAdjoinRootMonic K g := AdjoinRoot.isAdjoinRootMonic g hg_monic
+  -- Define the projection π : K →ₗ[R] R via the 0th coefficient.
+  let π : K →ₗ[R] R :=
+    { toFun := fun x => hm.coeff x 0
+      map_add' := fun x y => by simp
+      map_smul' := fun r x => by simp }
+  have hπ_algebraMap : ∀ r : R, π (algebraMap R K r) = r := by
+    intro r
+    show hm.coeff (algebraMap R K r) 0 = r
+    rw [hm.coeff_algebraMap]; simp
+  have hπ_one : π 1 = 1 := by
+    show hm.coeff 1 0 = 1; rw [hm.coeff_one]; simp
+  -- Use the characterization of ordered algebras
+  rw [Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+  intro hc
+  -- Case on the degree of g: either g.natDegree = 1, or g.natDegree ≥ 3.
+  by_cases hdeg1 : g.natDegree = 1
+  · -- Base case: g.natDegree = 1. Every x ∈ K equals algebraMap R K (π x), so π is a
+    -- surjective ring hom and we can transport.
+    have hrepr : ∀ x : K, x = algebraMap R K (π x) := by
+      intro x
+      apply hm.ext_elem
+      intro i hi
+      rw [hdeg1] at hi
+      interval_cases i
+      rw [hm.coeff_algebraMap]
+      simp [π]
+    have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
+      intro x
+      have h1 : x ^ 2 = algebraMap R K ((π x) ^ 2) := by
+        conv_lhs => rw [hrepr x]
+        rw [← map_pow]
+      rw [h1, hπ_algebraMap]
+      positivity
+    -- Then the span argument: π of any element in the span is ≥ 0.
+    have hπ_in_span :
+        ∀ s ∈ Submodule.span (Subsemiring.nonneg R) {x : K | IsSquare x}, 0 ≤ π s := by
+      intro s hs
+      refine Submodule.span_induction
+        (mem := ?_)
+        (zero := by rw [map_zero])
+        (add := fun x y _ _ hx hy => by rw [map_add]; linarith)
+        (smul := fun r x _ hx => by
+          show 0 ≤ π (r • x)
+          rw [LinearMap.map_smul_of_tower]
+          exact mul_nonneg r.2 hx) hs
+      rintro y ⟨z, hz⟩
+      have heq : y = z ^ 2 := by rw [hz]; ring
+      rw [heq]; exact hπ_sq z
+    have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
+    have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
+    linarith [h1 ▸ h2]
+  · -- Inductive case: g.natDegree ≥ 3.
+    have hn_ge : 3 ≤ g.natDegree := by
+      have h1 := hg_odd.pos
+      rcases hg_odd with ⟨k, hk⟩
+      omega
+    sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
