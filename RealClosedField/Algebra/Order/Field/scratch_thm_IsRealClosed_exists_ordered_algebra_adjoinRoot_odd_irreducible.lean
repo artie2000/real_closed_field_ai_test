@@ -354,6 +354,38 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
       rw [key]
       have hsum_eq : c.sum (fun mi r => r • mi) = ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y := rfl
       rw [← hsum_eq, hc_sum]; ring
+    -- Extract h with P = h * g
+    obtain ⟨h, hhg⟩ := hg_dvd_P
+    -- Analyze degrees
+    -- First: P ≠ 0 because P has constant term > 0 (the +1 at the end after C coefficients)
+    -- Actually we need to argue more carefully. Let's bound natDegree P.
+    -- Each summand C (c y) * (p y)^2 has natDegree ≤ 2 * (p y).natDegree < 2 * g.natDegree.
+    -- So natDegree P < 2 * g.natDegree.
+    have hP_deg_lt : P.natDegree < 2 * g.natDegree := by
+      have hbound : ∀ y : K, (C ((c y : R)) * (p y)^2).natDegree < 2 * g.natDegree := by
+        intro y
+        have h1 : (C ((c y : R)) * (p y)^2).natDegree ≤ (p y ^ 2).natDegree := by
+          calc (C ((c y : R)) * (p y)^2).natDegree
+              ≤ (C ((c y : R))).natDegree + (p y ^ 2).natDegree := Polynomial.natDegree_mul_le
+            _ ≤ 0 + (p y ^ 2).natDegree := by simp
+            _ = (p y ^ 2).natDegree := by rw [zero_add]
+        have h2 : (p y ^ 2).natDegree ≤ 2 * (p y).natDegree := by
+          have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
+        have := hp_deg_lt y; omega
+      have hsum_deg : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree < 2 * g.natDegree := by
+        by_cases hsupp : c.support.Nonempty
+        · have := Polynomial.natDegree_sum_le c.support (fun y => C ((c y : R)) * (p y)^2)
+          rw [Finset.fold_max_lt]
+          refine ⟨?_, fun y _ => hbound y⟩
+          linarith [hg_odd.pos]
+        · rw [Finset.not_nonempty_iff_eq_empty] at hsupp
+          simp [hsupp]
+          linarith [hg_odd.pos]
+      have : P.natDegree ≤
+          max (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree (1 : R[X]).natDegree :=
+        Polynomial.natDegree_add_le _ _
+      simp [Polynomial.natDegree_one] at this
+      omega
     sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
