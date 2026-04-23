@@ -7,7 +7,8 @@ import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.FieldTheory.Galois.Basic
 import Mathlib.FieldTheory.Normal.Closure
-import Mathlib.FieldTheory.Adjoin
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Algebra
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.IsAdjoinRoot
 import Mathlib.GroupTheory.Sylow
