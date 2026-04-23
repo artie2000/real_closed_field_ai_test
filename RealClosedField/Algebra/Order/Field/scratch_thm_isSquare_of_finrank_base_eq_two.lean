@@ -294,31 +294,26 @@ theorem isSquare_of_finrank_base_eq_two
     linear_combination this
   -- Representation of x in the basis
   have hInj : Function.Injective (algebraMap R K) := (algebraMap R K).injective
-  -- Use Basis.sum_repr to decompose x
-  have hxsum : ∑ i, pb.basis.repr x i • pb.basis i = x := pb.basis.sum_repr x
-  -- Reindex through the dimension = 2
-  -- pb.basis : Basis (Fin pb.dim) R K, with pb.dim = 2
-  -- We want to write x = a + b * α where a = pb.basis.repr x ⟨0, _⟩ etc.
-  set a : R := pb.basis.repr x ⟨0, by omega⟩ with ha_def
-  set b : R := pb.basis.repr x ⟨1, by omega⟩ with hb_def
-  -- The basis element at i is α^i by basis_eq_pow
-  have hbas0 : pb.basis ⟨0, by omega⟩ = 1 := by
-    rw [pb.basis_eq_pow]; simp
-  have hbas1 : pb.basis ⟨1, by omega⟩ = α := by
-    rw [pb.basis_eq_pow]; simp [hα_def]
+  -- Build a new basis over Fin 2 using Basis.reindex
+  let e : Fin pb.dim ≃ Fin 2 := Fin.castIso hdim |>.toEquiv
+  let basis2 : Basis (Fin 2) R K := pb.basis.reindex e
+  have hbasis2_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
+    intro i
+    show pb.basis.reindex e i = α ^ (i : ℕ)
+    rw [Basis.reindex_apply, pb.basis_eq_pow]
+    rfl
+  -- Use Basis.sum_repr to decompose x via basis2
+  have hxsum : ∑ i, basis2.repr x i • basis2 i = x := basis2.sum_repr x
+  set a : R := basis2.repr x 0 with ha_def
+  set b : R := basis2.repr x 1 with hb_def
+  have hbas0 : basis2 0 = 1 := by
+    rw [hbasis2_eq]; simp
+  have hbas1 : basis2 1 = α := by
+    rw [hbasis2_eq]; simp [hα_def]
   -- Expand x = a*1 + b*α
   have hx_eq : x = (algebraMap R K) a + (algebraMap R K) b * α := by
-    rw [← hxsum]
-    -- Sum over Fin pb.dim = Fin 2
-    have : (∑ i, pb.basis.repr x i • pb.basis i) =
-        pb.basis.repr x ⟨0, by omega⟩ • pb.basis ⟨0, by omega⟩ +
-        pb.basis.repr x ⟨1, by omega⟩ • pb.basis ⟨1, by omega⟩ := by
-      have : Fintype.card (Fin pb.dim) = 2 := by rw [Fintype.card_fin]; omega
-      -- Use Fin.sum_univ_two after reindexing
-      rw [show pb.dim = 2 from hdim] at *
-      exact Fin.sum_univ_two _
-    rw [this, hbas0, hbas1]
-    rw [Algebra.smul_def, Algebra.smul_def, mul_one]
+    rw [← hxsum, Fin.sum_univ_two, hbas0, hbas1,
+        Algebra.smul_def, Algebra.smul_def, mul_one]
     rfl
   -- a^2 + b^2 is a sum of squares in R, hence a square in R
   have hsumsq : IsSumSq (a ^ 2 + b ^ 2) := by
