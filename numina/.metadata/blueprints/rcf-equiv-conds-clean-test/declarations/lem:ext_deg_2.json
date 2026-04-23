@@ -6,5 +6,6 @@
     "def:RCF"
   ],
   "statement": "The field $R(i)$ is the unique quadratic extension of $R$.",
-  "proof": "Let $K/R$ be a quadratic extension. Since $\\ch R\\neq2$, we have $K\\cong R(\\sqrt{a})$ for some $a\\in R$. Since $a$ cannot be a square in $R$, we know $-a$ must be one. Rescaling by $\\sqrt{-a}$, we get $R(\\sqrt{a})\\cong R(i)$."
+  "proof": "Let $K/R$ be a quadratic extension. Since $\\ch R\\neq2$, we have $K\\cong R(\\sqrt{a})$ for some $a\\in R$. Since $a$ cannot be a square in $R$, we know $-a$ must be one. Rescaling by $\\sqrt{-a}$, we get $R(\\sqrt{a})\\cong R(i)$.",
+  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/rcf-equiv-conds-clean-test/scratch_s3_full.lean"
 }

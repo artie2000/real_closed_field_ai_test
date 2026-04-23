@@ -80,8 +80,7 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
   -- contradicting finrank = 2.
   have hdelta_neg : δ < 0 := by
     by_contra hnn
-    push_neg at hnn
-    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp hnn
+    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp (not_lt.mp hnn)
     -- hc : δ = c * c, so β^2 = (algebraMap c)^2, so (β - c)(β + c) = 0
     have hβsq' : β ^ 2 = (algebraMap R K c) ^ 2 := by
       rw [hβsq, show δ = c * c from hc, sq, map_mul]

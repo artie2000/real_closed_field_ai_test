@@ -334,8 +334,7 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
     rw [hb_eq, ha_eq]; ring
   have hdelta_neg : δ < 0 := by
     by_contra hnn
-    push_neg at hnn
-    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp hnn
+    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp (not_lt.mp hnn)
     have hβsq' : β ^ 2 = (algebraMap R K c) ^ 2 := by
       rw [hβsq, show δ = c * c from hc, sq, map_mul]
     have hprod : (β - algebraMap R K c) * (β + algebraMap R K c) = 0 := by
