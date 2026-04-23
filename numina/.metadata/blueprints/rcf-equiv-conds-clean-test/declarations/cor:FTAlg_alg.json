@@ -7,5 +7,5 @@
   ],
   "statement": "The only algebraic extensions of $R$ are $R$ itself and $R(i)$.",
   "proof": "An infinite algebraic extension contains finite subextensions of arbitrarily large degree.",
-  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/rcf-equiv-conds-clean-test/RealClosedField/Algebra/Order/Field/IsRealClosed/scratch_cor_FTAlg_alg.lean"
+  "scratchFile": ""
 }
