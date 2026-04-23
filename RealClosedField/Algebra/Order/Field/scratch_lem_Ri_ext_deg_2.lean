@@ -64,9 +64,8 @@ private lemma aux_choose_sqrt
       rw [hc0, mul_zero] at hc
       have har : a + r = 0 := by linarith
       have hr_eq : r = -a := by linarith
-      have hab : a^2 + b^2 = a^2 := by
-        have h1 : r^2 = a^2 := by rw [hr_eq]; ring
-        linarith [hr, h1]
+      have h1 : r^2 = a^2 := by rw [hr_eq]; ring
+      have hab : a^2 + b^2 = a^2 := by linarith [hr]
       have hb0 : b^2 = 0 := by linarith
       exact hb ((pow_eq_zero_iff two_ne_zero).mp hb0)
     · refine ⟨b / (2 * c), ?_⟩
@@ -114,7 +113,7 @@ theorem exists_sq_neg_one_of_finrank_eq_two
     intro e _
     rw [Algebra.mem_bot]
     exact hall e
-  -- Step 2: minpoly e has natDegree = 2
+  -- Step 2: minpoly e has natDegree = 2, extract coefficients
   have hint : IsIntegral R e := Algebra.IsIntegral.isIntegral e
   have hdeg : (minpoly R e).natDegree = 2 := by
     have h1 : 2 ≤ (minpoly R e).natDegree :=
@@ -122,15 +121,15 @@ theorem exists_sq_neg_one_of_finrank_eq_two
     have h2 : (minpoly R e).natDegree ≤ Module.finrank R K :=
       minpoly.natDegree_le _
     omega
-  -- Abbreviations:
-  set c₁ : R := (minpoly R e).coeff 1 with hc₁_def
-  set c₀ : R := (minpoly R e).coeff 0 with hc₀_def
   have hmonic : (minpoly R e).Monic := minpoly.monic hint
   have hleadcoeff : (minpoly R e).coeff 2 = 1 := by
     rw [← hdeg]; exact hmonic.coeff_natDegree
   have haeval : (Polynomial.aeval e) (minpoly R e) = 0 := minpoly.aeval R e
-  -- e² + algebraMap c₁ * e + algebraMap c₀ = 0
-  have hesq_eq : e^2 + (algebraMap R K c₁) * e + (algebraMap R K c₀) = 0 := by
+  -- Let c₀ = coeff 0, c₁ = coeff 1 (as concrete nums).
+  -- Derive: e² + c₁·e + c₀ = 0 (with scalar-algebraMap).
+  have hesq_eq :
+      e^2 + algebraMap R K ((minpoly R e).coeff 1) * e
+        + algebraMap R K ((minpoly R e).coeff 0) = 0 := by
     have hexpand :
         (Polynomial.aeval e) (minpoly R e) =
           ∑ i ∈ Finset.range 3, (minpoly R e).coeff i • e^i :=
@@ -142,78 +141,79 @@ theorem exists_sq_neg_one_of_finrank_eq_two
     rw [hleadcoeff, pow_zero, pow_one, one_smul,
         Algebra.smul_def, Algebra.smul_def, mul_one] at hexpand
     linear_combination -hexpand
-  set d : R := c₁^2 / 4 - c₀ with hd_def
-  set β : K := e + (algebraMap R K c₁) / 2 with hβ_def
-  have hβsq : β^2 = algebraMap R K d := by
-    have he2 : e^2 = -((algebraMap R K c₁) * e) - (algebraMap R K c₀) := by
+  -- Set d := c₁²/4 - c₀ and β := e + algebraMap(c₁/2).
+  -- We will prove β² = algebraMap d.
+  set c₁ : R := (minpoly R e).coeff 1 with hc₁_def
+  set c₀ : R := (minpoly R e).coeff 0 with hc₀_def
+  -- hesq_eq is now: e^2 + algebraMap c₁ * e + algebraMap c₀ = 0
+  have hfour : (algebraMap R K (4 : R)) = (4 : K) := map_ofNat _ 4
+  have htwo : (algebraMap R K (2 : R)) = (2 : K) := map_ofNat _ 2
+  -- d = c₁²/4 - c₀
+  have hβ_sq : (e + algebraMap R K c₁ / 2)^2 = algebraMap R K (c₁^2 / 4 - c₀) := by
+    have he2 : e^2 = -(algebraMap R K c₁ * e) - algebraMap R K c₀ := by
       linear_combination hesq_eq
-    show (e + (algebraMap R K c₁) / 2)^2 = algebraMap R K (c₁^2 / 4 - c₀)
-    have hA2 : ((algebraMap R K c₁))^2 = algebraMap R K (c₁^2) := (map_pow _ _ _).symm
-    have hfour : (algebraMap R K (4 : R)) = (4 : K) := map_ofNat _ 4
-    rw [map_sub, map_div₀, hfour, ← hA2]
-    -- Goal: (e + algebraMap c₁ / 2)^2 = (algebraMap c₁)^2 / 4 - algebraMap c₀
-    have hexpand : (e + (algebraMap R K c₁) / 2)^2 =
-        e^2 + (algebraMap R K c₁) * e + ((algebraMap R K c₁))^2 / 4 := by
+    have hexpand : (e + algebraMap R K c₁ / 2)^2 =
+        e^2 + algebraMap R K c₁ * e + (algebraMap R K c₁)^2 / 4 := by
       field_simp; ring
     rw [hexpand, he2]
+    rw [map_sub, map_div₀, hfour, map_pow]
     ring
-  -- d is not a square in R
-  have hd_not_sq : ¬ IsSquare d := by
+  -- d is not a square in R: if so, β = ±algebraMap s, putting e ∈ R.
+  have hd_not_sq : ¬ IsSquare (c₁^2 / 4 - c₀) := by
     rintro ⟨s, hs⟩
     apply he
-    have hβ2' : β^2 = (algebraMap R K s)^2 := by
-      rw [hβsq]
-      show algebraMap R K (c₁^2 / 4 - c₀) = (algebraMap R K s)^2
-      have : c₁^2 / 4 - c₀ = s^2 := by show d = s^2; rw [hs]; ring
-      rw [this, map_pow]
-    have hfac : (β - algebraMap R K s) * (β + algebraMap R K s) = 0 := by
-      have h_expand : (β - algebraMap R K s) * (β + algebraMap R K s) =
-          β^2 - (algebraMap R K s)^2 := by ring
+    have hβ2' : (e + algebraMap R K c₁ / 2)^2 = (algebraMap R K s)^2 := by
+      rw [hβ_sq]
+      have hseq : c₁^2 / 4 - c₀ = s^2 := by rw [hs]; ring
+      rw [hseq, map_pow]
+    have hfac :
+        ((e + algebraMap R K c₁ / 2) - algebraMap R K s) *
+        ((e + algebraMap R K c₁ / 2) + algebraMap R K s) = 0 := by
+      have h_expand :
+          ((e + algebraMap R K c₁ / 2) - algebraMap R K s) *
+          ((e + algebraMap R K c₁ / 2) + algebraMap R K s) =
+          (e + algebraMap R K c₁ / 2)^2 - (algebraMap R K s)^2 := by ring
       rw [h_expand, hβ2', sub_self]
-    have htwo : algebraMap R K (2 : R) = (2 : K) := map_ofNat _ 2
     rcases mul_eq_zero.mp hfac with h1 | h1
-    · have hβs : β = algebraMap R K s := by linear_combination h1
+    · have hβs : e + algebraMap R K c₁ / 2 = algebraMap R K s := by
+        linear_combination h1
       refine ⟨s - c₁/2, ?_⟩
       show algebraMap R K (s - c₁/2) = e
-      have he_eq : e = β - (algebraMap R K c₁) / 2 := by
-        show e = (e + (algebraMap R K c₁) / 2) - (algebraMap R K c₁) / 2
-        ring
-      rw [he_eq, hβs]
       rw [map_sub, map_div₀, htwo]
-    · have hβs : β = -algebraMap R K s := by linear_combination h1
+      linear_combination -hβs
+    · have hβs : e + algebraMap R K c₁ / 2 = -algebraMap R K s := by
+        linear_combination h1
       refine ⟨-s - c₁/2, ?_⟩
       show algebraMap R K (-s - c₁/2) = e
-      have he_eq : e = β - (algebraMap R K c₁) / 2 := by
-        show e = (e + (algebraMap R K c₁) / 2) - (algebraMap R K c₁) / 2
-        ring
-      rw [he_eq, hβs]
       rw [map_sub, map_neg, map_div₀, htwo]
-  have hneg_d_sq : IsSquare (-d) := by
-    rcases isSquare_or_isSquare_neg d with h | h
+      linear_combination -hβs
+  -- Apply isSquare_or_isSquare_neg to d; get u with -d = u²
+  have hneg_d_sq : IsSquare (-(c₁^2 / 4 - c₀)) := by
+    rcases isSquare_or_isSquare_neg (c₁^2 / 4 - c₀) with h | h
     · exact absurd h hd_not_sq
     · exact h
-  obtain ⟨u, hu⟩ := hneg_d_sq
+  obtain ⟨u, hu⟩ := hneg_d_sq  -- hu : -(c₁²/4 - c₀) = u*u
   have hu_ne : u ≠ 0 := by
     intro heq
     rw [heq, mul_zero] at hu
-    have hd_zero : d = 0 := by linarith
+    have hd_zero : c₁^2 / 4 - c₀ = 0 := by linarith
     apply hd_not_sq
-    exact ⟨0, by show d = 0 * 0; rw [hd_zero]; ring⟩
-  refine ⟨β / (algebraMap R K u), ?_⟩
+    exact ⟨0, by rw [hd_zero]; ring⟩
+  refine ⟨(e + algebraMap R K c₁ / 2) / (algebraMap R K u), ?_⟩
   have hu_ne_K : algebraMap R K u ≠ 0 := by
     intro heq
     exact hu_ne (FaithfulSMul.algebraMap_injective R K (by rw [heq]; simp))
-  rw [div_pow, hβsq,
+  rw [div_pow, hβ_sq,
       show (algebraMap R K u)^2 = algebraMap R K (u^2) from (map_pow _ _ _).symm]
-  have hu2 : u^2 = -d := by
-    have huu : u * u = -d := hu.symm
+  have hu2 : u^2 = -(c₁^2 / 4 - c₀) := by
+    have huu : u * u = -(c₁^2 / 4 - c₀) := hu.symm
     linear_combination -huu
   rw [hu2, ← map_div₀]
-  have hd_ne : d ≠ 0 := by
+  have hd_ne : c₁^2 / 4 - c₀ ≠ 0 := by
     intro heq
     apply hd_not_sq
-    exact ⟨0, by show d = 0 * 0; rw [heq]; ring⟩
-  have hdd : d / (-d) = (-1 : R) := by field_simp
+    exact ⟨0, by rw [heq]; ring⟩
+  have hdd : (c₁^2 / 4 - c₀) / (-(c₁^2 / 4 - c₀)) = (-1 : R) := by field_simp
   rw [hdd, map_neg, map_one]
 
 theorem isSquare_of_finrank_base_eq_two
