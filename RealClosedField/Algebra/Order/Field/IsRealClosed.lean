@@ -6,7 +6,10 @@ Authors: Artie Khovanov
 import RealClosedField.Algebra.Order.Algebra
 import RealClosedField.Algebra.Order.Field.IsSemireal
 import Mathlib.FieldTheory.IsRealClosed.Basic
+import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.Tactic.TFAE
+
+open Polynomial
 
 /-!
 # TFAE characterisation of real closed fields among ordered fields
