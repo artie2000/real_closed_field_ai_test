@@ -96,7 +96,7 @@ theorem IsStrictOrderedRing.unique_isStrictOrderedRing_iff [LinearOrder F] [IsSt
     · simp [h x hx]
     · simp [h (-x) (by linarith)]
 
-theorem Rat.existsUnique_isStrictOrderedRing :
+theorem existsUnique_isStrictOrderedRing_Rat :
     ∃! _ : LinearOrder ℚ, IsStrictOrderedRing ℚ := by
   have aux : ∀ (n : ℕ) (y : ℚ), IsSumSq (n * y^2) := by
     intro n y
@@ -122,8 +122,12 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  have h := IsStrictOrderedRing.unique_isStrictOrderedRing_iff (F := ℚ) |>.mpr key
-  refine ⟨h.exists.choose, ?_, fun l' _ => h.unique ?_ ?_⟩
-  all_goals first | exact h.exists.choose_spec | skip
-  · exact h.exists.choose_spec
-  · sorry
+  have haux : ∀ x : ℚ, IsSumSq x ∨ IsSumSq (-x) := by
+    intro x
+    rcases le_total 0 x with hx | hx
+    · exact Or.inl (key x hx)
+    · exact Or.inr (key (-x) (by linarith))
+  have hsemireal : IsSemireal ℚ :=
+    IsStrictOrderedRing.toIsSemireal ℚ
+  rw [← unique_subtype_iff_existsUnique]
+  exact .intro <| IsSemireal.unique_isStrictOrderedRing haux
