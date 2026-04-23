@@ -401,28 +401,21 @@ theorem isSquare_of_finrank_base_eq_two
       -- Expand the square
       -- (c + d·α)^2 = c^2 - d^2 + 2cd·α  (using α^2 = -1)
       -- Need c^2 - d^2 = a and 2cd = b
+      have h2c_ne : (2 * c : R) ≠ 0 := mul_ne_zero two_ne_zero hc_ne
       have h2cd : 2 * c * d = b := by
-        rw [hd_def]; field_simp
-      have hd2 : d ^ 2 = (t - a) / 2 := by
-        -- d = b/(2c), so d^2 = b^2/(4c^2)
-        -- c^2 = (a+t)/2, so 4c^2 = 2(a+t), so d^2 = b^2 / (2(a+t))
-        -- Need: b^2/(2(a+t)) = (t-a)/2
-        -- i.e., b^2 = (t-a)(a+t) = t^2 - a^2 = a^2 + b^2 - a^2 = b^2. ✓
-        have hc2_ne : c ^ 2 ≠ 0 := pow_ne_zero 2 hc_ne
-        have hat_ne : (a + t) ≠ 0 := by
-          intro h
-          have : (a + t) / 2 = 0 := by rw [h]; ring
-          rw [← hc2] at this
-          exact hc2_ne this
         rw [hd_def]
         field_simp
-        have : (t - a) * (2 * c) ^ 2 = 2 * b ^ 2 := by
-          have h1 : (2 * c) ^ 2 = 4 * c ^ 2 := by ring
-          rw [h1, hc2]
-          field_simp
-          ring_nf
-          linear_combination 2 * ht_sq
-        linarith [this]
+      have hd2 : d ^ 2 = (t - a) / 2 := by
+        rw [hd_def, div_pow, mul_pow]
+        -- Goal: 2^2 * c^2 ≠ 0 → b^2 / ... = (t-a)/2
+        rw [hc2]
+        -- Goal: b^2 / (2^2 * ((a+t)/2)) = (t-a)/2
+        have hat_ne : (a + t : R) ≠ 0 := by
+          intro h
+          have hc2_eq : c^2 = 0 := by rw [hc2, h]; ring
+          exact pow_ne_zero 2 hc_ne hc2_eq
+        field_simp
+        linear_combination ht_sq
       -- Now expand (c + d·α)^2
       have expand : ((algebraMap R K) c + (algebraMap R K) d * α) *
           ((algebraMap R K) c + (algebraMap R K) d * α) =
@@ -444,14 +437,16 @@ theorem isSquare_of_finrank_base_eq_two
       have hc2 : c ^ 2 = (a - t) / 2 := by rw [sq, ← hc]
       have hc_ne : c ≠ 0 := by
         intro hc0
-        have : (a - t) / 2 = 0 := by rw [← hc2, hc0]; ring
-        have hat : a - t = 0 := by linarith [this]
-        have hat' : a = t := by linarith
-        have : a ^ 2 = t ^ 2 := by rw [hat']
-        have : b ^ 2 = 0 := by linear_combination ht_sq - this
-        have : b = 0 := by
-          exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp this
-        exact hb0 this
+        have hh : (a - t) / 2 = 0 := by rw [← hc2, hc0]; ring
+        have hat : a - t = 0 := by
+          have h2 : (2 : R) ≠ 0 := two_ne_zero
+          field_simp at hh
+          exact hh
+        have hat2 : a ^ 2 = t ^ 2 := by
+          have : a = t := by linear_combination hat
+          rw [this]
+        have hb_sq : b ^ 2 = 0 := by linear_combination -ht_sq - hat2
+        exact hb0 ((pow_eq_zero_iff two_ne_zero).mp hb_sq)
       set d : R := b / (2 * c) with hd_def
       refine ⟨(algebraMap R K) c + (algebraMap R K) d * α, ?_⟩
       have h2cd : 2 * c * d = b := by
