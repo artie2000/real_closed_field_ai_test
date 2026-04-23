@@ -454,11 +454,189 @@ theorem no_quadratic_ext_Ri
   have hnatdeg1 : f.natDegree = 1 := natDegree_eq_of_degree_eq_some hdeg1
   omega
 
+/-- Key lemma: any finite Galois extension of an RCF has order a power of 2. -/
+private theorem finrank_pow_two_of_galois
+    (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
+    ∃ k : ℕ, Module.finrank R L = 2 ^ k := by
+  haveI : Finite (L ≃ₐ[R] L) := by
+    have h : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+    have hpos : 0 < Module.finrank R L := Module.finrank_pos
+    rw [← h] at hpos
+    exact Nat.finite_of_card_ne_zero (Nat.pos_iff_ne_zero.mp hpos)
+  set G := L ≃ₐ[R] L with hGdef
+  set n := Nat.card G with hndef
+  have hn_eq : n = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+  have hn_pos : 0 < n := by rw [hn_eq]; exact Module.finrank_pos
+  have hn_ne : n ≠ 0 := Nat.pos_iff_ne_zero.mp hn_pos
+  set k := Nat.factorization n 2 with hkdef
+  set q := n / 2 ^ k with hqdef
+  have h2_prime : Nat.Prime 2 := Nat.prime_two
+  haveI : Fact (Nat.Prime 2) := ⟨h2_prime⟩
+  have hn_split : n = 2 ^ k * q := by
+    rw [hqdef, hkdef]; exact (Nat.ordProj_mul_ordCompl_eq_self n 2).symm
+  have hq_odd : ¬ 2 ∣ q := Nat.not_dvd_ordCompl h2_prime hn_ne
+  obtain ⟨H, hH_card⟩ : ∃ H : Subgroup G, Nat.card H = 2 ^ k := by
+    refine Sylow.exists_subgroup_card_pow_prime 2 ?_
+    exact ⟨q, hn_split⟩
+  let M : IntermediateField R L := IntermediateField.fixedField H
+  have hM_finrank_L : Module.finrank M L = 2 ^ k := by
+    rw [← hH_card]; exact IntermediateField.finrank_fixedField_eq_card H
+  have htower : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
+    Module.finrank_mul_finrank R M L
+  have h2pos : (0 : ℕ) < 2 ^ k := Nat.pos_of_ne_zero (pow_ne_zero k (by decide))
+  have hq_pos : 0 < q := by
+    rw [hqdef]
+    have h1 : 2^k ∣ n := Nat.ordProj_dvd n 2
+    exact Nat.div_pos (Nat.le_of_dvd hn_pos h1) h2pos
+  have hM_finrank : Module.finrank R M = q := by
+    rw [hM_finrank_L] at htower
+    rw [← hn_eq, hn_split] at htower
+    have h : Module.finrank R M * 2^k = q * 2^k := by rw [mul_comm q]; linarith [htower]
+    exact Nat.eq_of_mul_eq_mul_right h2pos h
+  haveI : FiniteDimensional R M := inferInstance
+  have hq_1 : q = 1 := by
+    have hOdd : Odd q := by
+      rcases Nat.even_or_odd q with he | ho
+      · exact absurd he.two_dvd hq_odd
+      · exact ho
+    have hfM := hM_finrank
+    rw [← hfM] at hOdd
+    have := finrank_eq_one_of_odd_finrank M hOdd
+    rw [hM_finrank] at this
+    exact this
+  have hn_pow : n = 2 ^ k := by rw [hn_split, hq_1, mul_one]
+  refine ⟨k, ?_⟩
+  rw [← hn_eq]; exact hn_pow
+
+/-- Any finite Galois extension of an RCF has degree at most 2. -/
+private theorem finrank_le_two_of_galois
+    (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
+    Module.finrank R L ≤ 2 := by
+  obtain ⟨k, hkeq⟩ := finrank_pow_two_of_galois L
+  rw [hkeq]
+  by_contra hcontra
+  push_neg at hcontra
+  have hk_ge2 : 2 ≤ k := by
+    by_contra h
+    push_neg at h
+    interval_cases k <;> omega
+  haveI : Finite (L ≃ₐ[R] L) := by
+    have h : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+    have hpos : 0 < Module.finrank R L := Module.finrank_pos
+    rw [← h] at hpos
+    exact Nat.finite_of_card_ne_zero (Nat.pos_iff_ne_zero.mp hpos)
+  haveI : Fact (Nat.Prime 2) := ⟨Nat.prime_two⟩
+  have hGcard : Nat.card (L ≃ₐ[R] L) = 2 ^ k := by
+    rw [IsGalois.card_aut_eq_finrank, hkeq]
+  obtain ⟨H₁, hH₁_card⟩ : ∃ H₁ : Subgroup (L ≃ₐ[R] L), Nat.card H₁ = 2 ^ (k - 1) := by
+    refine Sylow.exists_subgroup_card_pow_prime 2 ?_
+    rw [hGcard]; exact pow_dvd_pow 2 (Nat.sub_le k 1)
+  let M : IntermediateField R L := IntermediateField.fixedField H₁
+  have hML_finrank : Module.finrank M L = 2 ^ (k - 1) := by
+    rw [← hH₁_card]; exact IntermediateField.finrank_fixedField_eq_card H₁
+  have htower_M : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
+    Module.finrank_mul_finrank R M L
+  have hM_finrank : Module.finrank R M = 2 := by
+    rw [hML_finrank, hkeq] at htower_M
+    have h2k : (2:ℕ) ^ k = 2 * 2 ^ (k - 1) := by
+      conv_lhs => rw [show k = 1 + (k - 1) from by omega]
+      rw [pow_add, pow_one]
+    rw [h2k] at htower_M
+    have h2posp : (0 : ℕ) < 2 ^ (k - 1) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
+    exact Nat.eq_of_mul_eq_mul_right h2posp htower_M
+  haveI hM_fd : FiniteDimensional R M := inferInstance
+  obtain ⟨e⟩ : Nonempty (M ≃ₐ[R] Ri R) :=
+    nonempty_algEquiv_Ri_of_finrank_eq_two M hM_finrank
+  haveI : Finite H₁ := Nat.finite_of_card_ne_zero (by rw [hH₁_card]; positivity)
+  obtain ⟨H₂, hH₂_card⟩ : ∃ H₂ : Subgroup H₁, Nat.card H₂ = 2 ^ (k - 2) := by
+    refine Sylow.exists_subgroup_card_pow_prime 2 ?_
+    rw [hH₁_card]; exact pow_dvd_pow 2 (by omega)
+  let H₂' : Subgroup (L ≃ₐ[R] L) := H₂.map H₁.subtype
+  have hH₂'_card : Nat.card H₂' = 2 ^ (k - 2) := by
+    rw [← hH₂_card]
+    exact Nat.card_congr
+      (Subgroup.equivMapOfInjective H₂ H₁.subtype H₁.subtype_injective).symm.toEquiv
+  let N : IntermediateField R L := IntermediateField.fixedField H₂'
+  have hNL_finrank : Module.finrank N L = 2 ^ (k - 2) := by
+    rw [← hH₂'_card]; exact IntermediateField.finrank_fixedField_eq_card H₂'
+  have hH₂'_le_H₁ : H₂' ≤ H₁ := by
+    intro x hx
+    rcases hx with ⟨y, _, rfl⟩
+    exact y.property
+  have hM_le_N : M ≤ N := IntermediateField.fixedField_antitone hH₂'_le_H₁
+  have htower_N : Module.finrank R N * Module.finrank N L = Module.finrank R L :=
+    Module.finrank_mul_finrank R N L
+  have hN_finrank : Module.finrank R N = 4 := by
+    rw [hNL_finrank, hkeq] at htower_N
+    have h2k : (2:ℕ) ^ k = 4 * 2 ^ (k - 2) := by
+      conv_lhs => rw [show k = 2 + (k - 2) from by omega]
+      rw [pow_add]; ring
+    rw [h2k] at htower_N
+    have h2posp : (0 : ℕ) < 2 ^ (k - 2) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
+    exact Nat.eq_of_mul_eq_mul_right h2posp htower_N
+  have hrel_MN : IntermediateField.relfinrank M N = 2 := by
+    have := IntermediateField.finrank_bot_mul_relfinrank hM_le_N
+    rw [hM_finrank, hN_finrank] at this
+    omega
+  let N' : IntermediateField M L := IntermediateField.extendScalars hM_le_N
+  have hMN'_finrank : Module.finrank M N' = 2 := by
+    rw [← IntermediateField.relfinrank_eq_finrank_of_le hM_le_N]
+    exact hrel_MN
+  let f : Ri R →+* N' :=
+    (algebraMap M N').comp (e.symm : Ri R →+* M)
+  letI : Algebra (Ri R) N' := f.toAlgebra
+  have hRiN_finrank : Module.finrank (Ri R) N' = 2 := by
+    have hswap : Module.finrank (Ri R) N' = Module.finrank M N' := by
+      refine Algebra.finrank_eq_of_equiv_equiv (e.symm : Ri R ≃+* M) (RingEquiv.refl N') ?_
+      apply RingHom.ext
+      intro x
+      show (algebraMap M N') (e.symm x) = algebraMap (Ri R) N' x
+      rfl
+    rw [hswap, hMN'_finrank]
+  exact no_quadratic_ext_Ri N' hRiN_finrank
+
+/-- Any finite Galois extension of an RCF has degree 1 or 2. -/
+private theorem finrank_one_or_two_of_galois
+    (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
+    Module.finrank R L = 1 ∨ Module.finrank R L = 2 := by
+  have h : Module.finrank R L ≤ 2 := finrank_le_two_of_galois L
+  have hpos : 0 < Module.finrank R L := Module.finrank_pos
+  interval_cases (Module.finrank R L) <;> simp_all
+
 /-- **S5.** FTA for RCF: every finite extension has degree 1 or 2. -/
 theorem finrank_eq_one_or_two_of_finite
     (K : Type u) [Field K] [Algebra R K] [Module.Finite R K] [Nontrivial K] :
     Module.finrank R K = 1 ∨ Module.finrank R K = 2 := by
-  sorry
+  haveI : CharZero R := IsStrictOrderedRing.toCharZero
+  haveI : Algebra.IsAlgebraic R K := Algebra.IsAlgebraic.of_finite R K
+  let AR : Type u := AlgebraicClosure R
+  let φ : K →ₐ[R] AR := IsAlgClosed.lift
+  have hφ_inj : Function.Injective φ := φ.toRingHom.injective
+  let L : IntermediateField R AR := IntermediateField.normalClosure R K AR
+  haveI hfin_L : FiniteDimensional R L := normalClosure.is_finiteDimensional R K AR
+  haveI hgal_L : IsGalois R L := by
+    haveI : Algebra.IsSeparable R K := Algebra.IsAlgebraic.isSeparable_of_perfectField
+    exact IsGalois.normalClosure R K AR
+  have hrange_le : φ.fieldRange ≤ L := AlgHom.fieldRange_le_normalClosure φ
+  let K' : IntermediateField R AR := φ.fieldRange
+  have hKK' : Module.finrank R K = Module.finrank R K' := by
+    let eq : K ≃ₐ[R] φ.range := AlgEquiv.ofInjectiveField φ
+    have h1 : Module.finrank R K = Module.finrank R φ.range :=
+      LinearEquiv.finrank_eq eq.toLinearEquiv
+    have h2 : Module.finrank R K' = Module.finrank R φ.range :=
+      (IntermediateField.finrank_eq_finrank_subalgebra K').symm
+    rw [h1, ← h2]
+  have hdvd : Module.finrank R K' ∣ Module.finrank R L := by
+    have htower := IntermediateField.finrank_bot_mul_relfinrank hrange_le
+    exact ⟨_, htower.symm⟩
+  rw [hKK']
+  rcases finrank_one_or_two_of_galois L with hL1 | hL2
+  · rw [hL1] at hdvd
+    left; exact Nat.dvd_one.mp hdvd
+  · rw [hL2] at hdvd
+    rcases (Nat.dvd_prime Nat.prime_two).mp hdvd with h | h
+    · left; exact h
+    · right; exact h
 
 /-- **S6.** An algebraic extension of an RCF is finite. -/
 theorem finite_of_isAlgebraic
