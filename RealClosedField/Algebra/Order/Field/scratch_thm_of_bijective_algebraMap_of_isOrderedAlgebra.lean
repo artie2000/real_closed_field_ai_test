@@ -158,23 +158,28 @@ private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
                   + 2 * (algebraMap R K u) * (algebraMap R K v * hm.root)
                   + (algebraMap R K v)^2 * (hm.root ^ 2) := by ring
       rw [e1, hroot_sq]
-      rw [show (algebraMap R K v)^2 * algebraMap R K a = algebraMap R K (v^2 * a) from by
-            rw [← map_pow, ← map_mul]]
-      rw [show (algebraMap R K u)^2 = algebraMap R K (u^2) from by rw [← map_pow]]
-      rw [show (2 : K) * algebraMap R K u * (algebraMap R K v * hm.root)
-              = algebraMap R K (2 * u * v) * hm.root from by
-            rw [show (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v
-                  from by rw [map_mul, map_mul]; simp]; ring]
-      rw [show algebraMap R K (u^2) + algebraMap R K (v^2 * a)
-            = algebraMap R K (u^2 + a * v^2) from by rw [← map_add]; ring_nf]
+      have hmid : (2 : K) * algebraMap R K u * (algebraMap R K v * hm.root)
+              = algebraMap R K (2 * u * v) * hm.root := by
+        rw [show (algebraMap R K (2 * u * v) : K) = 2 * algebraMap R K u * algebraMap R K v
+              from by rw [map_mul, map_mul]; simp]
+        ring
+      rw [hmid]
+      have h1 : (algebraMap R K u)^2 = algebraMap R K (u^2) := (map_pow _ _ _).symm
+      have h2 : (algebraMap R K v)^2 * algebraMap R K a = algebraMap R K (v^2 * a) := by
+        rw [← map_pow, ← map_mul]
+      have h3 : algebraMap R K (u^2) + algebraMap R K (v^2 * a)
+              = algebraMap R K (u^2 + a * v^2) := by rw [← map_add]; ring_nf
+      linear_combination h1 + h3 + h2
     rw [hx_sq]
     show hm.coeff _ 0 ≥ 0
     rw [LinearMap.map_add hm.coeff]
     rw [hm.coeff_algebraMap]
+    show (Pi.single 0 (u^2 + a*v^2) : ℕ → R) 0
+          + hm.coeff (algebraMap R K (2 * u * v) * hm.root) 0 ≥ 0
     rw [show algebraMap R K (2 * u * v) * hm.root = (2 * u * v) • hm.root from by
         rw [Algebra.smul_def]]
     rw [LinearMap.map_smul hm.coeff]
-    show (Pi.single 0 (u^2 + a*v^2) + (2*u*v) • hm.coeff hm.root) 0 ≥ 0
+    show (Pi.single 0 (u^2 + a*v^2) : ℕ → R) 0 + (2*u*v) • hm.coeff hm.root 0 ≥ 0
     rw [hm.coeff_root (by rw [hdeg2]; decide)]
     simp
     positivity
@@ -195,8 +200,8 @@ private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
         exact mul_nonneg r.2 hx)
       hs
     rintro y ⟨z, hz⟩
-    have : y = z ^ 2 := by rw [← hz]; ring
-    rw [this]
+    have heq : y = z ^ 2 := by rw [hz]; ring
+    rw [heq]
     exact hπ_sq z
   have h1 : π (-1 : K) = -1 := by rw [map_neg, hπ_one]
   have h2 : 0 ≤ π (-1 : K) := hπ_in_span _ hc
