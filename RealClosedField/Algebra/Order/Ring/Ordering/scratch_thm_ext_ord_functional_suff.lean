@@ -34,7 +34,7 @@ theorem exists_isOrderedAlgebra_of_linearProj_nonneg_sq'
     | zero => simp
     | add x y _ _ hx hy => rw [map_add]; linarith
     | smul r x _ hx =>
-      rw [LinearMap.map_smul_of_tower]
+      rw [LinearMap.map_smul_of_tower, Subsemiring.smul_def, smul_eq_mul]
       have hr : (0 : F) ≤ (r : F) := r.2
       exact mul_nonneg hr hx
   have := key (-1) h
