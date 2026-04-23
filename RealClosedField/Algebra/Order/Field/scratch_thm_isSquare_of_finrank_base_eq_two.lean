@@ -361,22 +361,21 @@ theorem isSquare_of_finrank_base_eq_two
         have h1 : (a + t) / 2 = -(u * u) := by linear_combination -hu
         have h2 : (a - t) / 2 = -(v * v) := by linear_combination -hv
         rw [h1, h2]; ring
+      -- hprod_sq after rewrite: (a+t)/2 * (a-t)/2 = (u*v)^2, rewritten to -(b^2)/4 = (u*v)^2
       rw [h_product] at hprod_sq
       -- So (uv)^2 = -b^2/4, i.e., (2uv/b)^2 = -1
       have hbne : (b : R) ≠ 0 := hb0
       have h2uv_b : (2 * (u * v) / b) ^ 2 = -1 := by
-        have h4 : (4 : R) = 2 * 2 := by norm_num
-        have h2b_ne : (2 * b : R) ≠ 0 := by
-          simp [hbne]
+        have hb2_ne : b ^ 2 ≠ 0 := pow_ne_zero 2 hbne
+        rw [div_pow, mul_pow]
+        -- Goal: 2^2 * (u * v)^2 / b^2 = -1
+        rw [← hprod_sq]
         field_simp
-        linear_combination (-4 : R) * hprod_sq
+        ring
       -- But -1 is not a square in R
-      have : IsSquare (-1 : R) := ⟨2 * (u * v) / b, by rw [← sq]; exact h2uv_b⟩
-      -- real closed field has -1 not a square (since sum of squares -1 is impossible)
-      obtain ⟨w, hw⟩ := this
-      -- (-1 = w^2), but 0 = 1 + w^2 is a sum of squares, contradicting IsSemireal
+      have hneg1_sq : IsSquare (-1 : R) := ⟨2 * (u * v) / b, by rw [← sq]; exact h2uv_b.symm⟩
       apply IsSemireal.not_isSumSq_neg_one R
-      exact ⟨w, by linear_combination -hw⟩
+      exact hneg1_sq.isSumSq
     -- Now in either case, construct y = c + d·α with y^2 = x
     rcases h_one_sq with ⟨c, hc⟩ | ⟨c, hc⟩
     · -- Case: (a + t)/2 = c^2
