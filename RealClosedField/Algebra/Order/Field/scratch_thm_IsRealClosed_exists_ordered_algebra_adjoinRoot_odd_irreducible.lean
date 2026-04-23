@@ -324,13 +324,15 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
     have hsqRoot : ∀ y ∈ c.support, y = sqRoot y ^ 2 := by
       intro y hy
       have hsq := hy_sq y hy
-      have := hsq.choose_spec
-      simp only [sqRoot, hsq, dif_pos]
-      rw [this]; ring
+      have hspec : y = hsq.choose * hsq.choose := hsq.choose_spec
+      show y = (if hy' : IsSquare y then hy'.choose else 0) ^ 2
+      rw [dif_pos hsq, sq]; exact hspec
     -- Polynomial lift of sqRoot y, with degree < g.natDegree.
     let p : K → R[X] := fun y => hm.modByMonicHom (sqRoot y)
     have hg_ne_one : g ≠ 1 := fun he => by
-      have := hg_irred; rw [he] at this; exact this.not_unit isUnit_one
+      have hgi := hg_irred
+      rw [he] at hgi
+      exact hgi.not_isUnit isUnit_one
     have hp_deg_lt : ∀ y : K, (p y).natDegree < g.natDegree := fun y =>
       Polynomial.natDegree_modByMonic_lt _ hg_monic hg_ne_one
     have hp_mk : ∀ y ∈ c.support, AdjoinRoot.mk g (p y) = sqRoot y := by
@@ -342,17 +344,17 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
     -- Claim: g | P
     have hg_dvd_P : g ∣ P := by
       rw [← AdjoinRoot.mk_eq_zero]
-      simp only [hP_def, map_add, map_sum, map_mul, map_pow, map_one, AdjoinRoot.mk_C]
-      have hsum_eq :
-          ∑ y ∈ c.support, (algebraMap R K (c y : R)) * (AdjoinRoot.mk g (p y))^2 = -1 := by
-        rw [show (-1 : K) = -(1 : K) from rfl, ← hc_sum]
-        rw [Finsupp.sum]
-        rw [show -∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y =
-              ∑ y ∈ c.support, -((c y : ↥(Subsemiring.nonneg R)) • y) from by
-          rw [← Finset.sum_neg_distrib]]
-        -- this is wrong sign. hc_sum is : (∑...) = -1, so -1 = (∑...) directly.
-        sorry
-      rw [hsum_eq]; ring
+      have key : AdjoinRoot.mk g P = (∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y) + 1 := by
+        rw [hP_def, map_add, map_sum, map_one]
+        congr 1
+        refine Finset.sum_congr rfl fun y hy => ?_
+        rw [map_mul, map_pow, AdjoinRoot.mk_C, hp_mk y hy, ← hsqRoot y hy]
+        show (algebraMap R K (c y : R)) * y = (c y : ↥(Subsemiring.nonneg R)) • y
+        rw [Algebra.smul_def]
+        rfl
+      rw [key]
+      have hsum_eq : c.sum (fun mi r => r • mi) = ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • y := rfl
+      rw [← hsum_eq, hc_sum]; ring
     sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
