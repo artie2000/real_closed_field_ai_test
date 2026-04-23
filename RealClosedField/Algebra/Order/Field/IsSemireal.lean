@@ -105,38 +105,22 @@ theorem Rat.existsUnique_isStrictOrderedRing :
         have : ((k + 1 : ℕ) : ℚ) * y^2 = y * y + k * y^2 := by push_cast; ring
         rw [this]
         exact IsSumSq.sq_add y ih
-  have key : ∀ x : ℚ, IsSumSq x ∨ IsSumSq (-x) := by
-    intro x
-    rcases le_or_lt 0 x with hx | hx
-    · left
-      have hnum : x.num ≥ 0 := Rat.num_nonneg.mpr hx
-      set p : ℕ := x.num.toNat with hp
-      set q : ℕ := x.den with hq
-      have hqpos : (q : ℚ) ≠ 0 := by exact_mod_cast x.den_ne_zero
-      have hnumcast : (x.num : ℚ) = (p : ℚ) := by
-        have : (x.num.toNat : ℤ) = x.num := Int.toNat_of_nonneg hnum
-        exact_mod_cast this.symm
-      have hpq : x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
-        rw [← Rat.num_div_den x, hnumcast]
-        push_cast
-        field_simp
-        ring
-      rw [hpq]
-      exact aux (p * q) (1 / q)
-    · right
-      have hx' : 0 ≤ -x := by linarith
-      have hnum : (-x).num ≥ 0 := Rat.num_nonneg.mpr hx'
-      set p : ℕ := (-x).num.toNat with hp
-      set q : ℕ := (-x).den with hq
-      have hqpos : (q : ℚ) ≠ 0 := by exact_mod_cast (-x).den_ne_zero
-      have hnumcast : ((-x).num : ℚ) = (p : ℚ) := by
-        have : ((-x).num.toNat : ℤ) = (-x).num := Int.toNat_of_nonneg hnum
-        exact_mod_cast this.symm
-      have hpq : -x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
-        rw [← Rat.num_div_den (-x), hnumcast]
-        push_cast
-        field_simp
-        ring
-      rw [hpq]
-      exact aux (p * q) (1 / q)
-  exact IsSemireal.existsUnique_isStrictOrderedRing_iff.mpr key
+  have key : ∀ x : ℚ, 0 ≤ x → IsSumSq x := by
+    intro x hx
+    have hnum : x.num ≥ 0 := Rat.num_nonneg.mpr hx
+    set p : ℕ := x.num.toNat with hp
+    set q : ℕ := x.den with hq
+    have hqpos : (q : ℚ) ≠ 0 := by exact_mod_cast x.den_ne_zero
+    have hnumcast : (x.num : ℚ) = (p : ℚ) := by
+      have : (x.num.toNat : ℤ) = x.num := Int.toNat_of_nonneg hnum
+      exact_mod_cast this.symm
+    have hpq : x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
+      rw [← Rat.num_div_den x, hnumcast]
+      push_cast
+      field_simp
+      ring
+    rw [hpq]
+    exact aux (p * q) (1 / q)
+  refine ⟨inferInstance, inferInstance, fun l' h' => ?_⟩
+  exact (IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key).unique
+    inferInstance h'
