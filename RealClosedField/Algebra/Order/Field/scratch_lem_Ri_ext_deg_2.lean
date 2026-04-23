@@ -86,11 +86,157 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
     Nonempty (K ≃ₐ[R] K') := sorry
 
+/-- Helper: in a real closed field `R`, with `t² = a² + b²`, at least one of
+`(a+t)/2` and `(a-t)/2` is a square. -/
+private lemma isSquare_or_isSquare_half_sum_or_diff_sqrt
+    (a b t : R) (ht : t ^ 2 = a ^ 2 + b ^ 2) (hb : b ≠ 0) :
+    IsSquare ((a + t) / 2) ∨ IsSquare ((a - t) / 2) := by
+  by_contra hcon
+  push_neg at hcon
+  obtain ⟨hn1, hn2⟩ := hcon
+  obtain ⟨p, hp⟩ := isSquare_neg_of_not_isSquare hn1
+  obtain ⟨q, hq⟩ := isSquare_neg_of_not_isSquare hn2
+  -- -((a+t)/2) = p*p and -((a-t)/2) = q*q, so (p*q)² = (a+t)(a-t)/4 = -b²/4.
+  have hprod : (p * q) ^ 2 = -(b ^ 2) / 4 := by
+    have key : (p * p) * (q * q) = -((a + t) / 2) * -((a - t) / 2) := by
+      rw [← hp, ← hq]
+    have h2 : -((a + t) / 2) * -((a - t) / 2) = (a ^ 2 - t ^ 2) / 4 := by ring
+    have h3 : (a ^ 2 - t ^ 2) / 4 = -(b ^ 2) / 4 := by rw [ht]; ring
+    nlinarith [key, h2, h3]
+  -- From (p*q)² = -b²/4 and b ≠ 0, deduce IsSumSq (-1) contradicting IsSemireal.
+  apply IsSemireal.not_isSumSq_neg_one R
+  have hb_half_ne : b / 2 ≠ 0 := by
+    intro hh; apply hb; linarith [(by linarith : (2 : R) * (b/2) = b)]
+  have hinv : (-1 : R) = (p * q / (b / 2)) ^ 2 + 0 := by
+    have : (p * q / (b / 2)) ^ 2 = (p * q) ^ 2 / (b / 2) ^ 2 := by
+      rw [div_pow]
+    rw [this, hprod, add_zero]
+    have h2 : (b / 2) ^ 2 = b ^ 2 / 4 := by ring
+    rw [h2]
+    have hb2_ne : b ^ 2 ≠ 0 := pow_ne_zero 2 hb
+    have hb2_4_ne : b ^ 2 / 4 ≠ 0 := by
+      intro hh
+      apply hb2_ne
+      linarith [(by linarith : (4 : R) * (b ^ 2 / 4) = b ^ 2)]
+    field_simp
+  rw [hinv]
+  exact .sq _ |>.isSumSq.add .zero
+
 /-- `R(i)` has no quadratic extension: equivalently, every element of any quadratic
 extension `K` of `R` is a square in `K`. -/
 theorem isSquare_of_finrank_base_eq_two
     (K : Type*) [Field K] [Algebra R K]
     (hK : Module.finrank R K = 2) (x : K) : IsSquare x := by
+  haveI : FiniteDimensional R K := Module.finite_of_finrank_eq_succ hK
+  -- Get a primitive element α.
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  have hint : IsIntegral R α := .of_finite R α
+  have halg : IsAlgebraic R α := hint.isAlgebraic
+  have hαtop : Algebra.adjoin R ({α} : Set K) = ⊤ := by
+    rw [← (IntermediateField.adjoin_simple_eq_top_iff_of_isAlgebraic halg).mp hα]
+    exact (IntermediateField.adjoin_simple_toSubalgebra_of_isAlgebraic halg).symm
+  have hdeg : (minpoly R α).natDegree = 2 := by
+    rw [(Field.primitive_element_iff_minpoly_natDegree_eq R α).mp hα, hK]
+  -- α is not in the image of algebraMap R K.
+  have hα_notin : α ∉ (algebraMap R K).range := by
+    intro h
+    have : (minpoly R α).natDegree = 1 := (minpoly.natDegree_eq_one_iff).mpr h
+    omega
+  -- Extract the minpoly and its coefficients.
+  set p := minpoly R α with hp_def
+  have hp_monic : p.Monic := minpoly.monic hint
+  set c₀ : R := p.coeff 0 with hc₀_def
+  set c₁ : R := p.coeff 1 with hc₁_def
+  have hp_deg2 : p = Polynomial.X ^ 2 + Polynomial.C c₁ * Polynomial.X + Polynomial.C c₀ := by
+    -- p is monic of natDegree 2
+    have h_as_sum : p = ∑ i ∈ Finset.range (p.natDegree + 1), Polynomial.C (p.coeff i) *
+                          Polynomial.X ^ i := Polynomial.as_sum_range_C_mul_X_pow p
+    rw [hdeg] at h_as_sum
+    -- sum over Fin 3 = 0, 1, 2
+    rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_zero, zero_add] at h_as_sum
+    -- coeff p 2 = leading = 1 since monic
+    have h_lead : p.coeff 2 = 1 := by
+      rw [show (2 : ℕ) = p.natDegree from hdeg.symm]
+      exact hp_monic.coeff_natDegree
+    rw [h_lead] at h_as_sum
+    simp [pow_succ] at h_as_sum
+    rw [h_as_sum]; ring
+  have hαrel : α ^ 2 + algebraMap R K c₁ * α + algebraMap R K c₀ = 0 := by
+    have h := minpoly.aeval R α
+    rw [← hp_def, hp_deg2] at h
+    simp [Polynomial.aeval_def, Polynomial.eval₂_add, Polynomial.eval₂_mul,
+          Polynomial.eval₂_pow, Polynomial.eval₂_C, Polynomial.eval₂_X] at h
+    linarith [h]
+  -- β = α + c₁/2 and β² = d := c₁²/4 - c₀.
+  set d : R := c₁ ^ 2 / 4 - c₀ with hd_def
+  set β : K := α + algebraMap R K (c₁ / 2) with hβ_def
+  have hβsq : β ^ 2 = algebraMap R K d := by
+    rw [hβ_def, hd_def]
+    have : (α + algebraMap R K (c₁ / 2)) ^ 2
+         = α ^ 2 + algebraMap R K c₁ * α + algebraMap R K c₁ ^ 2 / 4 := by
+      have h2 : algebraMap R K (c₁ / 2) = algebraMap R K c₁ / 2 := by
+        rw [map_div₀]; simp
+      rw [h2]; ring
+    rw [this]
+    have : α ^ 2 + algebraMap R K c₁ * α = -algebraMap R K c₀ := by linarith
+    rw [this]
+    have : algebraMap R K (c₁ ^ 2 / 4 - c₀) = algebraMap R K c₁ ^ 2 / 4 - algebraMap R K c₀ := by
+      rw [map_sub, map_div₀, map_pow]; simp
+    rw [this]; ring
+  -- d is not a square in R.
+  have hd_not_sq : ¬ IsSquare d := by
+    rintro ⟨t, ht⟩
+    -- β² = t² in K, so (β - t)(β + t) = 0.
+    have hβt : (β - algebraMap R K t) * (β + algebraMap R K t) = 0 := by
+      have expand : (β - algebraMap R K t) * (β + algebraMap R K t)
+                  = β ^ 2 - (algebraMap R K t) ^ 2 := by ring
+      rw [expand, hβsq]
+      have : (algebraMap R K t) ^ 2 = algebraMap R K (t * t) := by rw [map_mul]; ring
+      rw [this]
+      rw [show t * t = d from ht.symm]
+      ring
+    rcases mul_eq_zero.mp hβt with h | h
+    · have : β = algebraMap R K t := by linarith
+      -- β = t, so α = t - c₁/2 ∈ range
+      have hα_range : α = algebraMap R K (t - c₁ / 2) := by
+        have := this
+        rw [hβ_def] at this
+        have hh : α = algebraMap R K t - algebraMap R K (c₁ / 2) := by linarith
+        rw [hh, ← map_sub]
+      exact hα_notin ⟨_, hα_range.symm⟩
+    · have : β = -algebraMap R K t := by linarith
+      have hα_range : α = algebraMap R K (-t - c₁ / 2) := by
+        rw [hβ_def] at this
+        have hh : α = -algebraMap R K t - algebraMap R K (c₁ / 2) := by linarith
+        rw [hh]
+        rw [← map_neg, ← map_sub]
+      exact hα_notin ⟨_, hα_range.symm⟩
+  -- So -d is a square: -d = u².
+  obtain ⟨u, hu⟩ : IsSquare (-d) := isSquare_neg_of_not_isSquare hd_not_sq
+  have hu_ne : u ≠ 0 := by
+    rintro rfl
+    apply hd_not_sq
+    exact ⟨0, by rw [mul_zero] at hu; linarith⟩
+  have hu_sq : u * u = -d := hu.symm
+  -- Now decompose x = a + b·β using PowerBasis.
+  let PB : PowerBasis R K := PowerBasis.ofAdjoinEqTop hint hαtop
+  have hPBdim : PB.dim = 2 := hdeg
+  -- Use a basis for K over R of {1, α}.
+  -- The equivFun gives (Fin 2 → R).
+  have hxrepr : ∃ a b : R, x = algebraMap R K a + algebraMap R K b * α := by
+    have hbasis := PB.basis.sum_repr x
+    have : PB.dim = 2 := hdeg
+    -- rewrite sum over Fin PB.dim
+    refine ⟨PB.basis.repr x ⟨0, by omega⟩, PB.basis.repr x ⟨1, by omega⟩, ?_⟩
+    rw [show α = PB.gen from rfl]
+    -- Unfold the sum
+    have h0 : PB.basis ⟨0, by rw [this]; omega⟩ = PB.gen ^ (0 : ℕ) := PB.basis_eq_pow _
+    have h1 : PB.basis ⟨1, by rw [this]; omega⟩ = PB.gen ^ (1 : ℕ) := PB.basis_eq_pow _
+    have hfin : Finset.univ (α := Fin PB.dim) =
+                (Finset.univ.image (Fin.cast this.symm)) := by
+      ext ⟨i, hi⟩; simp
+    sorry
   sorry
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
