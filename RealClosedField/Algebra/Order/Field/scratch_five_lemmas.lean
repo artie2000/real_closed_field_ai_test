@@ -441,7 +441,31 @@ theorem finrank_le_two_of_isAlgebraic
 /-- A real closed field has no nontrivial real algebraic extensions. -/
 theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
     (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] [IsSemireal K] :
-    Function.Surjective (algebraMap R K) := sorry
+    Function.Surjective (algebraMap R K) := by
+  intro x
+  have hx_int : IsIntegral R x := Algebra.IsIntegral.isIntegral x
+  haveI hfin : FiniteDimensional R (IntermediateField.adjoin R ({x} : Set K)) :=
+    IntermediateField.adjoin.finiteDimensional hx_int
+  set K₀ := IntermediateField.adjoin R ({x} : Set K)
+  have hle : Module.finrank R K₀ ≤ 2 := finrank_le_two_of_finiteDimensional R K₀
+  have hpos : 0 < Module.finrank R K₀ := Module.finrank_pos
+  interval_cases hdim : Module.finrank R K₀
+  · -- finrank = 1
+    have hx_mem : x ∈ K₀ := IntermediateField.mem_adjoin_simple_self R x
+    have hK₀_bot : K₀ = ⊥ := by
+      rw [← IntermediateField.finrank_eq_one_iff]
+      exact hdim
+    rw [hK₀_bot, IntermediateField.mem_bot] at hx_mem
+    exact hx_mem
+  · -- finrank = 2
+    exfalso
+    have hsq : IsSquare ((-1 : K₀)) := isSquare_of_finrank_base_eq_two R K₀ hdim (-1)
+    obtain ⟨j, hj⟩ := hsq
+    have hjK : (-1 : K) = (j : K) * (j : K) := by
+      have h1 : ((-1 : K₀) : K) = -1 := by push_cast; rfl
+      have h2 : ((j * j : K₀) : K) = (j : K) * (j : K) := by push_cast; rfl
+      rw [← h1, hj, h2]
+    exact IsSemireal.not_isSumSq_neg_one K (hjK ▸ IsSumSq.mul_self (j : K))
 
 /-- Classification of monic irreducible polynomials over a real closed field `R`:
 they are linear (`X - c`) or quadratic of the form `(X - a)^2 + b^2` with `b ≠ 0`. -/
