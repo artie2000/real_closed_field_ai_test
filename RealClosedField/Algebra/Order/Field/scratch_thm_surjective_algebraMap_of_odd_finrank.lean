@@ -54,10 +54,9 @@ theorem surjective_algebraMap_of_odd_finrank
   have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
   -- Its degree equals `finrank R K` because `α` generates `K`.
   have hdeg : (minpoly R α).natDegree = Module.finrank R K := by
-    have h1 := IntermediateField.adjoin.finrank hint
-    rw [show (IntermediateField.adjoin R {α}) = _ from hα,
-      IntermediateField.finrank_top'] at h1
-    exact h1.symm
+    have h1 := (IntermediateField.adjoin.finrank hint).symm
+    rw [hα, IntermediateField.finrank_top'] at h1
+    exact h1
   -- `(minpoly R α).natDegree` is odd, so it has a root in `R`.
   rw [← hdeg] at hodd
   obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd
@@ -69,7 +68,8 @@ theorem surjective_algebraMap_of_odd_finrank
   have hfin1 : Module.finrank R K = 1 := by omega
   intro x
   have hbot : (⊥ : Subalgebra R K) = ⊤ := Subalgebra.bot_eq_top_of_finrank_eq_one hfin1
-  exact Algebra.mem_bot.mp (hbot ▸ Algebra.mem_top)
+  have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; trivial
+  exact Algebra.mem_bot.mp hx
 
 /-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
 any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
