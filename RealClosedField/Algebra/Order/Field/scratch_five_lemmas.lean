@@ -449,21 +449,21 @@ theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
   set K₀ := IntermediateField.adjoin R ({x} : Set K) with hK₀_def
   have hle : Module.finrank R K₀ ≤ 2 := finrank_le_two_of_finiteDimensional R K₀
   have hpos : 0 < Module.finrank R K₀ := Module.finrank_pos
-  interval_cases h : Module.finrank R K₀
+  rcases (show Module.finrank R K₀ = 1 ∨ Module.finrank R K₀ = 2 by omega) with h1 | h2
   · -- finrank = 1
     have hx_mem : x ∈ K₀ :=
       IntermediateField.subset_adjoin R ({x} : Set K) (Set.mem_singleton x)
-    have hK₀_bot : K₀ = ⊥ := IntermediateField.finrank_eq_one_iff.mp h
+    have hK₀_bot : K₀ = ⊥ := IntermediateField.finrank_eq_one_iff.mp h1
     rw [hK₀_bot, IntermediateField.mem_bot] at hx_mem
     exact hx_mem
   · -- finrank = 2
     exfalso
-    have hsq : IsSquare ((-1 : K₀)) := isSquare_of_finrank_base_eq_two R K₀ h (-1)
+    have hsq : IsSquare ((-1 : K₀)) := isSquare_of_finrank_base_eq_two R K₀ h2 (-1)
     obtain ⟨j, hj⟩ := hsq
     have hjK : (-1 : K) = (j : K) * (j : K) := by
-      have h1 : ((-1 : K₀) : K) = -1 := by push_cast; rfl
-      have h2 : ((j * j : K₀) : K) = (j : K) * (j : K) := by push_cast; rfl
-      rw [← h1, hj, h2]
+      have h1' : ((-1 : K₀) : K) = -1 := by push_cast; rfl
+      have h2' : ((j * j : K₀) : K) = (j : K) * (j : K) := by push_cast; rfl
+      rw [← h1', hj, h2']
     exact IsSemireal.not_isSumSq_neg_one K (hjK ▸ IsSumSq.mul_self (j : K))
 
 /-- Classification of monic irreducible polynomials over a real closed field `R`:

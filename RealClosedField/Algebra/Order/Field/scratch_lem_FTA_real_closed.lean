@@ -17,34 +17,46 @@ open IntermediateField Module
 private theorem finrank_le_two_of_isGalois
     (L : Type*) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L ≤ 2 := by
-  -- G = Gal(L/R)
-  set G := (L ≃ₐ[R] L)
-  -- |G| = [L:R]
-  have hcard : Nat.card G = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
-  -- Find a Sylow 2-subgroup; its index is odd.
+  -- |Gal(L/R)| = [L:R]
+  have hcard : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
+  -- 2 is prime
   have hp : Fact (Nat.Prime 2) := ⟨Nat.prime_two⟩
-  -- Finite G
-  have hfin : Finite G := AlgEquiv.fintype R L |>.finite
-  -- Sylow 2-subgroup
-  let P : Sylow 2 G := Classical.arbitrary _
-  have hPindex_coprime : (Nat.card P).Coprime P.1.index := P.card_coprime_index
-  -- P is a 2-group, so Nat.card P = 2^m for some m
-  obtain ⟨m, hPcard⟩ : ∃ m, Nat.card (P : Subgroup G) = 2 ^ m := IsPGroup.iff_card.mp P.isPGroup'
-  -- P.index is coprime to 2, hence odd
-  have hP_index_odd : Odd P.1.index := by
-    rw [Nat.odd_iff_not_even, ← Nat.Prime.dvd_iff_not_coprime Nat.prime_two]
-    · intro hdvd
-      have : (Nat.card P).Coprime P.1.index := hPindex_coprime
-      rw [hPcard] at this
-      have hdvd' : 2 ∣ 2 ^ m := by
-        rcases m with _ | m
-        · simp at hPcard
-          -- Nat.card P = 1, but P is a Sylow subgroup of a nontrivial group? Could be trivial.
-          -- Actually we don't need this.
-          exact hdvd.elim (fun _ => False.elim (by omega))
-        · exact ⟨2 ^ m, by ring⟩
-      exact absurd (Nat.Coprime.symm this).eq_of_mul_eq_zero_left sorry
-    · exact hdvd
+  -- Take a Sylow 2-subgroup
+  let P : Sylow 2 (L ≃ₐ[R] L) := Classical.arbitrary _
+  -- P is a 2-group, so |P| = 2^m
+  obtain ⟨m, hPcard⟩ : ∃ m, Nat.card (P : Subgroup (L ≃ₐ[R] L)) = 2 ^ m :=
+    IsPGroup.iff_card.mp P.isPGroup'
+  -- The fixed field of P has dimension equal to the index [G : P] which is odd.
+  have hFK_finrank : Module.finrank R (fixedField (P : Subgroup (L ≃ₐ[R] L))) * (2 ^ m) =
+      Module.finrank R L := by
+    rw [← hPcard]
+    rw [show Nat.card (P : Subgroup (L ≃ₐ[R] L)) = Nat.card (↥(P : Subgroup (L ≃ₐ[R] L))) from rfl]
+    rw [← finrank_fixedField_eq_card (P : Subgroup (L ≃ₐ[R] L))]
+    exact Module.finrank_mul_finrank R _ L
+  -- The index is odd (coprime to 2).
+  have hP_index_odd : Odd (Module.finrank R (fixedField (P : Subgroup (L ≃ₐ[R] L)))) := by
+    have hcoprime : (Nat.card (P : Subgroup (L ≃ₐ[R] L))).Coprime (P : Subgroup (L ≃ₐ[R] L)).index :=
+      P.card_coprime_index
+    -- index * card = card G (= finrank R L = 2^m * (index))
+    have hindex_eq :
+        (P : Subgroup (L ≃ₐ[R] L)).index = Module.finrank R (fixedField (P : Subgroup (L ≃ₐ[R] L))) := by
+      have h1 : (P : Subgroup (L ≃ₐ[R] L)).index * Nat.card (P : Subgroup (L ≃ₐ[R] L)) = Nat.card (L ≃ₐ[R] L) :=
+        (P : Subgroup (L ≃ₐ[R] L)).index_mul_card
+      rw [hcard, ← hFK_finrank, hPcard] at h1
+      have h2m_pos : (0 : ℕ) < 2 ^ m := Nat.pos_of_ne_zero (pow_ne_zero m (by norm_num))
+      -- a * 2^m = b * 2^m implies a = b
+      exact Nat.eq_of_mul_eq_mul_right h2m_pos h1
+    rw [← hindex_eq]
+    -- coprime to 2 implies not divisible by 2, but index is a natural number, so odd.
+    rw [hPcard] at hcoprime
+    -- Nat.Coprime (2^m) n → ¬(2 ∣ n)  hence Odd n (for n positive)
+    rw [Nat.Coprime, Nat.gcd_comm] at hcoprime
+    -- hmm need odd.
+    have hne2 : ¬ (2 ∣ (P : Subgroup (L ≃ₐ[R] L)).index) := by
+      intro hdvd
+      have : Nat.gcd (P : Subgroup (L ≃ₐ[R] L)).index (2 ^ m) = 2 ^ m * _ := sorry
+      sorry
+    exact Nat.odd_iff_not_even.mpr (fun heven => hne2 heven.two_dvd)
   sorry
 
 /-- FTA for real closed fields: any finite extension of R has dimension at most 2. -/
