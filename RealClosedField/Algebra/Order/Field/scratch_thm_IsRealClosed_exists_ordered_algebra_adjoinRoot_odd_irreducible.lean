@@ -215,15 +215,6 @@ private lemma not_exists_ordered_algebra_of_bijective
   haveI := hom
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
-/-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
-field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
-This is the classical Artin-Schreier induction. -/
-private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
-    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
-    ∃ _ : LinearOrder (AdjoinRoot g),
-      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
-  sorry
-
 /-- Every positive-odd-`natDegree` polynomial has a monic irreducible factor of odd
 `natDegree`. -/
 private lemma exists_odd_irreducible_factor
@@ -253,6 +244,15 @@ private lemma exists_odd_irreducible_factor
     obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
       ih q.natDegree hq_lt hq_odd hq_odd.pos rfl
     exact ⟨g', hg'_monic, hg'_irred, hg'_dvd.trans ⟨g, by rw [hq_eq]; ring⟩, hg'_odd⟩
+
+/-- Core induction lemma: every monic irreducible polynomial of odd `natDegree` over an ordered
+field `R` gives rise to a quotient `R`-algebra that admits an ordering extending the one on `R`.
+This is the classical Artin-Schreier induction. -/
+private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
+    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
+    ∃ _ : LinearOrder (AdjoinRoot g),
+      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
+  sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
