@@ -92,31 +92,26 @@ theorem exists_isOrderedAlgebra_of_adjoin_sqrt
       rw [← hb0]; exact hcoord00
     · intro x
       show 0 ≤ b.coord 0 (x^2)
-      -- Expand x in the basis b using c = b.repr x 0, d = b.repr x 1.
       have hx_eq : x = b.repr x 0 • (1 : K) + b.repr x 1 • α := by
         have hsum : ∑ i, b.repr x i • b i = x := Basis.sum_repr b x
         rw [Fin.sum_univ_two, hb0, hb1] at hsum
         exact hsum.symm
-      -- Shorthand
-      set c := b.repr x 0
-      set d := b.repr x 1
-      -- Note: b.coord i x = b.repr x i by definition
-      have hc_coord : b.coord 0 x = c := rfl
-      -- Compute x^2.
+      set c := b.repr x 0 with hc_def
+      set d := b.repr x 1 with hd_def
+      -- Compute x^2 as (c^2 + d^2 * a) • 1 + (2 * c * d) • α.
       have hx_sq : x^2 = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by
-        have h_sm : ∀ (t : F) (y : K), t • y = algebraMap F K t * y :=
-          fun t y ↦ Algebra.smul_def t y
-        have h_am : algebraMap F K a = a • (1 : K) := Algebra.algebraMap_eq_smul_one a
         have expand : (c • (1 : K) + d • α)^2
             = c^2 • (1 : K) + (2 * c * d) • α + d^2 • α^2 := by
-          simp_rw [h_sm]
+          simp only [Algebra.smul_def, map_pow, map_mul, map_ofNat, mul_one]
           ring
+        have h_am : algebraMap F K a = a • (1 : K) := Algebra.algebraMap_eq_smul_one a
         calc x^2
             = (c • (1 : K) + d • α)^2 := by rw [hx_eq]
           _ = c^2 • (1 : K) + (2 * c * d) • α + d^2 • α^2 := expand
           _ = c^2 • (1 : K) + (2 * c * d) • α + d^2 • (a • (1 : K)) := by rw [hα, h_am]
           _ = c^2 • (1 : K) + (2 * c * d) • α + (d^2 * a) • (1 : K) := by rw [smul_smul]
-          _ = c^2 • (1 : K) + (d^2 * a) • (1 : K) + (2 * c * d) • α := by ring
+          _ = c^2 • (1 : K) + (d^2 * a) • (1 : K) + (2 * c * d) • α := by
+              rw [add_assoc, add_comm ((2 * c * d) • α) _, ← add_assoc]
           _ = (c^2 + d^2 * a) • (1 : K) + (2 * c * d) • α := by rw [← add_smul]
       -- Compute (b.coord 0) (x^2).
       have hπ_x_sq : b.coord 0 (x^2) = c^2 + d^2 * a := by
