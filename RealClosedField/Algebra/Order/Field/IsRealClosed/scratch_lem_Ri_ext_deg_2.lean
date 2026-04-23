@@ -11,6 +11,7 @@ import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.IsAdjoinRoot
 import Mathlib.GroupTheory.Sylow
 import Mathlib.Algebra.Polynomial.SpecificDegree
+import Mathlib.Algebra.Polynomial.Degree.IsMonicOfDegree
 import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
 open Polynomial
@@ -66,10 +67,9 @@ theorem no_quadratic_ext_Ri
   haveI : Algebra.IsAlgebraic (Ri R) M := Algebra.IsAlgebraic.of_finite (Ri R) M
   -- CharZero lifts through the (injective) algebraMap R → Ri R → M; but we just need
   -- separability for the primitive element theorem over Ri R.
-  haveI : CharZero (Ri R) := by
-    refine RingHom.charZero (algebraMap R (Ri R)) ?_
-    -- standard result: algebraMap to AdjoinRoot of a nonzero poly is injective
-    sorry
+  haveI : CharZero (Ri R) :=
+    charZero_of_injective_algebraMap (R := R) (A := Ri R)
+      (AdjoinRoot.coe_injective' (f := (X ^ 2 + 1 : R[X])))
   haveI : Algebra.IsSeparable (Ri R) M := Algebra.IsAlgebraic.isSeparable_of_perfectField
   obtain ⟨α, hα⟩ := Field.exists_primitive_element (Ri R) M
   have hint : IsIntegral (Ri R) α := Algebra.IsIntegral.isIntegral α
