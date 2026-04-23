@@ -8,7 +8,9 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Minpoly.Field
+import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.Tactic.TFAE
 import RealClosedField.Algebra.Order.Algebra
@@ -60,7 +62,22 @@ any finite extension `K/R` with `Module.finrank R K` odd has `R → K` surjectiv
 theorem surjective_algebraMap_of_odd_finrank
     (K : Type*) [Field K] [Algebra R K] [FiniteDimensional R K]
     (hodd : Odd (Module.finrank R K)) :
-    Function.Surjective (algebraMap R K) := sorry
+    Function.Surjective (algebraMap R K) := by
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element R K
+  have hint : IsIntegral R α := .of_finite R α
+  have hirr : Irreducible (minpoly R α) := minpoly.irreducible hint
+  have hdeg : (minpoly R α).natDegree = Module.finrank R K :=
+    (Field.primitive_element_iff_minpoly_natDegree_eq R α).mp hα
+  rw [← hdeg] at hodd
+  obtain ⟨r, hr⟩ := IsRealClosed.exists_isRoot_of_odd_natDegree hodd
+  have hdeg1 : (minpoly R α).natDegree = 1 :=
+    Polynomial.natDegree_eq_of_degree_eq_some
+      (Polynomial.degree_eq_one_of_irreducible_of_root hirr hr)
+  have hfin1 : Module.finrank R K = 1 := by omega
+  intro x
+  have hbot : (⊥ : Subalgebra R K) = ⊤ := Subalgebra.bot_eq_top_of_finrank_eq_one hfin1
+  have hx : x ∈ (⊥ : Subalgebra R K) := by rw [hbot]; exact Algebra.mem_top
+  exact Algebra.mem_bot.mp hx
 
 /-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
 any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
