@@ -193,14 +193,29 @@ private theorem finrank_le_two_of_galois
     rw [← IntermediateField.relfinrank_eq_finrank_of_le hM_le_N]
     exact hrel_MN
   -- Transport Algebra structure: Ri' R → M → N' via e.symm
-  letI : Algebra (Ri' R) N' :=
-    (((IntermediateField.algebra (F := M) (E := L)) |>.toRingHom.comp e.symm.toRingHom
-       : Ri' R →+* N').toAlgebra)
-  -- Wait, simpler: N' has Algebra M; use AlgEquiv.toAlgHom (e.symm : Ri' R →ₐ[R] M) then compose
-  -- Actually let me just create the algebra directly
-  -- Actually we already have Algebra (Ri' R) N' as above. Check finrank (Ri' R) N' = 2.
-  -- Via e.symm : Ri' R ≃ₐ[R] M, we transport: N' as M-module via LinearEquiv ≃ N' as Ri' R-module
-  -- Use restriction of scalars and LinearEquiv.finrank_eq or similar.
+  -- Build Ri' R →ₐ[R] M using e.symm, then compose with the canonical M → N' inclusion.
+  let f : Ri' R →+* N' :=
+    (algebraMap M N').comp (e.symm : Ri' R →+* M)
+  letI : Algebra (Ri' R) N' := f.toAlgebra
+  -- Check finrank (Ri' R) N' = 2.
+  -- We have an R-alg isomorphism e : M → Ri' R; N' is an M-module; we can identify M-module
+  -- structure with Ri' R-module structure through e.
+  have hsmul : ∀ (c : Ri' R) (x : N'), c • x = (e.symm c) • x := by
+    intros c x
+    show f c * x = (e.symm c) • x
+    rw [Algebra.smul_def]
+    rfl
+  -- N' has a LinearEquiv from its M-structure to its Ri' R-structure
+  -- Define the identity as a LinearEquiv after change of scalars
+  let lin : N' ≃ₗ[Ri' R] N' :=
+    { toFun := id
+      invFun := id
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl
+      map_add' := fun _ _ => rfl
+      map_smul' := fun c x => by
+        change c • x = e c • x
+        rw [hsmul]; simp }
   sorry
 
 /-- Any finite Galois extension of an RCF has degree 1 or 2. -/
