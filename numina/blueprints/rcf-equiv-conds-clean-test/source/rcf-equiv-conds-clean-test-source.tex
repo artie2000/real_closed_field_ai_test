@@ -281,6 +281,7 @@ As before, let $R$ be a real closed field. Theorem \ref{thm:FTAlg} is a powerful
 \begin{corollary}
   \label{lem:RCF_max_ord}
   \uses{def:RCF,lem:RCF_ord_unique}
+  \lean{IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra}
   $R$ has no nontrivial ordered algebraic extensions (with respect to the unique order).
 \end{corollary}
 \begin{proof}
@@ -322,6 +323,7 @@ In fact, the converses to Lemmas \ref{lem:RCF_max} and \ref{lem:IVP_poly} also h
 \begin{theorem}
   \label{thm:IVP_poly_imp_RCF}
   \uses{def:RCF}
+  \lean{IsRealClosed.of_ivp}
   Let $R$ be an ordered field whose polynomials satisfy the intermediate value property. Then $R$ is real closed.
 \end{theorem}
 \begin{proof}
@@ -336,6 +338,7 @@ In fact, the converses to Lemmas \ref{lem:RCF_max} and \ref{lem:IVP_poly} also h
 \begin{theorem}
   \label{thm:ord_max_imp_RCF}
   \uses{def:RCF}
+  \lean{IsRealClosed.of_bijective_algebraMap_of_isOrderedAlgebra}
   Let $R$ be an ordered field with no nontrivial ordered algebraic extensions. Then $R$ is real closed.
 \end{theorem}
 \begin{proof}
@@ -390,6 +393,8 @@ In summary, we have the following characterisations of real closed fields.
 \begin{theorem}
   \label{thm:RCF_tfae_ord}
   \uses{def:RCF}
+  \lean{IsRealClosed.tfae_ord}
+  \leanok
   Let $R$ be an ordered field. TFAE:
   \begin{enumerate}
     \item $R$ is real closed.
@@ -399,6 +404,7 @@ In summary, we have the following characterisations of real closed fields.
 \end{theorem}
 \begin{proof}
   \uses{lem:IVP_poly,thm:IVP_poly_imp_RCF,lem:RCF_max_ord,thm:ord_max_imp_RCF}
+  \leanok
 \end{proof}
 
 \bibliographystyle{plain}
