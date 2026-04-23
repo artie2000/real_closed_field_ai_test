@@ -269,7 +269,7 @@ theorem isSquare_of_finrank_base_eq_two
   have hgen_sq : pb.gen ^ 2 = -1 := by
     have haev : Polynomial.aeval pb.gen (minpoly R pb.gen) = 0 := minpoly.aeval R pb.gen
     rw [hmin] at haev
-    simp at haev
+    simp only [map_add, map_pow, Polynomial.aeval_X, Polynomial.aeval_C, map_one] at haev
     linear_combination haev
   set j : K := pb.gen with hj_def
   -- Decompose x via pb.basis
@@ -407,8 +407,7 @@ theorem isSquare_of_finrank_base_eq_two
     -- 2cd = b
     have h2cd : 2 * c * d = b := by
       rw [hd_def]
-      rw [mul_div_assoc']
-      exact mul_div_cancel_left₀ b h2c_ne
+      field_simp
     -- Define y := algebraMap c + algebraMap d * j
     refine ⟨algebraMap R K c + algebraMap R K d * j, ?_⟩
     rw [hx_decomp]
