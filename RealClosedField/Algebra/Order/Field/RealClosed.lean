@@ -277,7 +277,151 @@ theorem nonempty_algEquiv_of_finrank_eq_two
 extension `K` of `R` is a square in `K`. -/
 theorem isSquare_of_finrank_base_eq_two
     (K : Type*) [Field K] [Algebra R K]
-    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := sorry
+    (hK : Module.finrank R K = 2) (x : K) : IsSquare x := by
+  obtain ⟨pb, hmin⟩ := exists_powerBasis_of_finrank_eq_two_aux R K hK
+  haveI hFin : FiniteDimensional R K := .of_finrank_eq_succ hK
+  have hInj : Function.Injective (algebraMap R K) := (algebraMap R K).injective
+  have hpb_dim : pb.dim = 2 := by
+    have h1 : (minpoly R pb.gen).natDegree = pb.dim := pb.natDegree_minpoly
+    rw [hmin] at h1
+    have h2 : (Polynomial.X ^ 2 + Polynomial.C (1 : R)).natDegree = 2 :=
+      Polynomial.natDegree_X_pow_add_C
+    omega
+  have hgen_sq : pb.gen ^ 2 = -1 := by
+    have haev : Polynomial.aeval pb.gen (minpoly R pb.gen) = 0 := minpoly.aeval R pb.gen
+    rw [hmin] at haev
+    simp only [map_add, map_pow, Polynomial.aeval_X, Polynomial.aeval_C, map_one] at haev
+    linear_combination haev
+  set j : K := pb.gen with hj_def
+  have hInj_j : j ∉ Set.range (algebraMap R K) := by
+    rintro ⟨s, hs⟩
+    have hs2 : (algebraMap R K s)^2 = -1 := by rw [hs]; exact hgen_sq
+    have hs2' : algebraMap R K (s^2 + 1) = 0 := by
+      rw [map_add, map_pow, map_one, hs2]; ring
+    have h1 : s^2 + 1 = 0 := hInj (by rw [hs2', map_zero])
+    have h2 : IsSumSq ((-1 : R)) := by
+      have : (-1 : R) = s * s := by linear_combination -h1
+      rw [this]
+      exact IsSumSq.mul_self s
+    exact IsSemireal.not_isSumSq_neg_one R h2
+  have hli : LinearIndependent R ![(1 : K), j] := by
+    rw [LinearIndependent.pair_iff]
+    intro r t hrt
+    by_cases ht : t = 0
+    · subst ht
+      simp only [zero_smul, add_zero] at hrt
+      rw [Algebra.smul_def, mul_one] at hrt
+      exact ⟨(map_eq_zero_iff _ hInj).mp hrt, rfl⟩
+    · exfalso
+      apply hInj_j
+      rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hrt
+      have htL : (algebraMap R K) t ≠ 0 := (map_ne_zero_iff _ hInj).mpr ht
+      refine ⟨-r / t, ?_⟩
+      rw [map_div₀, map_neg]
+      rw [div_eq_iff htL]
+      linear_combination -hrt
+  have hcard : Fintype.card (Fin 2) = Module.finrank R K := by
+    rw [Fintype.card_fin, hK]
+  let B : Basis (Fin 2) R K := basisOfLinearIndependentOfCardEqFinrank hli hcard
+  have hB0 : B 0 = 1 := by
+    show basisOfLinearIndependentOfCardEqFinrank hli hcard 0 = 1
+    rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
+    simp
+  have hB1 : B 1 = j := by
+    show basisOfLinearIndependentOfCardEqFinrank hli hcard 1 = j
+    rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]
+    simp
+  have hx_decomp : x = algebraMap R K (B.repr x 0) + algebraMap R K (B.repr x 1) * j := by
+    have hsum : ∑ i, B.repr x i • B i = x := B.sum_repr x
+    rw [Fin.sum_univ_two] at hsum
+    rw [hB0, hB1] at hsum
+    rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hsum
+    linear_combination -hsum
+  set a : R := B.repr x 0 with ha_def
+  set b : R := B.repr x 1 with hb_def
+  by_cases hb0 : b = 0
+  · rw [hb0, map_zero, zero_mul, add_zero] at hx_decomp
+    rcases isSquare_or_isSquare_neg a with ⟨c, hc⟩ | ⟨c, hc⟩
+    · refine ⟨algebraMap R K c, ?_⟩
+      rw [hx_decomp, hc, map_mul]
+    · refine ⟨algebraMap R K c * j, ?_⟩
+      rw [hx_decomp]
+      have ha_eq : a = -(c * c) := by linear_combination -hc
+      rw [ha_eq, map_neg, map_mul]
+      have : algebraMap R K c * j * (algebraMap R K c * j) = (algebraMap R K c)^2 * j^2 := by ring
+      rw [this, hgen_sq]
+      ring
+  · have hab_sq : IsSquare (a^2 + b^2) :=
+      isSquare_of_isSumSq (IsSumSq.add (IsSumSq.sq a) (IsSumSq.sq b))
+    obtain ⟨r, hr⟩ := hab_sq
+    have hr_sq : r^2 = a^2 + b^2 := by rw [hr]; ring
+    have hexists_sign : ∃ s : R, s^2 = a^2 + b^2 ∧ IsSquare ((s + a) / 2) := by
+      rcases isSquare_or_isSquare_neg ((r + a) / 2) with hsq | hsq
+      · exact ⟨r, hr_sq, hsq⟩
+      · refine ⟨-r, ?_, ?_⟩
+        · linear_combination hr_sq
+        · obtain ⟨α, hα⟩ := hsq
+          by_cases hα0 : α = 0
+          · exfalso
+            rw [hα0] at hα
+            have hra : r + a = 0 := by linear_combination -2 * hα
+            have h1 : r^2 = a^2 := by linear_combination (r - a) * hra
+            have h3 : b^2 = 0 := by linear_combination -hr_sq + h1
+            apply hb0
+            exact (pow_eq_zero_iff two_ne_zero).mp h3
+          · have hα_ne : α ≠ 0 := hα0
+            refine ⟨b / (2 * α), ?_⟩
+            have h2α_ne : (2 : R) * α ≠ 0 := mul_ne_zero two_ne_zero hα_ne
+            have h4α2_ne : (2 * α) * (2 * α) ≠ 0 := mul_ne_zero h2α_ne h2α_ne
+            rw [div_mul_div_comm,
+                div_eq_div_iff (by norm_num : (2 : R) ≠ 0) h4α2_ne]
+            linear_combination 4 * (r - a) * hα + 2 * hr_sq
+    obtain ⟨s, hs_sq, hcsq⟩ := hexists_sign
+    obtain ⟨c, hc⟩ := hcsq
+    have hc0 : c ≠ 0 := by
+      intro heq
+      rw [heq, mul_zero] at hc
+      have hsa : s + a = 0 := by linear_combination 2 * hc
+      have h1 : s^2 = a^2 := by linear_combination (s - a) * hsa
+      have h3 : b^2 = 0 := by linear_combination -hs_sq + h1
+      apply hb0
+      exact (pow_eq_zero_iff two_ne_zero).mp h3
+    set d : R := b / (2 * c) with hd_def
+    have h2c_ne : (2 : R) * c ≠ 0 := mul_ne_zero two_ne_zero hc0
+    have hc2_ne : c^2 ≠ 0 := pow_ne_zero _ hc0
+    have hc2 : c^2 = (s + a) / 2 := by
+      rw [sq]; linear_combination -hc
+    have hs_ne : s + a ≠ 0 := by
+      rw [show s + a = 2 * c^2 from by linear_combination -2 * hc2]
+      exact mul_ne_zero two_ne_zero hc2_ne
+    have hprod : (s + a) * (s - a) = b^2 := by linear_combination hs_sq
+    have hd2 : d^2 = (s - a) / 2 := by
+      have hstep1 : d^2 = b^2 / (2 * c)^2 := by rw [hd_def]; ring
+      have h2csq : (2 * c)^2 = 2 * (s + a) := by
+        have hex : (2 * c)^2 = 4 * c^2 := by ring
+        rw [hex, hc2]; ring
+      rw [hstep1, h2csq]
+      rw [div_eq_div_iff (mul_ne_zero two_ne_zero hs_ne) two_ne_zero]
+      linear_combination -2 * hprod
+    have hcd_eq_a : c^2 - d^2 = a := by
+      rw [hc2, hd2]; ring
+    have h2cd : 2 * c * d = b := by
+      rw [hd_def]
+      field_simp
+    refine ⟨algebraMap R K c + algebraMap R K d * j, ?_⟩
+    rw [hx_decomp]
+    have hexpand : (algebraMap R K c + algebraMap R K d * j) *
+                   (algebraMap R K c + algebraMap R K d * j) =
+                   (algebraMap R K c)^2 + (algebraMap R K d)^2 * j^2 +
+                   2 * algebraMap R K c * algebraMap R K d * j := by ring
+    rw [hexpand, hgen_sq]
+    have hmap_a : algebraMap R K a = (algebraMap R K c)^2 - (algebraMap R K d)^2 := by
+      rw [← map_pow, ← map_pow, ← map_sub, hcd_eq_a]
+    have hmap_b : algebraMap R K b = 2 * algebraMap R K c * algebraMap R K d := by
+      have h1 : (2 : K) = algebraMap R K 2 := (map_ofNat (algebraMap R K) 2).symm
+      rw [h1, ← map_mul, ← map_mul, h2cd]
+    rw [hmap_a, hmap_b]
+    ring
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
 of `R` are `R` itself and the quadratic extension `R(i)`. -/
