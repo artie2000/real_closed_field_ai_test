@@ -64,10 +64,13 @@ We can also characterise algebraically whether a field $F$ has a unique ordering
 
 \begin{corollary}
   \label{cor:unique_ord_Q}
+  \lean{Rat.existsUnique_isStrictOrderedRing}
+  \leanok
   There is a unique field ordering on $\Q$.
 \end{corollary}
 \begin{proof}
   \uses{cor:unique_ord_cond_ordered}
+  \leanok
   We use Corollary \ref{cor:unique_ord_cond_ordered}. Let $x\in\Q$ be non-negative. Then $x=p/q$ for some integers $p\geq0$ and $q>0$, so
   \[x=\underbrace{\frac{1}{q^2}+\cdots+\frac{1}{q^2}}_{pq\text{ times}}.\]
 \end{proof}
