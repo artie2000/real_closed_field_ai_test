@@ -280,7 +280,7 @@ theorem isSquare_of_finrank_base_eq_two
     (hK : Module.finrank R K = 2) (x : K) : IsSquare x := by
   obtain ⟨pb, hmin⟩ := exists_powerBasis_of_finrank_eq_two_aux R K hK
   have hdim : pb.dim = 2 := by
-    have : pb.dim = Module.finrank R K := pb.finrank
+    have h := pb.finrank
     omega
   -- α is the generator, with α^2 = -1
   set α : K := pb.gen with hα_def
@@ -322,8 +322,9 @@ theorem isSquare_of_finrank_base_eq_two
     rfl
   -- a^2 + b^2 is a sum of squares in R, hence a square in R
   have hsumsq : IsSumSq (a ^ 2 + b ^ 2) := by
-    refine IsSumSq.sq_add ?_ _
-    exact IsSumSq.sq _
+    have h1 : IsSquare (a ^ 2) := ⟨a, by ring⟩
+    have h2 : IsSquare (b ^ 2) := ⟨b, by ring⟩
+    exact IsSumSq.add h1.isSumSq h2.isSumSq
   obtain ⟨t, ht⟩ := isSquare_of_isSumSq R hsumsq
   -- t^2 = a^2 + b^2
   have ht_sq : t ^ 2 = a ^ 2 + b ^ 2 := by rw [sq, ← ht]
