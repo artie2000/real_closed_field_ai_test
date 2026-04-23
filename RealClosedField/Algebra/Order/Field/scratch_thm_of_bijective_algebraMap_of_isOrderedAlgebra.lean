@@ -51,7 +51,6 @@ private lemma algebraMap_not_bijective_of_irreducible_natDegree_pos
   have hroot : p.IsRoot r := hbij.1 (by simpa using this)
   exact hirred.not_isRoot_of_natDegree_ne_one hdeg.ne' hroot
 
-omit [LinearOrder R] [IsStrictOrderedRing R] in
 /-- Given an ordered structure on `AdjoinRoot p` (for `p` irreducible of natDegree > 1),
 the hypothesis that `algebraMap R K` is bijective for every ordered algebraic extension gives
 a contradiction. -/
@@ -123,25 +122,27 @@ private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
     intro i hi
     rw [hdeg2] at hi
     have hroot_coeff : hm.coeff hm.root = Pi.single 1 1 := hm.coeff_root (by rw [hdeg2]; decide)
+    have hcoeff_aM_mul_root : ∀ (c : R) (j : ℕ),
+        hm.coeff (algebraMap R K c * hm.root) j = c • (Pi.single (M := fun _ : ℕ => R) 1 1) j := by
+      intro c j
+      rw [show algebraMap R K c * hm.root = c • hm.root from by rw [Algebra.smul_def]]
+      rw [LinearMap.map_smul hm.coeff]
+      show c • hm.coeff hm.root j = _
+      rw [hroot_coeff]
     interval_cases i
     · -- i = 0
       rw [LinearMap.map_add hm.coeff]
       rw [hm.coeff_algebraMap]
-      -- Coefficient of (algebraMap v * root) at 0.
-      rw [show algebraMap R K (hm.coeff x 1) * hm.root
-            = (hm.coeff x 1) • hm.root from by rw [Algebra.smul_def]]
-      rw [LinearMap.map_smul hm.coeff]
-      show (Pi.single 0 (hm.coeff x 0) + (hm.coeff x 1) • hm.coeff hm.root) 0 = _
-      rw [hroot_coeff]
+      show (Pi.single 0 (hm.coeff x 0) : ℕ → R) 0 + hm.coeff (algebraMap R K (hm.coeff x 1)
+            * hm.root) 0 = hm.coeff x 0
+      rw [hcoeff_aM_mul_root]
       simp
     · -- i = 1
       rw [LinearMap.map_add hm.coeff]
       rw [hm.coeff_algebraMap]
-      rw [show algebraMap R K (hm.coeff x 1) * hm.root
-            = (hm.coeff x 1) • hm.root from by rw [Algebra.smul_def]]
-      rw [LinearMap.map_smul hm.coeff]
-      show hm.coeff x 1 = (Pi.single 0 (hm.coeff x 0) + (hm.coeff x 1) • hm.coeff hm.root) 1
-      rw [hroot_coeff]
+      show hm.coeff x 1 = (Pi.single 0 (hm.coeff x 0) : ℕ → R) 1
+          + hm.coeff (algebraMap R K (hm.coeff x 1) * hm.root) 1
+      rw [hcoeff_aM_mul_root]
       simp
   -- π(x^2) ≥ 0 for all x : K
   have hπ_sq : ∀ x : K, 0 ≤ π (x ^ 2) := by
