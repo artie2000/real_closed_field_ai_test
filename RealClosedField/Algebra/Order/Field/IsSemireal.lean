@@ -5,6 +5,8 @@ Authors: Artie Khovanov
 -/
 import Mathlib.Algebra.Order.Ring.Rat
 import Mathlib.Algebra.Ring.Semireal.Defs
+import Mathlib.RingTheory.AdjoinRoot
+import Mathlib.RingTheory.IsAdjoinRoot
 import RealClosedField.Algebra.Order.Ring.Ordering.Adjoin
 import RealClosedField.Algebra.Order.Ring.Ordering.Order
 
