@@ -833,7 +833,7 @@ theorem of_bijective_algebraMap_of_isSemireal [IsSemireal R]
   haveI : IsStrictOrderedRing R := IsStrictOrderedRing.ofIsSemireal R
   refine ⟨inferInstance, ?_⟩
   refine of_bijective_algebraMap_of_isOrderedAlgebra (fun K _ _ _ _ _ _ => ?_)
-  haveI : IsSemireal K := IsStrictOrderedRing.toIsSemireal
+  haveI : IsSemireal K := inferInstance
   exact h K
 
 variable (R) in
