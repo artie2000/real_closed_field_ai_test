@@ -196,14 +196,14 @@ private theorem finrank_le_two_of_galois
   let f : Ri' R →+* N' :=
     (algebraMap M N').comp (e.symm : Ri' R →+* M)
   letI : Algebra (Ri' R) N' := f.toAlgebra
-  -- Transfer finrank via `Module.finrank_eq_of_equiv_equiv`
+  -- Transfer finrank via `Algebra.finrank_eq_of_equiv_equiv`
   have hRiN_finrank : Module.finrank (Ri' R) N' = 2 := by
-    have : Module.finrank (Ri' R) N' = Module.finrank M N' := by
-      refine (Module.finrank_eq_of_equiv_equiv (e.symm : Ri' R ≃+* M) (RingEquiv.refl N') ?_).symm
+    have hswap : Module.finrank (Ri' R) N' = Module.finrank M N' := by
+      refine Algebra.finrank_eq_of_equiv_equiv (e.symm : Ri' R ≃+* M) (RingEquiv.refl N') ?_
       ext x
-      show algebraMap M N' (e.symm x) = f x
+      show f x = algebraMap M N' (e.symm x)
       rfl
-    rw [this, hMN'_finrank]
+    rw [hswap, hMN'_finrank]
   exact no_quadratic_ext_Ri' (R := R) N' hRiN_finrank
 
 /-- Any finite Galois extension of an RCF has degree 1 or 2. -/
