@@ -11,7 +11,6 @@ import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.IsAdjoinRoot
 import Mathlib.GroupTheory.Sylow
 import Mathlib.Algebra.Polynomial.SpecificDegree
-import Mathlib.Algebra.Polynomial.Degree.IsMonicOfDegree
 import Mathlib.LinearAlgebra.FiniteDimensional.Basic
 
 open Polynomial
@@ -87,8 +86,25 @@ theorem no_quadratic_ext_Ri
   have hmonic : (minpoly (Ri R) α).Monic := minpoly.monic hint
   -- Write minpoly = X^2 + C a * X + C b
   set f : (Ri R)[X] := minpoly (Ri R) α with hf
-  have hf_imd : IsMonicOfDegree f 2 := ⟨hnatdeg, hmonic⟩
-  obtain ⟨a, b, hab⟩ := Polynomial.isMonicOfDegree_two_iff.mp hf_imd
+  set a : Ri R := f.coeff 1
+  set b : Ri R := f.coeff 0
+  have hab : f = X ^ 2 + C a * X + C b := by
+    apply Polynomial.ext
+    intro n
+    rcases lt_trichotomy n 1 with hn | rfl | hn
+    · interval_cases n
+      simp [a, b]
+    · simp [a, b]
+    · rcases eq_or_lt_of_le (Nat.succ_le_iff.mpr hn) with h2 | h2
+      · simp [← h2, show (2 : ℕ) ≠ 0 from by decide, show (2 : ℕ) ≠ 1 from by decide,
+              hmonic.coeff_natDegree.trans rfl, hnatdeg]
+        rw [← hnatdeg]; exact hmonic.coeff_natDegree
+      · have hn_gt : n > f.natDegree := hnatdeg ▸ h2
+        rw [coeff_eq_zero_of_natDegree_lt hn_gt]
+        have hn2 : n ≠ 2 := Nat.ne_of_gt h2
+        have hn1 : n ≠ 1 := by omega
+        have hn0 : n ≠ 0 := by omega
+        simp [hn2, hn1, hn0]
   -- Ri_isSquare: find s with s^2 = (a/2)^2 - b
   obtain ⟨s, hs⟩ := Ri_isSquare ((a/2)^2 - b)
   -- Define root r = -a/2 + s
