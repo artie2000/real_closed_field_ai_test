@@ -74,6 +74,31 @@ private lemma not_exists_ordered_algebra_of_bijective
   haveI := hom
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
+/-- **Core induction lemma for Part B.**
+
+For every monic irreducible polynomial `g : R[X]` of odd `natDegree`, the quotient field
+`AdjoinRoot g` admits an ordering making it an ordered `R`-algebra.
+
+This is proved by strong induction on `g.natDegree`.
+* Base case `natDegree g = 1`: `AdjoinRoot g ≅ R` as `R`-algebras, and `R` is already ordered.
+* Step case `natDegree g ≥ 3` (odd): by contradiction. If `AdjoinRoot g` has no compatible order,
+  then (by `Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare`) we have
+  `-1 ∈ span_{R≥0} {IsSquare}` in `AdjoinRoot g`. Expanding, there are `cᵢ ∈ R≥0` and
+  `pᵢ : R[X]` with `natDegree pᵢ < natDegree g` such that
+  `1 + ∑ cᵢ pᵢ² = h · g` in `R[X]` for some `h : R[X]`. Analyzing leading coefficients
+  shows `natDegree h` is odd and less than `natDegree g`. So `h` has a monic irreducible factor
+  `g'` of odd degree less than `natDegree g`. By IH, `AdjoinRoot g'` is ordered, but the
+  same relation `1 + ∑ cᵢ pᵢ² ≡ 0 mod g'` shows `-1 ∈ span_squares` in `AdjoinRoot g'`,
+  a contradiction.
+
+TODO: Formalize this induction. The proof relies on detailed manipulation of polynomial
+modular arithmetic, which is technically involved in Lean. -/
+private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
+    {g : R[X]} (hg_monic : Monic g) (hg_irred : Irreducible g) (hg_odd : Odd g.natDegree) :
+    ∃ _ : LinearOrder (AdjoinRoot g),
+      IsStrictOrderedRing (AdjoinRoot g) ∧ IsOrderedModule R (AdjoinRoot g) := by
+  sorry
+
 /-- If `f : R[X]` has positive odd natDegree, then it has a monic irreducible factor
 of positive odd natDegree. -/
 private lemma exists_odd_irreducible_factor
@@ -283,9 +308,11 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
       have hgc : g.eval c = 0 := hc
       obtain ⟨q, hq⟩ := hg_dvd
       rw [hq, IsRoot, eval_mul, hgc, zero_mul]
-    · -- natDegree > 1, and odd. AdjoinRoot g must have an ordered structure — this is the
-      -- difficult induction step we do not formalise here.
-      have hg_deg_gt : 1 < g.natDegree := lt_of_le_of_ne hg_deg_pos.nat_succ_le (fun heq => hg_deg_one heq.symm)
-      sorry
+    · -- natDegree > 1, and odd. AdjoinRoot g must have an ordered structure (big induction).
+      have hg_deg_gt : 1 < g.natDegree :=
+        lt_of_le_of_ne hg_deg_pos.nat_succ_le (fun heq => hg_deg_one heq.symm)
+      exfalso
+      exact not_exists_ordered_algebra_of_bijective h hg_irred hg_deg_gt
+        (exists_ordered_algebra_adjoinRoot_odd_irreducible hg_monic hg_irred hg_odd)
 
 end IsRealClosed
