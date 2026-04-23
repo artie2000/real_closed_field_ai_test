@@ -222,10 +222,12 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
     intro a ha
     have h0 : (0 : R) ≤ a + 1 := by linarith
     have heval_0 : (Polynomial.X ^ 2 - Polynomial.C a).eval 0 ≤ 0 := by
-      simp
-      exact ha
+      simp only [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
+        Polynomial.eval_C]
+      nlinarith
     have heval_1 : 0 ≤ (Polynomial.X ^ 2 - Polynomial.C a).eval (a + 1) := by
-      simp
+      simp only [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
+        Polynomial.eval_C]
       nlinarith
     obtain ⟨c, hc_mem, hc_root⟩ :=
       h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
