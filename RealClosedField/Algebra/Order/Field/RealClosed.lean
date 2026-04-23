@@ -131,7 +131,7 @@ private theorem powerBasis_X_sq_add_one_of_finrank_eq_two
   have h2R : (2 : R) ≠ 0 := two_ne_zero
   have hy_sq : y ^ 2 = (algebraMap R L) c := by
     have half_sq : (algebraMap R L) (a / 2) ^ 2 = (algebraMap R L) (a ^ 2 / 4) := by
-      rw [← map_pow]; congr 1; field_simp
+      rw [← map_pow]; congr 1; field_simp; ring
     have half_times : 2 * (algebraMap R L) (a / 2) = (algebraMap R L) a := by
       have : (2 : L) = (algebraMap R L) 2 := (map_ofNat (algebraMap R L) 2).symm
       rw [this, ← map_mul]; congr 1; field_simp
@@ -220,7 +220,6 @@ private theorem powerBasis_X_sq_add_one_of_finrank_eq_two
     refine (minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_).symm
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
-    exact le_refl _
   have hli : LinearIndependent R ![(1 : L), α] := by
     rw [LinearIndependent.pair_iff]
     intro r t hrt
@@ -248,6 +247,16 @@ private theorem powerBasis_X_sq_add_one_of_finrank_eq_two
     rw [key]
     fin_cases i <;> simp
   exact ⟨{ gen := α, dim := 2, basis := basis2, basis_eq_pow := hbasis_eq }, hmin⟩
+
+/-- `R(i)` is the unique quadratic extension of a real closed field `R` (up to `R`-isomorphism):
+any quadratic extension of `R` is `R`-isomorphic to any other quadratic extension of `R`. -/
+theorem nonempty_algEquiv_of_finrank_eq_two
+    (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
+    (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
+    Nonempty (K ≃ₐ[R] K') := by
+  obtain ⟨pbK, hminK⟩ := powerBasis_X_sq_add_one_of_finrank_eq_two R K hK
+  obtain ⟨pbK', hminK'⟩ := powerBasis_X_sq_add_one_of_finrank_eq_two R K' hK'
+  exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
 
 /-- `R(i)` has no quadratic extension: equivalently, every element of any quadratic
 extension `K` of `R` is a square in `K`. -/
