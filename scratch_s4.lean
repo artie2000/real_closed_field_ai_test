@@ -110,7 +110,7 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
   -- Case analysis
   by_cases hb0 : b = 0
   · -- b = 0, z = a (in R)
-    subst hb0
+    rw [hb0] at hz
     simp only [map_zero, zero_mul, add_zero] at hz
     by_cases ha_nn : 0 ≤ a
     · -- z = a, IsSquare a in R, pull back through algebraMap
@@ -163,14 +163,16 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
       · exact h
       · exfalso; rw [← h] at hu'_sq; linarith
     have hu'_ne : u' ≠ 0 := ne_of_gt hu'_pos
-    set v : R := b / (2 * u')
+    let v : R := b / (2 * u')
     -- verify u'^2 - v^2 = a and 2*u'*v = b
     have h2u'_ne : (2 * u' : R) ≠ 0 := by positivity
     have hv_rel : 2 * u' * v = b := by
-      field_simp [v]
+      show 2 * u' * (b / (2 * u')) = b
+      field_simp
     have hu'2 : u' ^ 2 = (a + r') / 2 := by rw [sq]; exact hu'_sq
     have hv2 : v ^ 2 = b ^ 2 / (4 * u' ^ 2) := by
-      rw [show v = b / (2 * u') from rfl]; field_simp; ring
+      show (b / (2 * u')) ^ 2 = b ^ 2 / (4 * u' ^ 2)
+      field_simp; ring
     have hu'2_sub_v2 : u' ^ 2 - v ^ 2 = a := by
       rw [hu'2, hv2, hu'2]
       have hfour_pos : (0 : R) < 4 * ((a + r') / 2) := by linarith
