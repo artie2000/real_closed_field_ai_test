@@ -229,7 +229,7 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
       simp only [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
         Polynomial.eval_C]
       nlinarith
-    obtain ⟨c, hc_mem, hc_root⟩ :=
+    obtain ⟨c, _, hc_root⟩ :=
       h (Polynomial.X ^ 2 - Polynomial.C a) 0 (a + 1) h0 heval_0 heval_1
     have hc_eval : (Polynomial.X ^ 2 - Polynomial.C a).eval c = 0 := hc_root
     rw [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_C,
@@ -249,7 +249,7 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
     by_cases hlc_pos : 0 < f.leadingCoeff
     · obtain ⟨M, hMpos, hMneg_eval, hMpos_eval⟩ :=
         polynomialIVP_aux.exists_sign_change (R := R) f hn_def.symm hn1 hodd hlc_pos
-      obtain ⟨c, hc_mem, hc_root⟩ :=
+      obtain ⟨c, _, hc_root⟩ :=
         h f (-M) M (by linarith) hMneg_eval.le hMpos_eval.le
       exact ⟨c, hc_root⟩
     · push_neg at hlc_pos
@@ -264,7 +264,7 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
       obtain ⟨M, hMpos, hMneg_eval, hMpos_eval⟩ :=
         polynomialIVP_aux.exists_sign_change (R := R) (-f) hndeg hn1 hodd hlc'
       -- Apply IVP to (-f) directly; a root of (-f) is a root of f.
-      obtain ⟨c, hc_mem, hc_root⟩ :=
+      obtain ⟨c, _, hc_root⟩ :=
         h (-f) (-M) M (by linarith) hMneg_eval.le hMpos_eval.le
       refine ⟨c, ?_⟩
       have : (-f).eval c = 0 := hc_root
