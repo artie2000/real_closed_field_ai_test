@@ -225,6 +225,13 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
       (by rw [hdeg2]; decide)
       (exists_ordered_algebra_adjoinRoot_sq_sub_C ha hsq)
   · -- PART B: every odd-degree polynomial has a root
+    -- This requires a strong induction showing that for every odd-degree irreducible
+    -- polynomial g, AdjoinRoot g admits a compatible order. The induction goes:
+    --   Base (deg = 1): AdjoinRoot g ≅ R, which is already ordered.
+    --   Step (deg > 1 odd): if -1 ∈ span_squares in AdjoinRoot g, lift back to R[X] to
+    --     get 1 + ∑ cᵢ*pᵢ² = h*g; analyze degrees to find an odd-degree irreducible
+    --     factor of h with smaller degree, giving -1 ∈ span_squares there; apply IH.
+    -- We leave this full argument as a sorry, reporting the precise claim.
     sorry
 
 end IsRealClosed
