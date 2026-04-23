@@ -53,8 +53,9 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     (K K' : Type*) [Field K] [Algebra R K] [Field K'] [Algebra R K']
     (hK : Module.finrank R K = 2) (hK' : Module.finrank R K' = 2) :
     Nonempty (K ≃ₐ[R] K') := by
-  -- Helper: for any quadratic extension `L` of `R`, there is an element `α : L`
-  -- with `α^2 = -1` that generates a PowerBasis with minimal polynomial `X^2 + 1`.
+  -- It suffices to show that any quadratic extension `L` of `R` carries a PowerBasis whose
+  -- minimal polynomial is `X^2 + 1`. Then two such power bases agree on minimal polynomial
+  -- and PowerBasis.equivOfMinpoly gives the algebra equivalence.
   suffices h : ∀ (L : Type*) [Field L] [Algebra R L], Module.finrank R L = 2 →
       ∃ pb : PowerBasis R L, minpoly R pb.gen = Polynomial.X ^ 2 + Polynomial.C (1 : R) by
     obtain ⟨pbK, hminK⟩ := h K hK
@@ -62,6 +63,7 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     exact ⟨pbK.equivOfMinpoly pbK' (hminK.trans hminK'.symm)⟩
   intro L _ _ hL
   have hFin : FiniteDimensional R L := .of_finrank_eq_succ hL
+  have hInj : Function.Injective (algebraMap R L) := (algebraMap R L).injective
   -- Step 1: find an element `x : L` with `x ∉ range (algebraMap R L)`.
   have hne : ∃ x : L, x ∉ (algebraMap R L).range := by
     by_contra h
@@ -83,121 +85,116 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     have h2 : 2 ≤ (minpoly R x).natDegree := (minpoly.two_le_natDegree_iff hxI).mpr hx
     have hle : (minpoly R x).natDegree ≤ Module.finrank R L := minpoly.natDegree_le x
     omega
-  -- Step 2: x satisfies x^2 + a•x + b = 0 where a = coeff(minpoly) 1, b = coeff(minpoly) 0.
-  set a : R := (minpoly R x).coeff 1
-  set b : R := (minpoly R x).coeff 0
+  -- Step 2: extract coefficients `a = coeff 1`, `b = coeff 0` of minpoly,
+  -- and show x^2 + (algebraMap a) * x + (algebraMap b) = 0.
+  set a : R := (minpoly R x).coeff 1 with ha_def
+  set b : R := (minpoly R x).coeff 0 with hb_def
   have hfm : (minpoly R x).Monic := minpoly.monic hxI
-  have hroot_sum : x ^ 2 + a • x + b • (1 : L) = 0 := by
-    have haev : (minpoly R x).aeval x = 0 := minpoly.aeval R x
-    rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)] at haev
-    simp [Finset.sum_range_succ, pow_succ, pow_zero] at haev
-    -- haev : coeff 0 • 1 + coeff 1 • x + coeff 2 • (x * x) = 0
-    have h2 : (minpoly R x).coeff 2 = 1 := by
-      have := hfm
-      simp [Polynomial.Monic, Polynomial.leadingCoeff, hdeg2] at this
-      exact this
-    rw [h2] at haev
-    show x ^ 2 + a • x + b • (1 : L) = 0
-    simp only [a, b]
-    linear_combination haev + (sq x - x * x) * (1 : R) • (1 : L)
-  -- Reformulate: x^2 + algebraMap a * x + algebraMap b = 0
+  have hcoeff2 : (minpoly R x).coeff 2 = 1 := by
+    have hlc : (minpoly R x).leadingCoeff = 1 := hfm
+    rw [Polynomial.leadingCoeff, hdeg2] at hlc
+    exact hlc
   have hroot : x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) b = 0 := by
-    have := hroot_sum
-    simp only [Algebra.smul_def, mul_one] at this
-    exact this
-  -- Step 3: Let y = x + algebraMap(a/2). Complete the square.
-  set y : L := x + (algebraMap R L) (a / 2)
-  set c : R := a ^ 2 / 4 - b
+    have haev := minpoly.aeval R x
+    rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)] at haev
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add] at haev
+    -- haev : coeff 0 • x^0 + coeff 1 • x^1 + coeff 2 • x^2 = 0
+    simp only [Algebra.smul_def, pow_zero, mul_one, pow_one, hcoeff2, one_mul] at haev
+    -- haev : algebraMap (coeff 0) + algebraMap (coeff 1) * x + x^2 = 0
+    linear_combination haev
+  -- Step 3: y = x + algebraMap(a/2); y^2 = algebraMap(a^2/4 - b).
+  set c : R := a ^ 2 / 4 - b with hc_def
+  set y : L := x + (algebraMap R L) (a / 2) with hy_def
+  have h2R : (2 : R) ≠ 0 := two_ne_zero
   have hy_sq : y ^ 2 = (algebraMap R L) c := by
-    have h2R : (2 : R) ≠ 0 := two_ne_zero
-    have hinj : Function.Injective (algebraMap R L) := (algebraMap R L).injective
-    have h4R : (4 : R) ≠ 0 := by norm_num
-    show (x + (algebraMap R L) (a / 2)) ^ 2 = (algebraMap R L) c
-    have hc_expand : (algebraMap R L) c =
-        (algebraMap R L) (a ^ 2 / 4) - (algebraMap R L) b := by
-      rw [← map_sub]; congr 1
-    have half_mul_two : (algebraMap R L) (a / 2) * 2 = (algebraMap R L) a := by
-      have : (a / 2) * 2 = a := by field_simp
-      rw [show ((2 : L)) = (algebraMap R L) 2 from (map_ofNat (algebraMap R L) 2).symm,
-          ← map_mul, this]
     have half_sq : (algebraMap R L) (a / 2) ^ 2 = (algebraMap R L) (a ^ 2 / 4) := by
-      rw [← map_pow]; congr 1; field_simp
-    calc (x + (algebraMap R L) (a / 2)) ^ 2
-        = x ^ 2 + 2 * x * (algebraMap R L) (a / 2) + (algebraMap R L) (a / 2) ^ 2 := by ring
-      _ = x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) (a ^ 2 / 4) := by
-            rw [half_sq]; linear_combination (2 * x) * half_mul_two
-      _ = - (algebraMap R L) b + (algebraMap R L) (a ^ 2 / 4) := by linear_combination hroot
-      _ = (algebraMap R L) c := by rw [hc_expand]; ring
+      rw [← map_pow]
+      congr 1
+      field_simp
+    have half_times : 2 * (algebraMap R L) (a / 2) = (algebraMap R L) a := by
+      have : (2 : L) = (algebraMap R L) 2 := (map_ofNat (algebraMap R L) 2).symm
+      rw [this, ← map_mul]
+      congr 1
+      field_simp
+    have expand : y ^ 2 = x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) (a ^ 2 / 4) := by
+      show (x + (algebraMap R L) (a / 2)) ^ 2 = _
+      have : (x + (algebraMap R L) (a / 2)) ^ 2 =
+          x ^ 2 + x * (2 * (algebraMap R L) (a / 2)) + (algebraMap R L) (a / 2) ^ 2 := by ring
+      rw [this, half_sq, half_times]
+      ring
+    rw [expand]
+    show x ^ 2 + (algebraMap R L) a * x + (algebraMap R L) (a ^ 2 / 4) =
+      (algebraMap R L) (a ^ 2 / 4 - b)
+    rw [map_sub]
+    linear_combination hroot
   -- Step 4: y ∉ range algebraMap.
   have hy_ni : y ∉ (algebraMap R L).range := by
     rintro ⟨r, hr⟩
     apply hx
     refine ⟨r - a / 2, ?_⟩
     rw [map_sub]
-    have : y = (algebraMap R L) r := hr
-    show x = (algebraMap R L) r - (algebraMap R L) (a/2)
-    show x = (algebraMap R L) r - (algebraMap R L) (a/2)
-    simp only [y] at this
-    linarith [this]
+    have hy_eq : x + (algebraMap R L) (a / 2) = (algebraMap R L) r := hr
+    linear_combination hy_eq
   -- Step 5: c is not a square in R.
   have hc_ni : ¬ IsSquare c := by
     rintro ⟨s, hs⟩
-    apply hy_ni
-    -- (algebraMap s)^2 = y^2 implies y = ±algebraMap s ∈ range
-    have halg_sq : ((algebraMap R L) s) ^ 2 = y ^ 2 := by
-      rw [hy_sq, show c = s * s from hs, map_mul]; ring
+    -- then (algebraMap s)^2 = algebraMap c = y^2, so y = ± algebraMap s.
+    have halg_sq : y ^ 2 = ((algebraMap R L) s) ^ 2 := by
+      rw [hy_sq, show c = s * s from hs, map_mul]
+      ring
     have hfact : (y - (algebraMap R L) s) * (y + (algebraMap R L) s) = 0 := by
-      have : y ^ 2 - ((algebraMap R L) s) ^ 2 = 0 := by rw [halg_sq]; ring
-      linear_combination this
+      linear_combination halg_sq
+    apply hy_ni
     rcases mul_eq_zero.mp hfact with hd | hd
-    · exact ⟨s, by linarith [sub_eq_zero.mp hd]⟩
+    · exact ⟨s, by linear_combination -hd⟩
     · refine ⟨-s, ?_⟩
       rw [map_neg]
-      linarith [add_eq_zero_iff_eq_neg.mp hd]
-  -- Step 6: by RCF axiom, -c is a square.
+      linear_combination -hd
+  -- Step 6: by RCF axiom, -c is a square. Write -c = s^2.
   have hnc_sq : IsSquare (-c) := (IsRealClosed.isSquare_or_isSquare_neg c).resolve_left hc_ni
   obtain ⟨s, hs⟩ := hnc_sq
-  -- s ≠ 0 (else c = 0 is a square)
   have hs_ne : s ≠ 0 := by
     rintro rfl
     apply hc_ni
-    have : -c = 0 := by rw [hs]; ring
-    rw [show c = 0 by linarith]
+    have hmc : -c = 0 := by rw [hs]; ring
+    have hc0 : c = 0 := by linear_combination -hmc
+    rw [hc0]
     exact ⟨0, by ring⟩
   have hsL_ne : (algebraMap R L) s ≠ 0 :=
-    (map_ne_zero_iff _ (algebraMap R L).injective).mpr hs_ne
-  -- Step 7: define α := y / algebraMap s. Then α^2 = -1.
+    (map_ne_zero_iff _ hInj).mpr hs_ne
+  -- Step 7: α = y / algebraMap s. Then α^2 = -1.
   set α : L := y * (algebraMap R L) s⁻¹ with hα_def
   have hα_sq : α ^ 2 = -1 := by
     show (y * (algebraMap R L) s⁻¹) ^ 2 = -1
     rw [mul_pow, hy_sq]
-    rw [show (algebraMap R L) s⁻¹ ^ 2 = (algebraMap R L) (s⁻¹ ^ 2) from (map_pow _ _ _).symm]
+    rw [show (algebraMap R L) s⁻¹ ^ 2 = (algebraMap R L) (s⁻¹ * s⁻¹) by rw [← map_mul]; ring_nf]
     rw [← map_mul]
-    have : c * s⁻¹ ^ 2 = -1 := by
-      have hs2 : s ^ 2 = -c := by rw [sq, hs]
-      have hs2_ne : s ^ 2 ≠ 0 := pow_ne_zero _ hs_ne
+    have hs2 : s * s = -c := by rw [← sq]; rw [sq, hs]
+    have hinv2 : c * (s⁻¹ * s⁻¹) = -1 := by
+      have hs_ne' : s ≠ 0 := hs_ne
       field_simp
       linear_combination -hs2
-    rw [this]
+    rw [hinv2]
     simp
   have hα_ni : α ∉ (algebraMap R L).range := by
     rintro ⟨r, hr⟩
     apply hy_ni
     refine ⟨r * s, ?_⟩
     rw [map_mul]
-    have : (algebraMap R L) s * α = (algebraMap R L) s * (y * (algebraMap R L) s⁻¹) := by rfl
-    have hys : (algebraMap R L) s * α = y := by
-      rw [this]
+    have hy_eq : y = (algebraMap R L) s * α := by
+      show y = (algebraMap R L) s * (y * (algebraMap R L) s⁻¹)
+      have : (algebraMap R L) s * (algebraMap R L) s⁻¹ = 1 := by
+        rw [← map_mul, mul_inv_cancel₀ hs_ne, map_one]
       rw [show (algebraMap R L) s * (y * (algebraMap R L) s⁻¹) =
-          y * ((algebraMap R L) s * (algebraMap R L) s⁻¹) by ring]
-      rw [← map_mul, mul_inv_cancel₀ hs_ne, map_one, mul_one]
-    rw [← hys, ← hr, mul_comm]
+          y * ((algebraMap R L) s * (algebraMap R L) s⁻¹) by ring, this, mul_one]
+    rw [hy_eq, ← hr]
+    ring
   have hαI : IsIntegral R α := .of_finite R α
-  -- minpoly R α = X^2 + 1.
+  -- Step 8: show minpoly R α = X^2 + 1.
   have hmin : minpoly R α = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
-    set g : Polynomial R := Polynomial.X ^ 2 + Polynomial.C (1 : R)
+    set g : Polynomial R := Polynomial.X ^ 2 + Polynomial.C (1 : R) with hg_def
     have hgm : g.Monic := Polynomial.monic_X_pow_add_C (1 : R) (by norm_num : (2 : ℕ) ≠ 0)
-    have hgroot : (g).aeval α = 0 := by
+    have hgroot : Polynomial.aeval α g = 0 := by
       show Polynomial.aeval α (Polynomial.X ^ 2 + Polynomial.C (1 : R)) = 0
       simp [hα_sq]
     have hdα : (minpoly R α).natDegree = 2 := by
@@ -211,30 +208,31 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     refine minpoly.unique_of_degree_le_degree_minpoly R α hgm hgroot ?_
     rw [Polynomial.degree_eq_natDegree hgm.ne_zero,
         Polynomial.degree_eq_natDegree (minpoly.ne_zero hαI), hgdeg, hdα]
-  -- Now build the PowerBasis with gen α.
+  -- Step 9: build PowerBasis (gen := α, dim := 2).
   have hli : LinearIndependent R ![(1 : L), α] := by
     rw [LinearIndependent.pair_iff]
     intro r t hrt
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-      Matrix.head_cons] at hrt
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] at hrt
+    -- hrt : r • 1 + t • α = 0.
     by_cases ht : t = 0
     · subst ht
-      simp [Algebra.smul_def] at hrt
-      exact ⟨(map_eq_zero_iff _ (algebraMap R L).injective).mp hrt, rfl⟩
+      simp only [zero_smul, add_zero] at hrt
+      rw [Algebra.smul_def, mul_one] at hrt
+      exact ⟨(map_eq_zero_iff _ hInj).mp hrt, rfl⟩
     · exfalso
       apply hα_ni
+      rw [Algebra.smul_def, Algebra.smul_def, mul_one] at hrt
+      -- hrt : algebraMap r + algebraMap t * α = 0
+      have htL : (algebraMap R L) t ≠ 0 := (map_ne_zero_iff _ hInj).mpr ht
+      -- α = - algebraMap r / algebraMap t
       refine ⟨-r / t, ?_⟩
-      have : r • (1 : L) + t • α = 0 := hrt
-      rw [Algebra.smul_def, Algebra.smul_def, mul_one] at this
-      have htL : (algebraMap R L) t ≠ 0 :=
-        (map_ne_zero_iff _ (algebraMap R L).injective).mpr ht
       rw [map_div₀, map_neg]
-      rw [eq_div_iff htL]
-      linear_combination -this
+      field_simp
+      linear_combination -hrt
   have hcard : Fintype.card (Fin 2) = Module.finrank R L := by
     rw [Fintype.card_fin, hL]
   let basis2 : Basis (Fin 2) R L := basisOfLinearIndependentOfCardEqFinrank hli hcard
-  have hbasis_eq : ∀ i, basis2 i = α ^ (i : ℕ) := by
+  have hbasis_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
     intro i
     show basisOfLinearIndependentOfCardEqFinrank hli hcard i = α ^ (i : ℕ)
     rw [coe_basisOfLinearIndependentOfCardEqFinrank hli hcard]

@@ -260,11 +260,13 @@ theorem isRealClosed_of_polynomialIVP (h : PolynomialIVP R) : IsRealClosed R := 
         rw [Polynomial.leadingCoeff_neg]; linarith
       obtain ⟨M, hMpos, hMneg_eval, hMpos_eval⟩ :=
         polynomialIVP_aux.exists_sign_change (R := R) (-f) hndeg hn1 hodd hlc'
-      -- (-f).eval (-M) < 0 so f.eval (-M) > 0; (-f).eval M > 0 so f.eval M < 0.
-      rw [Polynomial.eval_neg] at hMneg_eval hMpos_eval
+      -- Apply IVP to (-f) directly; a root of (-f) is a root of f.
       obtain ⟨c, hc_mem, hc_root⟩ :=
-        h f M (-M) (by linarith) (by linarith) (by linarith)
-      exact ⟨c, hc_root⟩
+        h (-f) (-M) M (by linarith) hMneg_eval.le hMpos_eval.le
+      refine ⟨c, ?_⟩
+      have : (-f).eval c = 0 := hc_root
+      rw [Polynomial.eval_neg, neg_eq_zero] at this
+      exact this
 
 /-- A real closed ordered field has no nontrivial ordered algebraic extensions. -/
 theorem noNontrivialOrderedAlgExt_of_isRealClosed [IsRealClosed R] :
