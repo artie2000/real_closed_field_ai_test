@@ -43,7 +43,22 @@ theorem of_ivp
     (h : ∀ (f : R[X]) (a b : R), a ≤ b → f.eval a ≤ 0 → 0 ≤ f.eval b →
          ∃ c ∈ Set.Icc a b, f.IsRoot c) :
     IsRealClosed R := by
-  sorry
+  refine IsRealClosed.of_linearOrderedField ?_ ?_
+  · -- isSquare_of_nonneg
+    intro x hx
+    have ha : (X^2 - C x).eval 0 ≤ 0 := by simp
+    have hb : 0 ≤ (X^2 - C x).eval (x + 1) := by
+      simp only [eval_sub, eval_pow, eval_X, eval_C]
+      nlinarith [sq_nonneg x, sq_nonneg (x+1), hx]
+    have hab : (0 : R) ≤ x + 1 := by linarith
+    obtain ⟨c, _, hc⟩ := h (X^2 - C x) 0 (x + 1) hab ha hb
+    have : c^2 = x := by
+      have := hc
+      simp only [IsRoot, eval_sub, eval_pow, eval_X, eval_C] at this
+      linarith
+    exact ⟨c, by linarith [sq c, this]⟩
+  · -- exists_isRoot_of_odd_natDegree
+    sorry
 
 /-- A real closed field has no nontrivial ordered algebraic extension: if `K` is an
 algebraic extension of the real closed field `R` and `K` can be ordered compatibly with
