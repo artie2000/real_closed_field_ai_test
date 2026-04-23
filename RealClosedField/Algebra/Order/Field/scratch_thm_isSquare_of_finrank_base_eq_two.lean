@@ -406,23 +406,91 @@ theorem isSquare_of_finrank_base_eq_two
       -- Need c^2 - d^2 = a and 2cd = b
       have h2cd : 2 * c * d = b := by
         rw [hd_def]; field_simp
-      have hd2 : d ^ 2 = (a - t) / 2 := by
+      have hd2 : d ^ 2 = (t - a) / 2 := by
         -- d = b/(2c), so d^2 = b^2/(4c^2)
-        -- From h_product: (a+t)/2 * (a-t)/2 = -b^2/4
-        -- c^2 * (a-t)/2 = -b^2/4
-        -- So (a-t)/2 = -b^2/(4c^2) = -d^2 * c^2 / c^2  -- wait
-        -- Actually we have c^2 = (a+t)/2, so (a+t)/2 * (a-t)/2 = c^2 * (a-t)/2 = -b^2/4
-        -- => (a-t)/2 = -b^2/(4c^2) -- but we want d^2 = (a-t)/2...
-        -- Hmm, this gives d^2 = -(a-t)/2 instead. Let me recheck.
-        -- (c + dα)^2 = c^2 + 2cdα + d^2 α^2 = (c^2 - d^2) + 2cd α.
-        -- Need c^2 - d^2 = a.
-        -- c^2 = (a+t)/2.  If d^2 = (a-t)/2, then c^2 - d^2 = t. No!
-        -- Let me recompute. We need c^2 - d^2 = a. c^2 = (a+t)/2.
-        -- So d^2 = c^2 - a = (a+t)/2 - a = (t-a)/2 = -(a-t)/2.
-        -- So d^2 = -(a-t)/2 = (t-a)/2.
-        sorry
-      sorry
-    · sorry
+        -- c^2 = (a+t)/2, so 4c^2 = 2(a+t), so d^2 = b^2 / (2(a+t))
+        -- Need: b^2/(2(a+t)) = (t-a)/2
+        -- i.e., b^2 = (t-a)(a+t) = t^2 - a^2 = a^2 + b^2 - a^2 = b^2. ✓
+        have hc2_ne : c ^ 2 ≠ 0 := pow_ne_zero 2 hc_ne
+        have hat_ne : (a + t) ≠ 0 := by
+          intro h
+          have : (a + t) / 2 = 0 := by rw [h]; ring
+          rw [← hc2] at this
+          exact hc2_ne this
+        rw [hd_def]
+        field_simp
+        have : (t - a) * (2 * c) ^ 2 = 2 * b ^ 2 := by
+          have h1 : (2 * c) ^ 2 = 4 * c ^ 2 := by ring
+          rw [h1, hc2]
+          field_simp
+          ring_nf
+          linear_combination 2 * ht_sq
+        linarith [this]
+      -- Now expand (c + d·α)^2
+      have expand : ((algebraMap R K) c + (algebraMap R K) d * α) *
+          ((algebraMap R K) c + (algebraMap R K) d * α) =
+          (algebraMap R K) (c^2 - d^2) + (algebraMap R K) (2 * c * d) * α := by
+        have hα2 : α * α = -1 := by rw [← sq]; exact hα_sq
+        rw [map_sub, map_pow, map_pow]
+        have : ((algebraMap R K) c + (algebraMap R K) d * α) *
+            ((algebraMap R K) c + (algebraMap R K) d * α) =
+            (algebraMap R K) c ^ 2 + (algebraMap R K) d ^ 2 * (α * α) +
+            2 * ((algebraMap R K) c * ((algebraMap R K) d * α)) := by ring
+        rw [this, hα2]
+        rw [map_mul, map_ofNat]
+        ring
+      rw [expand, hx_eq, h2cd]
+      congr 2
+      -- Need c^2 - d^2 = a
+      rw [hc2, hd2]; ring
+    · -- Case: (a - t)/2 = c^2
+      have hc2 : c ^ 2 = (a - t) / 2 := by rw [sq, ← hc]
+      have hc_ne : c ≠ 0 := by
+        intro hc0
+        have : (a - t) / 2 = 0 := by rw [← hc2, hc0]; ring
+        have hat : a - t = 0 := by linarith [this]
+        have hat' : a = t := by linarith
+        have : a ^ 2 = t ^ 2 := by rw [hat']
+        have : b ^ 2 = 0 := by linear_combination -this + ht_sq
+        have : b = 0 := by
+          exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp this
+        exact hb0 this
+      set d : R := b / (2 * c) with hd_def
+      refine ⟨(algebraMap R K) c + (algebraMap R K) d * α, ?_⟩
+      have h2cd : 2 * c * d = b := by
+        rw [hd_def]; field_simp
+      have hd2 : d ^ 2 = -(a + t) / 2 := by
+        have hc2_ne : c ^ 2 ≠ 0 := pow_ne_zero 2 hc_ne
+        have hat_ne : (a - t) ≠ 0 := by
+          intro h
+          have : (a - t) / 2 = 0 := by rw [h]; ring
+          rw [← hc2] at this
+          exact hc2_ne this
+        rw [hd_def]
+        field_simp
+        have : -(a + t) * (2 * c) ^ 2 = 2 * b ^ 2 := by
+          have h1 : (2 * c) ^ 2 = 4 * c ^ 2 := by ring
+          rw [h1, hc2]
+          field_simp
+          ring_nf
+          linear_combination 2 * ht_sq
+        linarith [this]
+      have expand : ((algebraMap R K) c + (algebraMap R K) d * α) *
+          ((algebraMap R K) c + (algebraMap R K) d * α) =
+          (algebraMap R K) (c^2 - d^2) + (algebraMap R K) (2 * c * d) * α := by
+        have hα2 : α * α = -1 := by rw [← sq]; exact hα_sq
+        rw [map_sub, map_pow, map_pow]
+        have : ((algebraMap R K) c + (algebraMap R K) d * α) *
+            ((algebraMap R K) c + (algebraMap R K) d * α) =
+            (algebraMap R K) c ^ 2 + (algebraMap R K) d ^ 2 * (α * α) +
+            2 * ((algebraMap R K) c * ((algebraMap R K) d * α)) := by ring
+        rw [this, hα2]
+        rw [map_mul, map_ofNat]
+        ring
+      rw [expand, hx_eq, h2cd]
+      congr 2
+      -- Need c^2 - d^2 = a
+      rw [hc2, hd2]; ring
 
 /-- Fundamental theorem of algebra for real closed fields: the only finite extensions
 of `R` are `R` itself and the quadratic extension `R(i)`. -/
