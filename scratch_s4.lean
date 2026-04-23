@@ -197,7 +197,7 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
       rw [hu'2, hv2']
       rw [div_sub_div _ _ (by norm_num : (2:R) ≠ 0) h2ne]
       rw [div_eq_iff (mul_ne_zero (by norm_num : (2:R) ≠ 0) h2ne)]
-      nlinarith [hr'_sq']
+      linear_combination 2 * hr'_sq'
     -- Now witness: u' + v*i
     refine ⟨algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root, ?_⟩
     rw [hz]
