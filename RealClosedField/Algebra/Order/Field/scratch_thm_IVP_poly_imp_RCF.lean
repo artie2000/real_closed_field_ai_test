@@ -81,9 +81,7 @@ theorem of_ivp
           subst he
           simp at hn
         exact lt_of_le_of_ne (not_lt.mp hlc) hne
-      have : (-f).natDegree = f.natDegree := by
-        rw [show (-f) = (-1 : R) • f from by ring]
-        rw [natDegree_smul _ (by norm_num : (-1 : R) ≠ 0)]
+      have : (-f).natDegree = f.natDegree := natDegree_neg f
       obtain ⟨c, hc⟩ := key (-f) this hlc'
       refine ⟨c, ?_⟩
       simp only [IsRoot, eval_neg, neg_eq_zero] at hc
