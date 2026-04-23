@@ -99,10 +99,11 @@ private lemma exists_odd_irreducible_factor
     rw [Nat.not_odd_iff_even] at hg_odd
     obtain ⟨q, hq_eq⟩ := hg_dvd
     have hq_ne : q ≠ 0 := fun hz => hne (by rw [hq_eq, hz, mul_zero])
-    have hq_deg : q.natDegree = f.natDegree - g.natDegree := by
+    have hfg_deg : f.natDegree = g.natDegree + q.natDegree := by
       have := natDegree_mul hg_ne hq_ne
       rw [← hq_eq] at this
-      omega
+      exact this
+    have hq_deg : q.natDegree = f.natDegree - g.natDegree := by omega
     -- f.natDegree is odd, g.natDegree is even, so q.natDegree is odd.
     have hq_odd : Odd q.natDegree := by
       rw [hq_deg]
