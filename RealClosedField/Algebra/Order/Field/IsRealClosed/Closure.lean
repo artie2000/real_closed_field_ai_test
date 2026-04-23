@@ -286,7 +286,62 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
 /-- Auxiliary: no proper quadratic extension of `R[i]`. -/
 theorem no_quadratic_ext_Ri
     (M : Type u) [Field M] [Algebra (Ri R) M] (h : Module.finrank (Ri R) M = 2) : False := by
-  sorry
+  haveI : CharZero R := IsStrictOrderedRing.toCharZero
+  haveI : Module.Finite (Ri R) M := Module.finite_of_finrank_eq_succ h
+  haveI : Algebra.IsAlgebraic (Ri R) M := Algebra.IsAlgebraic.of_finite (Ri R) M
+  haveI : CharZero (Ri R) :=
+    charZero_of_injective_algebraMap (R := R) (A := Ri R)
+      (AdjoinRoot.coe_injective' (f := (X ^ 2 + 1 : R[X])))
+  haveI : Algebra.IsSeparable (Ri R) M := Algebra.IsAlgebraic.isSeparable_of_perfectField
+  obtain ⟨α, hα⟩ := Field.exists_primitive_element (Ri R) M
+  have hint : IsIntegral (Ri R) α := Algebra.IsIntegral.isIntegral α
+  have hfinrank_top : Module.finrank (Ri R) (⊤ : IntermediateField (Ri R) M)
+      = Module.finrank (Ri R) M := IntermediateField.finrank_top'
+  rw [← hα] at hfinrank_top
+  have hnatdeg : (minpoly (Ri R) α).natDegree = 2 := by
+    have : Module.finrank (Ri R) (IntermediateField.adjoin (Ri R) {α})
+        = (minpoly (Ri R) α).natDegree := IntermediateField.adjoin.finrank hint
+    rw [this] at hfinrank_top
+    omega
+  have hirr : Irreducible (minpoly (Ri R) α) := minpoly.irreducible hint
+  have hmonic : (minpoly (Ri R) α).Monic := minpoly.monic hint
+  set f : (Ri R)[X] := minpoly (Ri R) α with hf
+  set a : Ri R := f.coeff 1
+  set b : Ri R := f.coeff 0
+  have hcoeff2 : f.coeff 2 = 1 := by
+    have := hmonic.coeff_natDegree
+    rw [hnatdeg] at this
+    exact this
+  have hab : f = X ^ 2 + C a * X + C b := by
+    apply Polynomial.ext
+    intro n
+    rw [coeff_add, coeff_add, coeff_X_pow, coeff_C_mul, coeff_C, coeff_X]
+    rcases lt_trichotomy n 2 with hn | rfl | hn
+    · interval_cases n
+      · show b = _
+        simp
+      · show a = _
+        simp
+    · show f.coeff 2 = _
+      rw [hcoeff2]; simp
+    · have hn_gt : n > f.natDegree := by rw [hnatdeg]; exact hn
+      rw [coeff_eq_zero_of_natDegree_lt hn_gt]
+      have hn2 : n ≠ 2 := Nat.ne_of_gt hn
+      have hn1 : (1 : ℕ) ≠ n := by omega
+      have hn0 : n ≠ 0 := by omega
+      simp [hn2, hn1, hn0]
+  obtain ⟨s, hs⟩ := Ri_isSquare ((a/2)^2 - b)
+  set r : Ri R := -a/2 + s with hr
+  have hroot : f.IsRoot r := by
+    simp only [IsRoot, hab, eval_add, eval_pow, eval_X, eval_mul, eval_C]
+    have hss : s ^ 2 = (a/2)^2 - b := by rw [sq]; exact hs.symm
+    show r ^ 2 + a * r + b = 0
+    rw [hr]
+    linear_combination hss
+  have hdeg1 : f.degree = 1 :=
+    Polynomial.degree_eq_one_of_irreducible_of_root hirr hroot
+  have hnatdeg1 : f.natDegree = 1 := natDegree_eq_of_degree_eq_some hdeg1
+  omega
 
 /-- **S5.** FTA for RCF: every finite extension has degree 1 or 2. -/
 theorem finrank_eq_one_or_two_of_finite
