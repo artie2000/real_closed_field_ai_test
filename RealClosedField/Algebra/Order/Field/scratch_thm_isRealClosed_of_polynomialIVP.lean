@@ -128,7 +128,9 @@ private lemma exists_sign_change
   have hMpow_pos : (0 : R) < M ^ (n - 1) := pow_pos hMpos _
   have hMpow_ge_one : (1 : R) ≤ M ^ (n - 1) := one_le_pow₀ hM1
   have hn_split : n = (n - 1) + 1 := by omega
-  have hMn_eq : M ^ n = M ^ (n - 1) * M := by rw [hn_split, pow_succ]
+  have hMn_eq : M ^ n = M ^ (n - 1) * M := by
+    conv_lhs => rw [hn_split]
+    exact pow_succ M (n - 1)
   -- Express evaluation via eval_eq_sum_range
   have hlc_eq : f.coeff n = f.leadingCoeff := by rw [← hn]; rfl
   have heval_general : ∀ x : R, f.eval x =

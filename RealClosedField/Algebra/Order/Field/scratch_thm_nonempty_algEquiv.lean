@@ -174,18 +174,25 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     -- `hs : -c = s * s`; show `s ^ 2 = -c`.
     rw [sq, ← hs]
   set α : L := y * sL⁻¹ with hα_def
+  have hcL_ne : (algebraMap R L) c ≠ 0 := by
+    intro hc0
+    have : c = 0 := (map_eq_zero_iff _ hInj).mp hc0
+    apply hc_ni
+    rw [this]; exact ⟨0, by ring⟩
+  have hsL_sq_ne : sL ^ 2 ≠ 0 := by
+    rw [hsL_sq]; exact neg_ne_zero.mpr hcL_ne
   have hα_sq : α ^ 2 = -1 := by
-    have hsL_pow_inv : sL⁻¹ ^ 2 = (sL ^ 2)⁻¹ := by rw [inv_pow]
-    calc α ^ 2 = y ^ 2 * (sL ^ 2)⁻¹ := by rw [mul_pow, hsL_pow_inv]
-      _ = (algebraMap R L) c * (sL ^ 2)⁻¹ := by rw [hy_sq]
-      _ = (algebraMap R L) c * (- (algebraMap R L) c)⁻¹ := by rw [hsL_sq]
-      _ = -1 := by
-          have hcL_ne : (algebraMap R L) c ≠ 0 := by
-            intro hc0
-            have : c = 0 := (map_eq_zero_iff _ hInj).mp hc0
-            apply hc_ni
-            rw [this]; exact ⟨0, by ring⟩
-          field_simp
+    have step1 : α ^ 2 * sL ^ 2 = (algebraMap R L) c := by
+      calc α ^ 2 * sL ^ 2
+          = (y * sL⁻¹) ^ 2 * sL ^ 2 := by rw [hα_def]
+        _ = y ^ 2 * (sL⁻¹ * sL) ^ 2 := by ring
+        _ = y ^ 2 * 1 ^ 2 := by rw [inv_mul_cancel₀ hsL_ne]
+        _ = y ^ 2 := by ring
+        _ = (algebraMap R L) c := hy_sq
+    -- From α^2 * sL^2 = algebraMap c = -sL^2 (since sL^2 = -algebraMap c), derive α^2 = -1.
+    have step2 : α ^ 2 * sL ^ 2 = (-1) * sL ^ 2 := by
+      rw [step1, hsL_sq]; ring
+    exact mul_right_cancel₀ hsL_sq_ne step2
   have hα_ni : α ∉ (algebraMap R L).range := by
     rintro ⟨r, hr⟩
     apply hy_ni
