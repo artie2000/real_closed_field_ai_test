@@ -1,8 +1,26 @@
 % Blueprint: RCF equiv conds clean test
 % Created by Numina
 
+\documentclass{article}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\ch}{\operatorname{char}}
+\newcommand{\Gal}{\operatorname{Gal}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\leanok}{}
+\newcommand{\mathlibok}{}
+\newcommand{\lean}[1]{}
+\newcommand{\uses}[1]{}
+
 \begin{document}
 
-% Your blueprint will go here.
+\input{source/rcf-equiv-conds-clean-test-source.tex}
 
 \end{document}
