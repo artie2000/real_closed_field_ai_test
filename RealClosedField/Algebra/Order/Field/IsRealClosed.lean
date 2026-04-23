@@ -5,6 +5,7 @@ Authors: Artie Khovanov
 -/
 import RealClosedField.Algebra.Order.Algebra
 import RealClosedField.Algebra.Order.Field.IsSemireal
+import RealClosedField.Algebra.Order.Field.IsRealClosed.Closure
 import Mathlib.FieldTheory.IsRealClosed.Basic
 import Mathlib.RingTheory.Algebraic.Defs
 import Mathlib.RingTheory.AdjoinRoot
@@ -37,8 +38,8 @@ variable {R : Type u} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 /-- Polynomials over a real closed field satisfy the intermediate value property. -/
 theorem exists_isRoot_of_nonpos_of_nonneg [IsRealClosed R]
     {f : R[X]} {a b : R} (hab : a ≤ b) (ha : f.eval a ≤ 0) (hb : 0 ≤ f.eval b) :
-    ∃ c ∈ Set.Icc a b, f.IsRoot c := by
-  sorry
+    ∃ c ∈ Set.Icc a b, f.IsRoot c :=
+  ivp_poly hab ha hb
 
 /-- If polynomials over an ordered field `R` satisfy the intermediate value property,
 then `R` is real closed. -/
@@ -161,8 +162,8 @@ the order on `R`, then the embedding `R → K` is a bijection. -/
 theorem bijective_algebraMap_of_isOrderedAlgebra [IsRealClosed R]
     (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K]
     [LinearOrder K] [IsStrictOrderedRing K] [IsOrderedModule R K] :
-    Function.Bijective (algebraMap R K) := by
-  sorry
+    Function.Bijective (algebraMap R K) :=
+  bijective_algebraMap_of_isOrderedAlgebra' K
 
 /-- A polynomial `X^2 - C a` with `a` not a square is irreducible. -/
 private lemma irreducible_X_sq_sub_C_of_not_isSquare
