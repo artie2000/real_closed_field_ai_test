@@ -7,5 +7,6 @@
   ],
   "statement": "Let $R$ be an ordered field. TFAE:\n  \\begin{enumerate}\n    \\item $R$ is real closed.\n    \\item $R$ is maximal with respect to ordered algebraic extensions.\n    \\item Polynomials over $R$ satisfy the intermediate value property.\n  \\end{enumerate}",
   "proof": "\\leanok",
-  "leanDeclaration": "IsRealClosed.tfae_ord"
+  "leanDeclaration": "IsRealClosed.tfae_ord",
+  "status": "proved"
 }
