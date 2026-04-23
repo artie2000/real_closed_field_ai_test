@@ -18,6 +18,7 @@ import Mathlib.GroupTheory.Sylow
 import Mathlib.GroupTheory.SpecificGroups.Cyclic
 import Mathlib.Algebra.Polynomial.SpecificDegree
 import Mathlib.LinearAlgebra.FiniteDimensional.Basic
+import Mathlib.LinearAlgebra.Trace
 
 /-!
 # Fundamental theorem of algebra for real closed fields
