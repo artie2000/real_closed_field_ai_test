@@ -100,7 +100,7 @@ theorem Rat.existsUnique_isStrictOrderedRing :
   have aux : ∀ (n : ℕ) (y : ℚ), IsSumSq (n * y^2) := by
     intro n y
     induction n with
-    | zero => simpa using IsSumSq.zero
+    | zero => simp [IsSumSq.zero]
     | succ k ih =>
         have : ((k + 1 : ℕ) : ℚ) * y^2 = y * y + k * y^2 := by push_cast; ring
         rw [this]
@@ -111,12 +111,12 @@ theorem Rat.existsUnique_isStrictOrderedRing :
     set p : ℕ := x.num.toNat with hp
     set q : ℕ := x.den with hq
     have hqpos : (q : ℚ) ≠ 0 := by exact_mod_cast x.den_ne_zero
+    have hnumcast : (x.num : ℚ) = (p : ℚ) := by
+      rw [hp, Int.toNat_of_nonneg hnum]
     have hpq : x = (p * q : ℕ) * ((1 : ℚ) / q)^2 := by
-      rw [← Rat.num_div_den x]
-      have hnumcast : (x.num : ℚ) = (p : ℚ) := by
-        simp [hp, Int.toNat_of_nonneg hnum]
-      rw [hnumcast]
+      rw [← Rat.num_div_den x, hnumcast]
+      push_cast
       field_simp
     rw [hpq]
     exact aux (p * q) (1 / q)
-  exact IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  exact_mod_cast IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
