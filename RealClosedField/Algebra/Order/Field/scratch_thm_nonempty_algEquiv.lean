@@ -68,13 +68,14 @@ theorem nonempty_algEquiv_of_finrank_eq_two
   have hne : ∃ x : L, x ∉ (algebraMap R L).range := by
     by_contra h
     push_neg at h
+    -- Every element of `L` lies in the range of `algebraMap R L`, so `⊥ = ⊤` as subalgebras.
     have hTop : (⊥ : Subalgebra R L) = ⊤ := by
-      apply Subalgebra.toSubmodule_injective
-      apply Submodule.eq_top_iff'.mpr
-      intro x
+      rw [eq_top_iff]
+      rintro x -
+      rw [Algebra.mem_bot]
       obtain ⟨r, hr⟩ := h x
-      rw [← hr]
-      exact Algebra.mem_bot.mpr ⟨r, rfl⟩
+      exact ⟨r, hr⟩
+    -- Contradiction: finrank R L = 2 but finrank R ⊥ = 1.
     have heq : Module.finrank R (⊥ : Subalgebra R L) = Module.finrank R L := by
       rw [hTop]; exact Subalgebra.topEquiv.toLinearEquiv.finrank_eq
     rw [Subalgebra.finrank_bot] at heq
