@@ -433,7 +433,23 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
       rw [hP1] at hhg
       have : IsUnit g := IsUnit.of_mul_eq_one _ hhg.symm
       exact hg_irred.not_isUnit this
-    sorry
+    · -- Not all p y are zero. Analyze the leading term.
+      push_neg at hnot_all_zero
+      -- Let S be the subset of c.support where p y ≠ 0
+      let S : Finset K := c.support.filter (fun y => p y ≠ 0)
+      have hS_nonempty : S.Nonempty := by
+        obtain ⟨y, hy, hpy⟩ := hnot_all_zero
+        exact ⟨y, by simp [S, hy, hpy]⟩
+      -- Define d := maximum of (p y).natDegree over y ∈ S
+      let d : ℕ := S.sup (fun y => (p y).natDegree)
+      -- At degree 2d, leading coefficient of ∑ is positive.
+      -- Summand C (c y) * (p y)^2 has natDegree = 2 * (p y).natDegree when p y ≠ 0 and c y ≠ 0.
+      -- Actually, `(p y)^2` has natDegree `2 * (p y).natDegree`.
+      -- leading coefficient of C(c y) * (p y)^2 is (c y) * (leadingCoeff (p y))^2.
+      have hsum_lead : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree = 2 * d := by
+        -- Use the fact: the coefficient of the sum at degree 2d is > 0, and the degree is bounded.
+        sorry
+      sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
