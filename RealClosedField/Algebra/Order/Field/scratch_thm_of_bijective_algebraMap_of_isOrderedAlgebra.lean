@@ -75,39 +75,45 @@ private lemma not_exists_ordered_algebra_of_bijective
   exact algebraMap_not_bijective_of_irreducible_natDegree_pos hirred hdeg (h (AdjoinRoot p))
 
 /-- If `f : R[X]` has positive odd natDegree, then it has a monic irreducible factor
-of positive odd natDegree. We prove this by strong induction on `natDegree`.  -/
+of positive odd natDegree. -/
 private lemma exists_odd_irreducible_factor
     {f : R[X]} (hf : Odd f.natDegree) (hpos : 0 < f.natDegree) :
     ∃ g : R[X], Monic g ∧ Irreducible g ∧ g ∣ f ∧ Odd g.natDegree := by
   classical
+  -- Strong induction on natDegree
   induction hn : f.natDegree using Nat.strong_induction_on generalizing f with
   | _ n ih =>
   subst hn
-  by_cases hfirred : Irreducible f
-  · -- f itself is irreducible; use it with monic rescaling.
-    have hne : f ≠ 0 := hfirred.ne_zero
-    set g := f * C (f.leadingCoeff)⁻¹
-    have hg_monic : g.Monic := monic_mul_leadingCoeff_inv hne
-    have hassoc : Associated f g := associated_mul_unit_right _ _ <|
-      isUnit_C.2 (leadingCoeff_ne_zero.2 hne).isUnit.inv
-    have hg_irred : Irreducible g := hassoc.irreducible hfirred
-    have hg_dvd : g ∣ f := hassoc.symm.dvd
-    have hg_deg : g.natDegree = f.natDegree := by
-      rw [natDegree_mul hne (by
-        simp only [ne_eq, C_eq_zero]
-        exact inv_ne_zero (leadingCoeff_ne_zero.2 hne))]
-      simp [natDegree_C]
-    exact ⟨g, hg_monic, hg_irred, hg_dvd, hg_deg ▸ hf⟩
-  · -- f is reducible. Decompose f = p * q with 0 < natDegree p, natDegree q < natDegree f.
-    have hne : f ≠ 0 := fun heq => by rw [heq, natDegree_zero] at hpos; exact absurd hpos (by decide)
-    have hnu : ¬ IsUnit f := fun hu => by
-      have := natDegree_eq_zero_of_isUnit hu
-      rw [this] at hpos; exact absurd hpos (by decide)
-    -- Use Irreducible iff (not unit and not factorable)
-    -- From `¬ Irreducible f`, unfold.
-    rw [Polynomial.Monic.irreducible_iff_natDegree (f := f)] at hfirred
-    push_neg at hfirred
-    sorry
+  -- Get a monic irreducible factor g | f
+  have hne : f ≠ 0 := fun heq => by rw [heq, natDegree_zero] at hpos; exact absurd hpos (by decide)
+  have hnu : ¬ IsUnit f := fun hu => by
+    have := natDegree_eq_zero_of_isUnit hu
+    rw [this] at hpos; exact absurd hpos (by decide)
+  obtain ⟨g, hg_monic, hg_irred, hg_dvd⟩ := Polynomial.exists_monic_irreducible_factor f hnu
+  have hg_ne : g ≠ 0 := hg_irred.ne_zero
+  have hg_deg_pos : 0 < g.natDegree := hg_irred.natDegree_pos
+  -- If g.natDegree is odd, we're done.
+  by_cases hg_odd : Odd g.natDegree
+  · exact ⟨g, hg_monic, hg_irred, hg_dvd, hg_odd⟩
+  · -- g.natDegree is even. Consider the quotient q = f / g.
+    rw [Nat.not_odd_iff_even] at hg_odd
+    obtain ⟨q, hq_eq⟩ := hg_dvd
+    have hq_ne : q ≠ 0 := fun hz => hne (by rw [hq_eq, hz, mul_zero])
+    have hq_deg : q.natDegree = f.natDegree - g.natDegree := by
+      have := natDegree_mul hg_ne hq_ne
+      rw [← hq_eq] at this
+      omega
+    -- f.natDegree is odd, g.natDegree is even, so q.natDegree is odd.
+    have hq_odd : Odd q.natDegree := by
+      rw [hq_deg]
+      exact Nat.Odd.sub_even (by have := hg_deg_pos; omega) hf hg_odd
+    have hq_pos : 0 < q.natDegree := hq_odd.pos
+    -- Apply IH to q
+    have hq_lt : q.natDegree < f.natDegree := by rw [hq_deg]; omega
+    obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
+      ih q.natDegree hq_lt hq_odd hq_pos rfl
+    refine ⟨g', hg'_monic, hg'_irred, ?_, hg'_odd⟩
+    exact hg'_dvd.trans ⟨g, by rw [hq_eq]; ring⟩
 
 /-- Part A: showing that adjoining a square root yields an ordered extension. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
