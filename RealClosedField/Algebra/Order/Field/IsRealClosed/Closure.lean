@@ -740,7 +740,9 @@ theorem eq_linear_or_eq_sq_add_sq_of_irreducible
       rw [show (-a/2 : R) = -(a/2) from by ring, map_neg]
     rw [hCa', hCadd, hCsq]
     have h2C : (C a : R[X]) = 2 * C (a/2) := by
-      rw [show (a : R) = 2 * (a/2) from by ring, map_mul, map_ofNat]
+      have heq : (a : R) = 2 * (a/2) := by ring
+      conv_lhs => rw [heq]
+      rw [map_mul, map_ofNat]
     rw [h2C]
     ring
 
