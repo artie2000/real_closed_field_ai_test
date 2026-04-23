@@ -295,7 +295,7 @@ theorem isSquare_of_finrank_base_eq_two
   -- Representation of x in the basis
   have hInj : Function.Injective (algebraMap R K) := (algebraMap R K).injective
   -- Build a new basis over Fin 2 using Basis.reindex
-  let e : Fin pb.dim ≃ Fin 2 := Fin.castIso hdim |>.toEquiv
+  let e : Fin pb.dim ≃ Fin 2 := finCongr hdim
   let basis2 : Basis (Fin 2) R K := pb.basis.reindex e
   have hbasis2_eq : ∀ i : Fin 2, basis2 i = α ^ (i : ℕ) := by
     intro i
