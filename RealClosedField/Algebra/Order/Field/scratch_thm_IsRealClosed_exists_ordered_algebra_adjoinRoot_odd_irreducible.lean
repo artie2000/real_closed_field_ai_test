@@ -433,22 +433,146 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
       rw [hP1] at hhg
       have : IsUnit g := IsUnit.of_mul_eq_one _ hhg.symm
       exact hg_irred.not_isUnit this
-    · -- Not all p y are zero. Analyze the leading term.
+    · -- Not all p y are zero. Show that P.natDegree is even, so h.natDegree is odd.
       push_neg at hnot_all_zero
-      -- Let S be the subset of c.support where p y ≠ 0
-      let S : Finset K := c.support.filter (fun y => p y ≠ 0)
-      have hS_nonempty : S.Nonempty := by
-        obtain ⟨y, hy, hpy⟩ := hnot_all_zero
-        exact ⟨y, by simp [S, hy, hpy]⟩
-      -- Define d := maximum of (p y).natDegree over y ∈ S
-      let d : ℕ := S.sup (fun y => (p y).natDegree)
-      -- At degree 2d, leading coefficient of ∑ is positive.
-      -- Summand C (c y) * (p y)^2 has natDegree = 2 * (p y).natDegree when p y ≠ 0 and c y ≠ 0.
-      -- Actually, `(p y)^2` has natDegree `2 * (p y).natDegree`.
-      -- leading coefficient of C(c y) * (p y)^2 is (c y) * (leadingCoeff (p y))^2.
-      have hsum_lead : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree = 2 * d := by
-        -- Use the fact: the coefficient of the sum at degree 2d is > 0, and the degree is bounded.
-        sorry
+      obtain ⟨y₀, hy₀, hpy₀⟩ := hnot_all_zero
+      -- Let d := maximum of (p y).natDegree over y ∈ c.support (those with p y ≠ 0)
+      let d : ℕ := c.support.sup (fun y => (p y).natDegree)
+      -- d ≥ (p y₀).natDegree ≥ 0; and d ≤ g.natDegree - 1.
+      have hd_ge : (p y₀).natDegree ≤ d := Finset.le_sup (f := fun y => (p y).natDegree) hy₀
+      have hd_lt : d < g.natDegree := by
+        rw [Finset.sup_lt_iff hg_odd.pos]
+        intro y _; exact hp_deg_lt y
+      -- coeff of ∑ at index 2d is ∑ y, (c y) * (leadingCoeff (p y))^2 if (p y).natDegree = d, else 0.
+      have hsum_coeff_2d :
+          (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).coeff (2 * d) =
+          ∑ y ∈ c.support, if (p y).natDegree = d then (c y : R) * ((p y).leadingCoeff)^2 else 0 := by
+        rw [Polynomial.finset_sum_coeff]
+        refine Finset.sum_congr rfl fun y _ => ?_
+        rw [Polynomial.coeff_C_mul]
+        by_cases hpy_ne : p y = 0
+        · rw [hpy_ne]
+          simp
+          intro hEq; simp [hEq]
+        · -- (p y)^2 has natDegree 2 * (p y).natDegree
+          have hdp : (p y)^2 = (p y) * (p y) := sq (p y)
+          have hdeg_sq : ((p y)^2).natDegree = 2 * (p y).natDegree := by
+            rw [hdp, Polynomial.natDegree_mul hpy_ne hpy_ne]; ring
+          by_cases hdp_eq : (p y).natDegree = d
+          · rw [if_pos hdp_eq]
+            have : ((p y) ^ 2).coeff (2 * d) = ((p y).leadingCoeff)^2 := by
+              rw [← hdp_eq, ← hdeg_sq, Polynomial.coeff_natDegree]
+              rw [hdp, Polynomial.leadingCoeff_mul]; ring
+            rw [this]
+          · rw [if_neg hdp_eq]
+            have hlt : ((p y)^2).natDegree < 2 * d := by
+              rw [hdeg_sq]
+              have hle : (p y).natDegree ≤ d := Finset.le_sup ‹y ∈ c.support›
+              omega
+            rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt]; ring
+      -- The RHS of hsum_coeff_2d: show it's > 0
+      have hsum_coeff_2d_pos :
+          0 < (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).coeff (2 * d) := by
+        rw [hsum_coeff_2d]
+        -- Each term is nonneg; at least one is positive (for y₀ if (p y₀).natDegree = d, else
+        -- for some y with max).
+        -- Find some y with (p y).natDegree = d.
+        -- Since d = sup over c.support of (p y).natDegree, d is attained by some y ∈ c.support.
+        have hex : ∃ y ∈ c.support, (p y).natDegree = d := by
+          obtain ⟨y, hy, hymax⟩ :=
+            Finset.exists_mem_eq_sup c.support ⟨y₀, hy₀⟩ (fun y => (p y).natDegree)
+          exact ⟨y, hy, hymax.symm⟩
+        obtain ⟨y₁, hy₁_mem, hy₁_eq⟩ := hex
+        -- To get y₁ with p y₁ ≠ 0: if (p y₁).natDegree = d ≥ 0, then either p y₁ = 0 (degree 0), or nonzero.
+        -- If d = 0 and p y₁ = 0, that's fine, but then for positivity we need (p y₁).leadingCoeff ≠ 0.
+        -- If p y₁ = 0, leadingCoeff is 0 so term is 0. So we need y₁ with p y₁ ≠ 0.
+        -- Pick d such that (p y).natDegree = d AND p y ≠ 0. We know p y₀ ≠ 0 so (p y₀).natDegree is one candidate.
+        by_cases hpy1_ne : p y₁ ≠ 0
+        · -- Then leadingCoeff p y₁ ≠ 0, (c y₁) > 0.
+          have hpos_term : 0 < (c y₁ : R) * ((p y₁).leadingCoeff)^2 := by
+            have hc_pos : 0 < (c y₁ : R) := by
+              have hne : c y₁ ≠ 0 := Finsupp.mem_support_iff.mp hy₁_mem
+              have hnn : 0 ≤ (c y₁ : R) := (c y₁).2
+              have : (c y₁ : R) ≠ 0 := fun he => hne (Subtype.ext he)
+              exact lt_of_le_of_ne hnn (Ne.symm this)
+            have hlc_ne : (p y₁).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hpy1_ne
+            have hlc_sq : 0 < ((p y₁).leadingCoeff)^2 := by positivity
+            exact mul_pos hc_pos hlc_sq
+          refine lt_of_lt_of_le hpos_term ?_
+          have : ∀ y ∈ c.support,
+              (0 : R) ≤ if (p y).natDegree = d then (c y : R) * ((p y).leadingCoeff)^2 else 0 := by
+            intro y _
+            by_cases hf : (p y).natDegree = d
+            · rw [if_pos hf]
+              have := (c y).2
+              have : (0 : R) ≤ (c y : R) := this
+              positivity
+            · rw [if_neg hf]
+          -- Decompose the sum: singleton {y₁} + rest
+          rw [← Finset.sum_erase_add _ _ hy₁_mem]
+          rw [if_pos hy₁_eq]
+          have hnn_rest :
+              (0 : R) ≤ ∑ x ∈ c.support.erase y₁,
+                if (p x).natDegree = d then (c x : R) * ((p x).leadingCoeff)^2 else 0 := by
+            apply Finset.sum_nonneg
+            intro y hy
+            have hy' : y ∈ c.support := Finset.mem_of_mem_erase hy
+            exact this y hy'
+          linarith
+        · -- p y₁ = 0 means (p y₁).natDegree = 0 = d. So d = 0.
+          push_neg at hpy1_ne
+          rw [hpy1_ne] at hy₁_eq
+          simp at hy₁_eq
+          -- d = 0, but (p y₀).natDegree ≤ d = 0, so (p y₀).natDegree = 0. But p y₀ ≠ 0, so that's fine.
+          -- Recompute using y₀ as the distinguished term.
+          have hd0 : d = 0 := hy₁_eq.symm
+          have hpy0_deg : (p y₀).natDegree = 0 := by
+            have : (p y₀).natDegree ≤ d := Finset.le_sup hy₀
+            omega
+          have hc0_pos : 0 < (c y₀ : R) := by
+            have hne : c y₀ ≠ 0 := Finsupp.mem_support_iff.mp hy₀
+            have hnn : 0 ≤ (c y₀ : R) := (c y₀).2
+            have : (c y₀ : R) ≠ 0 := fun he => hne (Subtype.ext he)
+            exact lt_of_le_of_ne hnn (Ne.symm this)
+          have hlc0 : 0 < ((p y₀).leadingCoeff)^2 := by
+            have hlc_ne : (p y₀).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hpy₀
+            positivity
+          have hpos_term : 0 < (c y₀ : R) * ((p y₀).leadingCoeff)^2 := mul_pos hc0_pos hlc0
+          rw [← Finset.sum_erase_add _ _ hy₀]
+          rw [if_pos hpy0_deg]
+          have hnn_rest :
+              (0 : R) ≤ ∑ x ∈ c.support.erase y₀,
+                if (p x).natDegree = d then (c x : R) * ((p x).leadingCoeff)^2 else 0 := by
+            apply Finset.sum_nonneg
+            intro y hy
+            by_cases hf : (p y).natDegree = d
+            · rw [if_pos hf]
+              have := (c y).2
+              have : (0 : R) ≤ (c y : R) := this
+              positivity
+            · rw [if_neg hf]
+          linarith
+      -- Now the natDegree of sumSq is exactly 2 * d.
+      have hsum_natDeg :
+          (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree = 2 * d := by
+        apply le_antisymm
+        · -- ≤ 2 * d: because each term has natDegree ≤ 2 * (p y).natDegree ≤ 2 * d.
+          apply Polynomial.natDegree_sum_le_of_forall_le
+          intro y _
+          calc (C ((c y : R)) * (p y)^2).natDegree
+              ≤ (p y ^ 2).natDegree := by
+                calc (C ((c y : R)) * (p y)^2).natDegree
+                    ≤ (C ((c y : R))).natDegree + (p y ^ 2).natDegree := Polynomial.natDegree_mul_le
+                  _ ≤ 0 + (p y ^ 2).natDegree := by simp
+                  _ = (p y ^ 2).natDegree := by rw [zero_add]
+            _ ≤ 2 * (p y).natDegree := by
+                have := Polynomial.natDegree_pow_le (p := p y) (n := 2); omega
+            _ ≤ 2 * d := by
+                have hle : (p y).natDegree ≤ d := Finset.le_sup ‹y ∈ c.support›
+                omega
+        · -- ≥ 2 * d: because coeff (2*d) ≠ 0.
+          apply Polynomial.le_natDegree_of_ne_zero
+          exact ne_of_gt hsum_coeff_2d_pos
       sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
