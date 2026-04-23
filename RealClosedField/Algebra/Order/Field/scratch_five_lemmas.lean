@@ -432,7 +432,11 @@ theorem finrank_le_two_of_finiteDimensional
 /-- The only algebraic extensions of a real closed field `R` are `R` and `R(i)`. -/
 theorem finrank_le_two_of_isAlgebraic
     (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] :
-    Module.finrank R K ≤ 2 := sorry
+    Module.finrank R K ≤ 2 := by
+  by_cases hFin : FiniteDimensional R K
+  · exact finrank_le_two_of_finiteDimensional R K
+  · rw [Module.finrank_of_infinite_dimensional hFin]
+    norm_num
 
 /-- A real closed field has no nontrivial real algebraic extensions. -/
 theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
