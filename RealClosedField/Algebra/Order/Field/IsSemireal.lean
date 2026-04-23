@@ -122,4 +122,5 @@ theorem Rat.existsUnique_isStrictOrderedRing :
       ring
     rw [hpq]
     exact aux (p * q) (1 / q)
-  exact IsStrictOrderedRing.unique_isStrictOrderedRing_iff.mpr key
+  exact (@IsStrictOrderedRing.unique_isStrictOrderedRing_iff ℚ _ Rat.linearOrder
+    Rat.instIsStrictOrderedRing).mpr key
