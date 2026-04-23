@@ -79,7 +79,30 @@ theorem nonempty_algEquiv_Ri_of_finrank_eq_two
   -- Show δ < 0 : if δ ≥ 0, δ is a square, so β = ±sqrt(δ) ∈ image R, so α ∈ image R,
   -- contradicting finrank = 2.
   have hdelta_neg : δ < 0 := by
-    sorry
+    by_contra hnn
+    push_neg at hnn
+    obtain ⟨c, hc⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := δ)).mp hnn
+    -- hc : δ = c * c, so β^2 = (algebraMap c)^2, so (β - c)(β + c) = 0
+    have hβsq' : β ^ 2 = (algebraMap R K c) ^ 2 := by
+      rw [hβsq, show δ = c * c from hc, sq, map_mul]
+    have hprod : (β - algebraMap R K c) * (β + algebraMap R K c) = 0 := by
+      have : β ^ 2 - (algebraMap R K c) ^ 2 = 0 := by rw [hβsq']; ring
+      linear_combination this
+    have hα_range : α ∈ (algebraMap R K).range := by
+      rcases mul_eq_zero.mp hprod with h1 | h1
+      · have hβeq : β = algebraMap R K c := by linear_combination h1
+        refine ⟨c - a / 2, ?_⟩
+        have : α = algebraMap R K c - algebraMap R K (a/2) := by
+          have hh := hβeq; rw [hβdef] at hh; linear_combination hh
+        rw [this, map_sub]
+      · have hβeq : β = -algebraMap R K c := by linear_combination h1
+        refine ⟨-c - a/2, ?_⟩
+        have : α = -algebraMap R K c - algebraMap R K (a/2) := by
+          have hh := hβeq; rw [hβdef] at hh; linear_combination hh
+        rw [this, map_sub, map_neg]
+    have hdeg1 : (minpoly R α).natDegree = 1 := (minpoly.natDegree_eq_one_iff).mpr hα_range
+    rw [hnatdeg] at hdeg1
+    exact absurd hdeg1 (by norm_num)
   sorry
 
 end IsRealClosed
