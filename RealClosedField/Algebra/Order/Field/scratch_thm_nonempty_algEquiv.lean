@@ -197,14 +197,13 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     rintro ⟨r, hr⟩
     apply hy_ni
     refine ⟨r * s, ?_⟩
-    rw [map_mul]
-    -- y = α * sL
+    -- We want: (algebraMap R L) (r * s) = y.
+    -- From α = (algebraMap R L) r and y = α * sL, we have
+    -- y = (algebraMap R L) r * (algebraMap R L) s = (algebraMap R L) (r * s).
     have hy_eq : y = α * sL := by
       show y = (y * sL⁻¹) * sL
       rw [mul_assoc, inv_mul_cancel₀ hsL_ne, mul_one]
-    rw [hy_eq, ← hr]
-    show (algebraMap R L) r * sL = (algebraMap R L) r * sL
-    rfl
+    rw [hy_eq, ← hr, hsL_def, ← map_mul]
   have hαI : IsIntegral R α := .of_finite R α
   -- Step 8: show minpoly R α = X^2 + 1.
   have hmin : minpoly R α = Polynomial.X ^ 2 + Polynomial.C (1 : R) := by
