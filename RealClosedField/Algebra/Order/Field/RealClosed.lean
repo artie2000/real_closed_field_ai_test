@@ -689,6 +689,137 @@ theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
     rw [h_cast]
     exact IsSumSq.mul_self (j : K)
 
+/-- Classification of monic irreducible polynomials over a real closed field `R`:
+they are linear (`X - c`) or quadratic of the form `(X - a)^2 + b^2` with `b ≠ 0`. -/
+theorem monic_irreducible_classification
+    {f : Polynomial R} (hf : f.Monic) (hf' : Irreducible f) :
+    (∃ c : R, f = Polynomial.X - Polynomial.C c) ∨
+    (∃ a b : R, b ≠ 0 ∧
+      f = (Polynomial.X - Polynomial.C a) ^ 2 + Polynomial.C (b ^ 2)) := by
+  -- K := AdjoinRoot f is a field of dim natDegree f over R.
+  haveI hirr : Fact (Irreducible f) := ⟨hf'⟩
+  let K : Type _ := AdjoinRoot f
+  haveI hKField : Field K := AdjoinRoot.instField
+  haveI : Algebra R K := AdjoinRoot.instAlgebra
+  have hpb : PowerBasis R K := AdjoinRoot.powerBasis hf'.ne_one
+  have hpb_dim : hpb.dim = f.natDegree := AdjoinRoot.powerBasis_dim hf'.ne_one
+  haveI : FiniteDimensional R K := hpb.finite
+  have hfinrank : Module.finrank R K = f.natDegree := by
+    rw [hpb.finrank, hpb_dim]
+  have hdeg_le : f.natDegree ≤ 2 := by
+    rw [← hfinrank]; exact finrank_le_two_of_finiteDimensional R K
+  have hdeg_pos : 0 < f.natDegree := by
+    by_contra h
+    push_neg at h
+    interval_cases f.natDegree
+    have : f = 1 := by
+      have := Polynomial.eq_C_of_natDegree_eq_zero (n := 0) (p := f) (by omega)
+      rw [this, hf.coeff_natDegree]; simp
+    exact hf'.not_isUnit (this ▸ isUnit_one)
+  rcases show f.natDegree = 1 ∨ f.natDegree = 2 from by omega with hd1 | hd2
+  · -- Degree 1: f = X - C(-coeff 0)
+    left
+    refine ⟨-f.coeff 0, ?_⟩
+    ext n
+    rcases Nat.lt_or_ge n 2 with hn | hn
+    · interval_cases n
+      · simp [Polynomial.coeff_X_sub_C, Polynomial.coeff_C]
+      · simp [Polynomial.coeff_X_sub_C]
+        have : f.coeff 1 = f.leadingCoeff := by rw [Polynomial.leadingCoeff, hd1]
+        rw [this, hf]
+    · have hf_coeff_n : f.coeff n = 0 :=
+        Polynomial.coeff_eq_zero_of_natDegree_lt (by omega : f.natDegree < n)
+      rw [hf_coeff_n]
+      simp [Polynomial.coeff_X_sub_C, Polynomial.coeff_C]
+      omega
+  · -- Degree 2: complete the square and use isSquare_or_isSquare_neg
+    right
+    set a₁ : R := f.coeff 1 with ha1_def
+    set a₀ : R := f.coeff 0 with ha0_def
+    have hcoeff2 : f.coeff 2 = 1 := by
+      have hlc : f.leadingCoeff = 1 := hf
+      rw [Polynomial.leadingCoeff, hd2] at hlc
+      exact hlc
+    have hf_eq : f = Polynomial.X ^ 2 + Polynomial.C a₁ * Polynomial.X + Polynomial.C a₀ := by
+      ext n
+      rcases Nat.lt_or_ge n 3 with hn | hn
+      · interval_cases n
+        · simp [Polynomial.coeff_add, Polynomial.coeff_X_pow, Polynomial.coeff_mul_X,
+            Polynomial.coeff_C]
+        · simp [Polynomial.coeff_add, Polynomial.coeff_X_pow, Polynomial.coeff_C_mul,
+            Polynomial.coeff_X, Polynomial.coeff_C]
+        · simp [Polynomial.coeff_add, Polynomial.coeff_X_pow, Polynomial.coeff_C_mul,
+            Polynomial.coeff_X, Polynomial.coeff_C, hcoeff2]
+      · rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega : f.natDegree < n)]
+        simp [Polynomial.coeff_add, Polynomial.coeff_X_pow, Polynomial.coeff_C_mul,
+          Polynomial.coeff_X, Polynomial.coeff_C]
+        omega
+    -- No roots, since irreducible of degree ≥ 2
+    have hno_root : ∀ c : R, ¬ f.IsRoot c := by
+      intro c hc
+      have hX_sub_C_dvd : (Polynomial.X - Polynomial.C c) ∣ f := Polynomial.dvd_iff_isRoot.mpr hc
+      have : IsUnit (Polynomial.X - Polynomial.C c) ∨ IsUnit (f / (Polynomial.X - Polynomial.C c)) :=
+        hf'.isUnit_or_isUnit hX_sub_C_dvd.choose_spec
+      rcases this with hu1 | hu2
+      · have : (Polynomial.X - Polynomial.C c).natDegree = 0 := Polynomial.natDegree_eq_zero_of_isUnit hu1
+        rw [Polynomial.natDegree_X_sub_C] at this
+        omega
+      · obtain ⟨q, hq⟩ := hX_sub_C_dvd
+        have h_q_unit : IsUnit q := by
+          have : f / (Polynomial.X - Polynomial.C c) = q := by
+            rw [hq]
+            exact mul_div_cancel_left₀ _ (Polynomial.X_sub_C_ne_zero c)
+          rw [this] at hu2; exact hu2
+        have hq_deg : q.natDegree = 0 := Polynomial.natDegree_eq_zero_of_isUnit h_q_unit
+        have : f.natDegree = 1 := by
+          rw [hq, Polynomial.natDegree_mul (Polynomial.X_sub_C_ne_zero c)
+            (fun h => by simp [h] at hq; exact hf'.ne_zero hq)]
+          rw [Polynomial.natDegree_X_sub_C, hq_deg]
+        omega
+    -- discr = a1²/4 - a0 is not a square (else f would have a root)
+    have hdiscr_not_sq : ¬ IsSquare (a₁ ^ 2 / 4 - a₀) := by
+      rintro ⟨γ, hγ⟩
+      apply hno_root (-a₁ / 2 + γ)
+      show f.eval (-a₁ / 2 + γ) = 0
+      rw [hf_eq]
+      simp only [Polynomial.eval_add, Polynomial.eval_pow, Polynomial.eval_X,
+        Polynomial.eval_mul, Polynomial.eval_C]
+      have : γ * γ = a₁^2/4 - a₀ := hγ.symm
+      linear_combination this
+    -- So a0 - a1²/4 is a square, say β²
+    obtain ⟨β, hβ⟩ :=
+      (IsRealClosed.isSquare_or_isSquare_neg (a₁^2/4 - a₀)).resolve_left hdiscr_not_sq
+    have hβ_sq : β^2 = a₀ - a₁^2/4 := by
+      have : β * β = -(a₁^2/4 - a₀) := hβ.symm
+      linear_combination this
+    have hβ_ne_zero : β ≠ 0 := by
+      rintro rfl
+      apply hdiscr_not_sq
+      refine ⟨0, ?_⟩
+      have h0 : β^2 = 0 := by rw [show β = 0 from rfl]; ring
+      rw [h0] at hβ_sq
+      linarith
+    refine ⟨-a₁/2, β, hβ_ne_zero, ?_⟩
+    rw [hf_eq]
+    ext n
+    simp only [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
+      Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul]
+    rcases Nat.lt_or_ge n 3 with hn | hn
+    · interval_cases n <;>
+      · simp [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
+          Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
+        ring_nf
+        linarith [hβ_sq]
+    · rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by
+        rw [show ((Polynomial.X - Polynomial.C (-a₁/2))^2 + Polynomial.C (β^2)).natDegree = 2 by
+          rw [Polynomial.natDegree_add_C, Polynomial.natDegree_pow,
+            Polynomial.natDegree_X_sub_C]; ring]
+        omega : ((Polynomial.X - Polynomial.C (-a₁/2))^2 +
+          Polynomial.C (β^2)).natDegree < n)]
+      simp [Polynomial.coeff_add, Polynomial.coeff_pow, Polynomial.coeff_sub,
+        Polynomial.coeff_X, Polynomial.coeff_C, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
+      omega
+
 end Algebraic
 
 variable [LinearOrder R] [IsStrictOrderedRing R]
