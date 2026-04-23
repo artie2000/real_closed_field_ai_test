@@ -99,8 +99,12 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     rw [Polynomial.aeval_eq_sum_range' (n := 3) (by omega)] at haev
     simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add] at haev
     -- haev : coeff 0 • x^0 + coeff 1 • x^1 + coeff 2 • x^2 = 0
-    simp only [Algebra.smul_def, pow_zero, mul_one, pow_one, hcoeff2, one_mul] at haev
-    -- haev : algebraMap (coeff 0) + algebraMap (coeff 1) * x + x^2 = 0
+    -- Fold in the coeff defs and simplify powers/scalars.
+    rw [show (minpoly R x).coeff 0 = b from rfl,
+        show (minpoly R x).coeff 1 = a from rfl,
+        hcoeff2] at haev
+    simp only [Algebra.smul_def, pow_zero, mul_one, pow_one, one_mul, map_one] at haev
+    -- haev : algebraMap b + algebraMap a * x + x^2 = 0
     linear_combination haev
   -- Step 3: y = x + algebraMap(a/2); y^2 = algebraMap(a^2/4 - b).
   set c : R := a ^ 2 / 4 - b with hc_def
@@ -168,8 +172,8 @@ theorem nonempty_algEquiv_of_finrank_eq_two
     show ((algebraMap R L) s) ^ 2 = - (algebraMap R L) c
     rw [← map_pow, ← map_neg]
     congr 1
-    have : -c = s ^ 2 := by rw [hs]; ring
-    linear_combination -this
+    -- `hs : -c = s * s`; show `s ^ 2 = -c`.
+    rw [sq, ← hs]
   set α : L := y * sL⁻¹ with hα_def
   have hα_sq : α ^ 2 = -1 := by
     have hsL_pow_inv : sL⁻¹ ^ 2 = (sL ^ 2)⁻¹ := by rw [inv_pow]
