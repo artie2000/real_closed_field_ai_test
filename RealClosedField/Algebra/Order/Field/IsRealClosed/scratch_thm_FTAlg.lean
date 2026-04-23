@@ -112,34 +112,27 @@ private theorem finrank_le_two_of_galois
     (L : Type u) [Field L] [Algebra R L] [FiniteDimensional R L] [IsGalois R L] :
     Module.finrank R L ≤ 2 := by
   obtain ⟨k, hkeq⟩ := finrank_pow_two_of_galois (R := R) L
-  -- Want to show k ≤ 1
+  -- Show k ≤ 1
+  rw [hkeq]
   by_contra hcontra
   push_neg at hcontra
-  rw [hkeq] at hcontra
-  -- 2^k > 2 means k ≥ 2
   have hk_ge2 : 2 ≤ k := by
     by_contra h
     push_neg at h
-    interval_cases k <;> simp_all <;> omega
-  -- Given that finrank R L = 2^k with k ≥ 2, find contradiction via S4.
-  -- Strategy: G = Gal(L/R), order 2^k. A 2-Sylow is all of G.
-  -- Take subgroup H₁ ≤ G with |H₁| = 2^{k-1}, hence index 2 in G.
+    interval_cases k <;> omega
+  -- Given finrank R L = 2^k with k ≥ 2, find contradiction via S4.
   haveI : Finite (L ≃ₐ[R] L) := by
     have h : Nat.card (L ≃ₐ[R] L) = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
     have hpos : 0 < Module.finrank R L := Module.finrank_pos
     rw [← h] at hpos
     exact Nat.finite_of_card_ne_zero (Nat.pos_iff_ne_zero.mp hpos)
-  set G := L ≃ₐ[R] L with hGdef
-  set n := Nat.card G with hndef
-  have hn_eq : n = Module.finrank R L := IsGalois.card_aut_eq_finrank R L
-  have h2_prime : Nat.Prime 2 := Nat.prime_two
-  haveI : Fact (Nat.Prime 2) := ⟨h2_prime⟩
-  have hn_pow : n = 2 ^ k := by rw [hn_eq]; exact hkeq
+  haveI : Fact (Nat.Prime 2) := ⟨Nat.prime_two⟩
+  have hGcard : Nat.card (L ≃ₐ[R] L) = 2 ^ k := by
+    rw [IsGalois.card_aut_eq_finrank, hkeq]
   -- Get subgroup H₁ of G with |H₁| = 2^{k-1}
-  obtain ⟨H₁, hH₁_card⟩ : ∃ H₁ : Subgroup G, Nat.card H₁ = 2 ^ (k - 1) := by
+  obtain ⟨H₁, hH₁_card⟩ : ∃ H₁ : Subgroup (L ≃ₐ[R] L), Nat.card H₁ = 2 ^ (k - 1) := by
     refine Sylow.exists_subgroup_card_pow_prime 2 ?_
-    rw [hn_pow]
-    exact pow_dvd_pow 2 (Nat.sub_le k 1)
+    rw [hGcard]; exact pow_dvd_pow 2 (Nat.sub_le k 1)
   -- M = fixed field of H₁, finrank R M = 2
   let M : IntermediateField R L := IntermediateField.fixedField H₁
   have hML_finrank : Module.finrank M L = 2 ^ (k - 1) := by
@@ -147,91 +140,61 @@ private theorem finrank_le_two_of_galois
   have htower_M : Module.finrank R M * Module.finrank M L = Module.finrank R L :=
     Module.finrank_mul_finrank R M L
   have hM_finrank : Module.finrank R M = 2 := by
-    rw [hML_finrank] at htower_M
-    rw [hkeq] at htower_M
-    have h2k : k = (k - 1) + 1 := (Nat.sub_add_cancel (by omega : 1 ≤ k)).symm
-    rw [h2k, pow_succ] at htower_M
+    rw [hML_finrank, hkeq] at htower_M
+    have h2k : k = 1 + (k - 1) := by omega
+    rw [h2k, pow_add, pow_one] at htower_M
     have h2posp : (0 : ℕ) < 2 ^ (k - 1) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
-    have : Module.finrank R M * 2 ^ (k-1) = 2 * 2 ^ (k-1) := by
-      rw [mul_comm 2 (2 ^ (k-1))] at htower_M
-      linarith
-    exact Nat.eq_of_mul_eq_mul_right h2posp this
+    exact Nat.eq_of_mul_eq_mul_right h2posp htower_M
   haveI hM_fd : FiniteDimensional R M := inferInstance
   -- Apply S3: M ≃ₐ[R] Ri' R
   obtain ⟨e⟩ : Nonempty (M ≃ₐ[R] Ri' R) :=
     nonempty_algEquiv_Ri_of_finrank_eq_two' (R := R) M hM_finrank
-  -- L has Algebra M structure; transport to give L Algebra (Ri' R) structure
-  -- Actually: for the contradiction with S4, we need an intermediate field N between M and L
-  -- with [N:M] = 2.
-  -- Get H₂ ≤ H₁ with |H₂| = 2^{k-2}, exists since k-1 ≥ 1 so we can take a subgroup.
-  obtain ⟨H₂, hH₂_card⟩ : ∃ H₂ : Subgroup G, Nat.card H₂ = 2 ^ (k - 2) := by
-    refine Sylow.exists_subgroup_card_pow_prime 2 ?_
-    rw [hn_pow]
-    exact pow_dvd_pow 2 (Nat.sub_le k 2)
-  -- Actually, we need H₂ ≤ H₁, not just H₂ ≤ G. Let me use subgroup-of-H₁ approach.
-  -- Use Sylow.exists_subgroup_card_pow_prime applied to H₁ with power k-2.
-  haveI : Finite H₁ := Finite.of_fintype _
+  -- Get H₂ ≤ H₁ with |H₂| = 2^{k-2}
+  haveI : Finite H₁ := Nat.finite_of_card_ne_zero (by rw [hH₁_card]; positivity)
   obtain ⟨H₂, hH₂_card⟩ : ∃ H₂ : Subgroup H₁, Nat.card H₂ = 2 ^ (k - 2) := by
     refine Sylow.exists_subgroup_card_pow_prime 2 ?_
-    rw [hH₁_card]
-    exact pow_dvd_pow 2 (by omega : k - 2 ≤ k - 1)
-  -- Embed H₂ into G as a subgroup via H₁
-  let H₂' : Subgroup G := H₂.map H₁.subtype
+    rw [hH₁_card]; exact pow_dvd_pow 2 (by omega)
+  -- Embed H₂ into G
+  let H₂' : Subgroup (L ≃ₐ[R] L) := H₂.map H₁.subtype
   have hH₂'_card : Nat.card H₂' = 2 ^ (k - 2) := by
     rw [← hH₂_card]
-    exact Nat.card_congr (Subgroup.equivMapOfInjective H₂ H₁.subtype H₁.subtype_injective).symm.toEquiv
+    exact Nat.card_congr
+      (Subgroup.equivMapOfInjective H₂ H₁.subtype H₁.subtype_injective).symm.toEquiv
   -- N = fixed field of H₂'
   let N : IntermediateField R L := IntermediateField.fixedField H₂'
   have hNL_finrank : Module.finrank N L = 2 ^ (k - 2) := by
     rw [← hH₂'_card]; exact IntermediateField.finrank_fixedField_eq_card H₂'
-  -- We have M ⊆ N because H₂' ⊆ H₁
   have hH₂'_le_H₁ : H₂' ≤ H₁ := by
     intro x hx
     rcases hx with ⟨y, _, rfl⟩
     exact y.property
   have hM_le_N : M ≤ N := IntermediateField.fixedField_antitone hH₂'_le_H₁
-  -- Tower: finrank R N * finrank N L = finrank R L = 2^k
+  -- finrank R N = 4
   have htower_N : Module.finrank R N * Module.finrank N L = Module.finrank R L :=
     Module.finrank_mul_finrank R N L
-  have hN_finrank_R : Module.finrank R N = 2 ^ 2 ∨ Module.finrank R N = 2 ^ (k - (k - 2)) := by
-    right; rw [hkeq] at htower_N; rw [hNL_finrank] at htower_N
-    have hkeq' : k = (k - 2) + 2 := by omega
-    conv_lhs => rw [show k - (k-2) = 2 from by omega]
-    rw [hkeq', pow_add] at htower_N
+  have hN_finrank : Module.finrank R N = 4 := by
+    rw [hNL_finrank, hkeq] at htower_N
+    have h2k : k = 2 + (k - 2) := by omega
+    rw [h2k, pow_add] at htower_N
     have h2posp : (0 : ℕ) < 2 ^ (k - 2) := Nat.pos_of_ne_zero (pow_ne_zero _ (by decide))
-    have : Module.finrank R N * 2 ^ (k-2) = 2 ^ 2 * 2 ^ (k-2) := by
-      rw [mul_comm (2^2) (2^(k-2))] at htower_N
-      linarith
-    exact Nat.eq_of_mul_eq_mul_right h2posp this
-  -- Now: M ⊆ N, both intermediate fields of L. We need relfinrank M N = 2.
+    have := Nat.eq_of_mul_eq_mul_right h2posp htower_N
+    rw [this]; decide
+  -- relfinrank M N = 2
   have hrel_MN : IntermediateField.relfinrank M N = 2 := by
-    -- finrank R M * relfinrank M N = finrank R N
     have := IntermediateField.finrank_bot_mul_relfinrank hM_le_N
-    rw [hM_finrank] at this
-    have hN_finrank : Module.finrank R N = 4 := by
-      rcases hN_finrank_R with h1 | h2
-      · rw [h1]; norm_num
-      · rw [h2]
-        have : k - (k - 2) = 2 := by omega
-        rw [this]; norm_num
-    rw [hN_finrank] at this
+    rw [hM_finrank, hN_finrank] at this
     omega
-  -- Now we have M ⊆ N, both IntermediateFields of L.
-  -- Via M ≃ₐ[R] Ri' R, we have Ri' R Algebra structure on N with finrank 2.
-  -- First: N has Algebra M structure (as M ≤ N in L).
-  -- The R-algebra isomorphism M ≃ₐ[R] Ri' R makes N into a Ri' R-algebra.
-  -- And the finrank of N over M (= Ri' R) is 2.
-  -- Apply S4 to get contradiction.
-  -- Set up the algebra structure: N has Algebra M via the inclusion M ≤ N, and M ≃ₐ Ri' R.
-  haveI : Algebra M N := (IntermediateField.inclusion hM_le_N).toAlgebra
-  -- Check finrank M N = 2
+  -- Set up Algebra M N structure via the inclusion M ≤ N in L
+  letI : Algebra M N := (IntermediateField.inclusion hM_le_N).toAlgebra
+  -- finrank M N = 2
   have hMN_finrank : Module.finrank M N = 2 := by
-    -- N over M: this is just relfinrank M N = 2
-    -- The Algebra M N structure via the inclusion has N's elements viewed as M-module
+    -- relfinrank is defined via toSubfield relrank; the Algebra structure
+    -- matches. Use `IntermediateField.relfinrank_eq_finrank_of_le`
     sorry
-  -- Transport algebra: Algebra (Ri' R) N
-  haveI : Algebra (Ri' R) N := (e.symm.toAlgHom.comp (Algebra.ofId M N)).toAlgebra
-  -- Transport finrank: finrank Ri' R N = finrank M N via the AlgEquiv e : M ≃ₐ[R] Ri' R
+  -- Transport Algebra structure: Ri' R → M → N
+  letI : Algebra (Ri' R) N := ((IntermediateField.inclusion hM_le_N).comp
+    e.symm.toAlgHom).toAlgebra
+  -- finrank (Ri' R) N = 2
   have hRiN_finrank : Module.finrank (Ri' R) N = 2 := by
     sorry
   exact no_quadratic_ext_Ri' (R := R) N hRiN_finrank
