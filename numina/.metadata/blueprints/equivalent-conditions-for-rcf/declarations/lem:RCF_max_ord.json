@@ -2,8 +2,8 @@
   "label": "lem:RCF_max_ord",
   "kind": "corollary",
   "title": "lem:RCF_max_ord",
-  "leanDeclaration": "",
-  "leanFile": "",
+  "leanDeclaration": "IsRealClosed.noNontrivialOrderedAlgExt_of_isRealClosed",
+  "leanFile": "RealClosedField/Algebra/Order/Field/RealClosed.lean",
   "assessment": "EASY",
   "uses": [
     "def:RCF",
@@ -11,5 +11,6 @@
   ],
   "statement": "$R$ has no nontrivial ordered algebraic extensions (with respect to the unique order).",
   "proof": "Since ordered fields are real, we are done by Lemma \\ref{lem:RCF_max}.",
-  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/equivalent-conditions-for-rcf/RealClosedField/Algebra/Order/Field/scratch_lem_RCF_max_ord.lean"
+  "scratchFile": "/data/clones/artie2000/real_closed_field_ai_test/equivalent-conditions-for-rcf/RealClosedField/Algebra/Order/Field/scratch_lem_RCF_max_ord.lean",
+  "status": "proved"
 }
