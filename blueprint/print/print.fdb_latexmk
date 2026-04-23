@@ -1,23 +1,23 @@
 # Fdb version 4
-["bibtex /c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"] 1776898082.01067 "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print" 1776899078.00721 0
+["bibtex /c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"] 1776911585.69045 "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print" 1776911590.10196 0
   "./rcf.bib" 1767128493.3029 1442 9efd63a36ecd5dbbca96010ae44c6052 ""
-  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776899076.17848 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
+  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776911588.26913 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/bibtex/bst/bibtex/plain.bst" 1291864736 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
   (generated)
   "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl"
   "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.blg"
   (rewritten before read)
-["bibtex C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"] 1776898081.54214 "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print" 1776899078.006 0
+["bibtex C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"] 1776911585.21036 "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print" 1776911590.10081 0
   "./rcf.bib" 1767128493.3029 1442 9efd63a36ecd5dbbca96010ae44c6052 ""
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/bibtex/bst/bibtex/plain.bst" 1291864736 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776899076.17848 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
+  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776911588.26913 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
   (generated)
   "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl"
   "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.blg"
   (rewritten before read)
-["pdflatex"] 1776899074.03807 "print.tex" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.pdf" "print" 1776899078.00887 0
-  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776899076.17848 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
-  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" 1776898082.3309 897 071d4e28a4cc2c420df9f9a970107c6d "bibtex /c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"
+["pdflatex"] 1776911586.11851 "print.tex" "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.pdf" "print" 1776911590.10329 0
+  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776911588.26913 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
+  "/c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" 1776911586.01587 897 071d4e28a4cc2c420df9f9a970107c6d "bibtex /c/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"
   "C:/Users/Artie/AppData/Local/MiKTeX/miktex/data/le/xetex/xelatex.fmt" 1766970064.82472 27012792 63a90e2fad2588d09632b64dac031097 ""
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136772254 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1233951854 916 f87d7c45f9c908e672703b83b72241a3 ""
@@ -93,10 +93,10 @@
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/tex/latex/unicode-math/unicode-math-xetex.sty" 1691937353 131459 a23c98c9e5ecfc17568c7bc94fda1317 ""
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/tex/latex/unicode-math/unicode-math.sty" 1691937353 1474 b42cfbe849cb22ed1c0632800327884f ""
   "C:/Users/Artie/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
-  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776899076.17848 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
-  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" 1776898082.3309 897 071d4e28a4cc2c420df9f9a970107c6d "bibtex C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"
-  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.out" 1776899076.17848 259 f3c1da2e4d983c6330a6a6d7ce23f7dc "pdflatex"
-  "content.tex" 1776898977.74958 19986 f7a6262fbefbc131c655d1e5a5097daa ""
+  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.aux" 1776911588.26913 2367 848f9bda010ced5350156c7f63a90776 "pdflatex"
+  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.bbl" 1776911586.01587 897 071d4e28a4cc2c420df9f9a970107c6d "bibtex C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print"
+  "C:/Users/Artie/Documents/Lean/real_closed_field_ai_test/blueprint/print/print.out" 1776911588.26913 259 f3c1da2e4d983c6330a6a6d7ce23f7dc "pdflatex"
+  "content.tex" 1776911323.35191 19986 f7a6262fbefbc131c655d1e5a5097daa ""
   "macros/common.tex" 1767018715.01269 2223 e8eba3532b67d78b5db6903ae2b3b8de ""
   "macros/print.tex" 1767017891.80112 1101 87627b2ec24fef68edc71c13f43f7bab ""
   "print.aux" 1767402826.08316 3349 d98cc6ff32af8d0d55380322112da9d7 ""
