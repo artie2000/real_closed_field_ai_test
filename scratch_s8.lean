@@ -54,24 +54,20 @@ theorem bijective_algebraMap_of_isOrderedAlgebra'
     obtain ⟨φ⟩ := nonempty_algEquiv_Ri_of_finrank_eq_two K h2
     -- Build i : K with i^2 = -1
     set i : K := φ.symm (AdjoinRoot.root (X ^ 2 + 1 : R[X])) with hi_def
+    have hroot_sum : (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 = (0 : Ri R) := by
+      have hms : AdjoinRoot.mk (X ^ 2 + 1 : R[X]) (X ^ 2 + 1) = 0 :=
+        AdjoinRoot.mk_self
+      have heq : AdjoinRoot.mk (X ^ 2 + 1 : R[X]) (X ^ 2 + 1 : R[X]) =
+          (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 := by
+        rw [← AdjoinRoot.aeval_eq]
+        simp [map_add, map_pow, map_one]
+      rw [heq] at hms
+      exact hms
     have hroot_sq : (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 = (-1 : Ri R) := by
-      have : (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 = 0 := by
-        have := AdjoinRoot.mk_self (X ^ 2 + 1 : R[X])
-        have h2 : AdjoinRoot.mk (X ^ 2 + 1 : R[X]) (X ^ 2 + 1) =
-            (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 := by
-          rw [← AdjoinRoot.aeval_eq]
-          simp [map_add, map_pow, map_one]
-        rw [h2] at this
-        exact this
-      linarith [this]
+      have := hroot_sum
+      linear_combination this
     have hi_sq : i ^ 2 = (-1 : K) := by
-      have : φ.symm ((AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2) = φ.symm (-1) := by
-        rw [hroot_sq]
-      simp [map_pow, map_neg, map_one] at this
-      rw [hi_def]
-      rw [map_pow] at this
-      convert this using 1
-      simp
+      rw [hi_def, ← map_pow, hroot_sq, map_neg, map_one]
     have hsq : (0 : K) ≤ i ^ 2 := sq_nonneg i
     rw [hi_sq] at hsq
     linarith
