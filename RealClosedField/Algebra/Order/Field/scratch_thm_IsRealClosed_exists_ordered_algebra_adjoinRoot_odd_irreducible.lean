@@ -576,6 +576,85 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
         · -- ≥ 2 * d: because coeff (2*d) ≠ 0.
           apply Polynomial.le_natDegree_of_ne_zero
           exact ne_of_gt hsum_coeff_2d_pos
+      -- Derive d ≥ 2. If d = 0, sum has degree 0, so P has degree ≤ 0,
+      -- contradicting g.natDegree ≥ 3 ≤ P.natDegree.
+      have hd_pos : 2 ≤ d := by
+        by_contra hd_bad
+        push_neg at hd_bad
+        -- d ≤ 1. Then 2*d ≤ 2, so sum.natDegree ≤ 2, so P.natDegree ≤ 2.
+        -- but g.natDegree ≤ P.natDegree and g.natDegree ≥ 3. Contradiction.
+        have hsum_le : (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree ≤ 2 := by
+          rw [hsum_natDeg]; omega
+        have hP_le : P.natDegree ≤ 2 := by
+          have h1 : P.natDegree ≤
+              max (∑ y ∈ c.support, C ((c y : R)) * (p y)^2).natDegree (1 : R[X]).natDegree :=
+            by rw [hP_def]; exact Polynomial.natDegree_add_le _ _
+          simp [Polynomial.natDegree_one] at h1
+          omega
+        omega
+      -- P.natDegree = 2*d (since sum has natDegree 2*d > 0, and 1 has natDegree 0)
+      have hP_natDeg : P.natDegree = 2 * d := by
+        rw [hP_def]
+        rw [show (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1 =
+            (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + C 1 by simp]
+        rw [Polynomial.natDegree_add_C, hsum_natDeg]
+      -- h.natDegree is odd
+      have hh_deg_val : h.natDegree = 2 * d - g.natDegree := by
+        rw [hh_deg, hP_natDeg]
+      have hh_deg_pos : 0 < h.natDegree := by
+        rw [hh_deg_val]
+        -- 2*d - g.natDegree > 0 iff 2*d > g.natDegree iff d ≥ ⌈g.natDegree/2⌉
+        -- We have g.natDegree ≤ P.natDegree = 2*d, and g.natDegree is odd so g.natDegree < 2*d
+        have : g.natDegree < 2 * d := by
+          rcases hg_odd with ⟨k, hk⟩
+          have hge := hP_deg_ge
+          rw [hP_natDeg] at hge
+          omega
+        omega
+      have hh_deg_odd : Odd h.natDegree := by
+        rw [hh_deg_val]
+        rcases hg_odd with ⟨k, hk⟩
+        rw [hk]
+        -- 2*d - (2*k + 1) is odd since 2*d > 2*k + 1 means 2*d ≥ 2*k + 2, then 2*d - 2*k - 1 is odd
+        have h1 : 2 * k + 1 < 2 * d := by
+          rw [← hk]
+          rcases hg_odd with ⟨k', hk'⟩
+          have hge := hP_deg_ge
+          rw [hP_natDeg] at hge
+          omega
+        obtain ⟨m, hm⟩ := Nat.even_or_odd (2 * d - (2 * k + 1))
+        rcases hm with heven | hodd
+        · exfalso
+          -- 2*d - (2k+1) is even means 2*d = (2k+1) + even, but 2*d - (2k+1) + (2k+1) = 2*d
+          -- So (2k+1) + even = 2*d, but lhs is odd and rhs is even. Contradiction.
+          obtain ⟨m, rfl⟩ := heven
+          omega
+        · exact hodd
+      -- Extract odd irreducible factor g' of h
+      obtain ⟨g', hg'_monic, hg'_irred, hg'_dvd, hg'_odd⟩ :=
+        exists_odd_irreducible_factor hh_deg_odd hh_deg_pos
+      -- g'.natDegree ≤ h.natDegree < g.natDegree, so IH applies.
+      have hg'_lt : g'.natDegree < g.natDegree := by
+        have hdvd := hg'_dvd
+        obtain ⟨q, hq⟩ := hdvd
+        have hq_ne : q ≠ 0 := fun hz => by
+          rw [hq, hz, mul_zero] at *; exact hh_ne hq
+        have : h.natDegree = g'.natDegree + q.natDegree := by
+          rw [hq, Polynomial.natDegree_mul hg'_irred.ne_zero hq_ne]
+        omega
+      -- g' ∣ P: because g' ∣ h ∣ P.
+      have hg'_dvd_P : g' ∣ P := hg'_dvd.trans ⟨g, by rw [hhg]; ring⟩
+      -- Now descend to AdjoinRoot g' and derive -1 ∈ span of squares.
+      haveI : Fact (Irreducible g') := ⟨hg'_irred⟩
+      set K' := AdjoinRoot g'
+      have hmk'_P : AdjoinRoot.mk g' P = 0 := AdjoinRoot.mk_eq_zero.mpr hg'_dvd_P
+      -- mk g' (sum) = -1 in K'
+      have hsum_eq_neg_one :
+          AdjoinRoot.mk g' (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) = (-1 : K') := by
+        have hsum : AdjoinRoot.mk g' ((∑ y ∈ c.support, C ((c y : R)) * (p y)^2) + 1) = 0 := by
+          rw [← hP_def]; exact hmk'_P
+        rw [map_add, map_one] at hsum
+        linarith_or_polyrith
       sorry
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
