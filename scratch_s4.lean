@@ -181,11 +181,22 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
       show (b / (2 * u')) ^ 2 = b ^ 2 / (4 * u' ^ 2)
       field_simp; ring
     have hu'2_sub_v2 : u' ^ 2 - v ^ 2 = a := by
-      rw [hu'2, hv2, hu'2]
-      have hfour_pos : (0 : R) < 4 * ((a + r') / 2) := by linarith
-      have hfour_ne : (4 * ((a + r') / 2) : R) ≠ 0 := ne_of_gt hfour_pos
+      -- u'^2 = (a+r')/2, so 4 * u'^2 = 2 * (a + r')
+      -- v^2 = b^2 / (4 * u'^2) = b^2 / (2 * (a + r'))
+      -- u'^2 - v^2 = (a+r')/2 - b^2 / (2*(a+r'))
+      --           = ((a+r')^2 - b^2) / (2*(a+r'))
+      -- (a+r')^2 - b^2 = a^2 + 2ar' + r'^2 - b^2 = a^2 + 2ar' + (a^2+b^2) - b^2 = 2a^2 + 2ar'
+      --                = 2a(a + r')
+      -- so u'^2 - v^2 = 2a(a+r')/(2(a+r')) = a.
       have hr'_sq' : r' ^ 2 = a ^ 2 + b ^ 2 := by rw [sq]; exact hr'_sq
-      field_simp
+      have hapr_ne : (a + r' : R) ≠ 0 := ne_of_gt hapr_pos
+      have h4u'2 : 4 * u' ^ 2 = 2 * (a + r') := by rw [hu'2]; ring
+      have hv2' : v ^ 2 = b ^ 2 / (2 * (a + r')) := by rw [hv2, h4u'2]
+      have h2ne : (2 * (a + r') : R) ≠ 0 := by
+        exact mul_ne_zero (by norm_num) hapr_ne
+      rw [hu'2, hv2']
+      rw [div_sub_div _ _ (by norm_num : (2:R) ≠ 0) h2ne]
+      rw [div_eq_iff (mul_ne_zero (by norm_num : (2:R) ≠ 0) h2ne)]
       nlinarith [hr'_sq']
     -- Now witness: u' + v*i
     refine ⟨algebraMap R (Ri R) u' + algebraMap R (Ri R) v * hm.root, ?_⟩
