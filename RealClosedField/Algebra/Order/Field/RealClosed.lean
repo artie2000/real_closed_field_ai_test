@@ -637,19 +637,28 @@ theorem finrank_le_two_of_finiteDimensional
 /-- The only algebraic extensions of a real closed field `R` are `R` and `R(i)`. -/
 theorem finrank_le_two_of_isAlgebraic
     (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] :
-    Module.finrank R K ≤ 2 := sorry
+    Module.finrank R K ≤ 2 := by
+  by_contra hgt
+  push_neg at hgt
+  have hpos : 0 < Module.finrank R K := by omega
+  haveI : FiniteDimensional R K := .of_finrank_pos hpos
+  exact absurd (finrank_le_two_of_finiteDimensional R K) (not_le.mpr hgt)
 
 /-- A real closed field has no nontrivial real algebraic extensions. -/
 theorem surjective_algebraMap_of_isAlgebraic_of_isSemireal
     (K : Type*) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] [IsSemireal K] :
-    Function.Surjective (algebraMap R K) := sorry
-
-/-- Classification of monic irreducible polynomials over a real closed field `R`:
-they are linear (`X - c`) or quadratic of the form `(X - a)^2 + b^2` with `b ≠ 0`. -/
-theorem monic_irreducible_classification {f : Polynomial R} (hf : f.Monic) (hf' : Irreducible f) :
-    (∃ c : R, f = Polynomial.X - Polynomial.C c) ∨
-    (∃ a b : R, b ≠ 0 ∧
-      f = (Polynomial.X - Polynomial.C a) ^ 2 + Polynomial.C (b ^ 2)) := sorry
+    Function.Surjective (algebraMap R K) := by
+  intro x
+  -- x is algebraic over R, so R[x] is finite-dim with dim = minpoly degree ≤ 2.
+  have hx_int : IsIntegral R x := Algebra.IsIntegral.isIntegral x
+  set A : Subalgebra R K := Algebra.adjoin R ({x} : Set K) with hA_def
+  haveI : FiniteDimensional R A :=
+    (Subalgebra.isField_of_algebraic A (fun a ↦ (Algebra.IsAlgebraic.isAlgebraic _)))
+      |>.elim
+      (fun _ ↦ inferInstance)
+    |>.elim
+      (fun _ ↦ inferInstance)
+  sorry
 
 end Algebraic
 
