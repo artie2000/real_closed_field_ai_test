@@ -374,11 +374,9 @@ theorem isSquare_of_finrank_base_eq_two
     have hc0 : c ≠ 0 := by
       intro heq
       rw [heq, mul_zero] at hc
-      have hsa : s + a = 0 := by linear_combination -2 * hc
-      have hs_eq : s = -a := by linear_combination hsa
-      have h1 : s^2 = a^2 := by rw [hs_eq]; ring
-      have h2 : a^2 = a^2 + b^2 := by linear_combination -hs_sq + h1
-      have h3 : b^2 = 0 := by linear_combination -h2
+      have hsa : s + a = 0 := by linear_combination 2 * hc
+      have h1 : s^2 = a^2 := by linear_combination (s - a) * hsa
+      have h3 : b^2 = 0 := by linear_combination -hs_sq + h1
       apply hb0
       exact (pow_eq_zero_iff two_ne_zero).mp h3
     -- Let d := b / (2c)
