@@ -193,7 +193,7 @@ theorem IsSquare.of_isSumSq_of_forall_isSquare_adjoinRoot
     set d : F := hm.coeff w 1
     have hw_repr : w = algebraMap F _ c + algebraMap F _ d * hm.root := hrepr w
     -- Compute w*w = (c^2 - d^2) + (2cd) * root (using root^2 = -1)
-    have hi2 : hm.root * hm.root = -1 := by rw [← sq]; exact hroot_sq
+    have hi2 : hm.root * hm.root = -1 := by rw [← pow_two]; exact hroot_sq
     have hw_sq :
         w * w = algebraMap F _ (c ^ 2 - d ^ 2) +
                 algebraMap F _ (2 * c * d) * hm.root := by
@@ -218,7 +218,7 @@ theorem IsSquare.of_isSumSq_of_forall_isSquare_adjoinRoot
       · rw [show A * B + A * B = algebraMap F _ (2 * c * d) from ?_]
         · rw [map_mul, map_mul, map_ofNat]; ring
     -- From hw: z = w^2 = w*w
-    have hz_wsq : z = w * w := by rw [hw, sq]
+    have hz_wsq : z = w * w := by rw [hw, pow_two]
     have hz_wsq' :
         algebraMap F _ x + algebraMap F _ u * hm.root =
           algebraMap F _ (c ^ 2 - d ^ 2) +
