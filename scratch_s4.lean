@@ -122,10 +122,17 @@ theorem Ri_isSquare (z : Ri R) : IsSquare z := by
       have hna_nn : 0 ≤ -a := by linarith
       obtain ⟨s, hs⟩ := (IsRealClosed.nonneg_iff_isSquare (R := R) (x := -a)).mp hna_nn
       refine ⟨algebraMap R (Ri R) s * hm.root, ?_⟩
-      have : (algebraMap R (Ri R) s * hm.root) * (algebraMap R (Ri R) s * hm.root)
-          = algebraMap R (Ri R) (s * s) * hm.root ^ 2 := by ring
-      rw [this, hroot_sq, ← hs, hz]
-      push_cast; ring
+      have step1 :
+          (algebraMap R (Ri R) s * hm.root) * (algebraMap R (Ri R) s * hm.root)
+          = (algebraMap R (Ri R) s * algebraMap R (Ri R) s) * (hm.root * hm.root) := by
+        ring
+      have hmul : algebraMap R (Ri R) s * algebraMap R (Ri R) s
+                    = algebraMap R (Ri R) (-a) := by
+        rw [← map_mul, ← hs]
+      have hii : hm.root * hm.root = -1 := by rw [← sq]; exact hroot_sq
+      rw [step1, hmul, hii, hz]
+      rw [show algebraMap R (Ri R) (-a) * (-1 : Ri R) = algebraMap R (Ri R) a from by
+        rw [map_neg]; ring]
   · -- b ≠ 0, so r' > 0 and a + r' > 0
     have hb2_pos : 0 < b ^ 2 := by positivity
     have hr'2_pos : 0 < r' ^ 2 := by
