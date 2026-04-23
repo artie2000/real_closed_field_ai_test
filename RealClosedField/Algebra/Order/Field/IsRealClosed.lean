@@ -822,6 +822,20 @@ theorem of_bijective_algebraMap_of_isOrderedAlgebra
       exact not_exists_ordered_algebra_of_bijective h hg_irred hg_deg_gt
         (exists_ordered_algebra_adjoinRoot_odd_irreducible hg_monic hg_irred hg_odd)
 
+omit [LinearOrder R] [IsStrictOrderedRing R] in
+/-- **cor:real_max_imp_RCF.** If `R` is a real (semireal) field with no nontrivial real algebraic
+extensions, then `R` admits an ordering making it real closed. -/
+theorem of_bijective_algebraMap_of_isSemireal [IsSemireal R]
+    (h : ∀ (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] [IsSemireal K],
+         Function.Bijective (algebraMap R K)) :
+    ∃ _ : LinearOrder R, IsRealClosed R := by
+  letI : LinearOrder R := LinearOrder.ofIsSemireal R
+  haveI : IsStrictOrderedRing R := IsStrictOrderedRing.ofIsSemireal R
+  refine ⟨inferInstance, ?_⟩
+  refine of_bijective_algebraMap_of_isOrderedAlgebra (fun K _ _ _ _ _ _ => ?_)
+  haveI : IsSemireal K := IsStrictOrderedRing.toIsSemireal
+  exact h K
+
 variable (R) in
 /-- Characterisation of real closed fields among ordered fields. -/
 theorem tfae_ord :
