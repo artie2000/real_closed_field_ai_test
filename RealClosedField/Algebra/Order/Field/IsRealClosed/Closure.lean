@@ -979,34 +979,25 @@ instance isAlgClosed_adjoinRoot_X_sq_add_one [IsRealClosed R] :
   -- Thus K is a finite extension of R via tower
   haveI : Module.Finite R K := Module.Finite.trans (Ri R) K
   -- By S5, finrank R K = 1 or 2
+  have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
+    have hne' : (X ^ 2 + 1 : R[X]) ≠ 0 := (irreducible_X_sq_add_one (R := R)).ne_zero
+    have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
+      have h1 : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by
+        simp [map_neg, map_one, sub_neg_eq_add]
+      rw [h1]; exact natDegree_X_pow_sub_C
+    have h1 := (AdjoinRoot.powerBasis hne').finrank
+    rw [AdjoinRoot.powerBasis_dim hne'] at h1
+    rw [h1, hdeg]
   rcases finrank_eq_one_or_two_of_finite (R := R) K with h1 | h2
   · -- finrank R K = 1, and finrank R (Ri R) = 2, so finrank (Ri R) K * 2 = 1: impossible
     exfalso
     have htower : Module.finrank R (Ri R) * Module.finrank (Ri R) K =
         Module.finrank R K := Module.finrank_mul_finrank R (Ri R) K
-    have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
-      have hbasis := AdjoinRoot.powerBasis (irreducible_X_sq_add_one (R := R)).ne_zero
-      have : hbasis.dim = (X ^ 2 + 1 : R[X]).natDegree := by
-        rw [AdjoinRoot.powerBasis_dim]
-      have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
-        have h1 : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by
-          simp [map_neg, map_one, sub_neg_eq_add]
-        rw [h1]; exact natDegree_X_pow_sub_C
-      have := hbasis.finrank
-      rw [this, AdjoinRoot.powerBasis_dim, hdeg]
     rw [h1, hfinrank_Ri] at htower
     omega
   · -- finrank R K = 2, and finrank R (Ri R) = 2, so finrank (Ri R) K = 1
     have htower : Module.finrank R (Ri R) * Module.finrank (Ri R) K =
         Module.finrank R K := Module.finrank_mul_finrank R (Ri R) K
-    have hfinrank_Ri : Module.finrank R (Ri R) = 2 := by
-      have hbasis := AdjoinRoot.powerBasis (irreducible_X_sq_add_one (R := R)).ne_zero
-      have hdeg : (X ^ 2 + 1 : R[X]).natDegree = 2 := by
-        have h1 : (X ^ 2 + 1 : R[X]) = X ^ 2 - C (-1) := by
-          simp [map_neg, map_one, sub_neg_eq_add]
-        rw [h1]; exact natDegree_X_pow_sub_C
-      have := hbasis.finrank
-      rw [this, AdjoinRoot.powerBasis_dim, hdeg]
     rw [h2, hfinrank_Ri] at htower
     have hfinrank_K : Module.finrank (Ri R) K = 1 := by omega
     -- deg p = 1, so p has a root
