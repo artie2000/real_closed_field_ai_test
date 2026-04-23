@@ -648,7 +648,37 @@ private lemma exists_ordered_algebra_adjoinRoot_odd_irreducible
           rw [← hP_def]; exact hmk'_P
         rw [map_add, map_one] at hsum
         linear_combination hsum
-      sorry
+      -- Build element in span of squares.
+      -- For each y, (mk g' (p y))^2 is a square in K'.
+      -- The coefficient (c y : nonneg R) acts via smul.
+      -- So mk g' (sum) = ∑ (c y) • (mk g' (p y))^2.
+      have hsum_expand :
+          AdjoinRoot.mk g' (∑ y ∈ c.support, C ((c y : R)) * (p y)^2) =
+          ∑ y ∈ c.support, (c y : ↥(Subsemiring.nonneg R)) • (AdjoinRoot.mk g' (p y))^2 := by
+        rw [map_sum]
+        refine Finset.sum_congr rfl fun y _ => ?_
+        rw [map_mul, map_pow, AdjoinRoot.mk_C]
+        show (algebraMap R K' (c y : R)) * (AdjoinRoot.mk g' (p y))^2 =
+          (c y : ↥(Subsemiring.nonneg R)) • (AdjoinRoot.mk g' (p y))^2
+        rw [Subsemiring.smul_def, Algebra.smul_def]
+      have hneg_one_in_span : (-1 : K') ∈
+          Submodule.span (Subsemiring.nonneg R) {x : K' | IsSquare x} := by
+        rw [← hsum_eq_neg_one, hsum_expand]
+        apply Submodule.sum_mem
+        intro y _
+        apply Submodule.smul_mem
+        apply Submodule.subset_span
+        exact ⟨AdjoinRoot.mk g' (p y), by ring⟩
+      -- Apply IH to g': get ordered structure on K'
+      obtain ⟨lo, hsr, hom⟩ := ih g'.natDegree hg'_lt hg'_monic hg'_irred hg'_odd rfl
+      -- By the characterization, -1 ∉ span. Contradiction.
+      letI := lo
+      haveI := hsr
+      haveI := hom
+      have hno : (-1 : K') ∉ Submodule.span (Subsemiring.nonneg R) {x : K' | IsSquare x} := by
+        rw [← Field.exists_isOrderedAlgebra_iff_neg_one_notMem_span_nonneg_isSquare]
+        exact ⟨lo, hsr, hom⟩
+      exact hno hneg_one_in_span
 
 /-- Adjoining `√a` to an ordered field (for `a ≥ 0` not a square) gives an ordered algebra. -/
 private lemma exists_ordered_algebra_adjoinRoot_sq_sub_C
