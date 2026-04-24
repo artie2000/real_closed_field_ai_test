@@ -881,7 +881,7 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
     [IsAlgClosure F (AdjoinRoot (X ^ 2 + 1 : F[X]))] :
     ∃ _ : LinearOrder F, IsRealClosed F := by
   -- Set up notation for F(i)
-  set Fi : Type u := AdjoinRoot (X ^ 2 + 1 : F[X]) with hFi_def
+  set Fi : Type u := AdjoinRoot (X ^ 2 + 1 : F[X])
   -- X^2 + 1 is irreducible, so Fi is a field
   have hirred : Irreducible (X ^ 2 + 1 : F[X]) :=
     Polynomial.irreducible_X_sq_add_one_of_not_isSquare_neg_one h_neg_one
