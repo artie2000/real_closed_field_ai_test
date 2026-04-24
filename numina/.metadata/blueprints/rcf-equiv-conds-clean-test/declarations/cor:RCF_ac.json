@@ -1,0 +1,11 @@
+{
+  "label": "cor:RCF_ac",
+  "kind": "corollary",
+  "title": "cor:RCF_ac",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "$\\bar{R}=R(i)$.",
+  "proof": "\\leanok",
+  "leanDeclaration": "IsRealClosed.isAlgClosure_adjoinRoot_X_sq_add_one"
+}

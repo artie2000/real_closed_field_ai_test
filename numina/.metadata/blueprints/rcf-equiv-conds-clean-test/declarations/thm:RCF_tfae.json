@@ -1,0 +1,10 @@
+{
+  "label": "thm:RCF_tfae",
+  "kind": "theorem",
+  "title": "thm:RCF_tfae",
+  "uses": [
+    "def:RCF"
+  ],
+  "statement": "Let $R$ be a field. TFAE:\n  \\begin{enumerate}\n    \\item $R$ is real closed.\n    \\item $\\bar{R}=R(i)$ (and $R(i)\\neq R$).\n    \\item $R$ is real, but has no nontrivial real algebraic extensions.\n  \\end{enumerate}",
+  "proof": ""
+}

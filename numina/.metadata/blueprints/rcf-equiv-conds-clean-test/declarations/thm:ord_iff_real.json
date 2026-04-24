@@ -1,0 +1,9 @@
+{
+  "label": "thm:ord_iff_real",
+  "kind": "theorem",
+  "title": "thm:ord_iff_real",
+  "uses": [],
+  "statement": "A field can be ordered if and only if it is real (that is, $-1$ is not a sum of squares).",
+  "proof": "\\leanok",
+  "leanDeclaration": "Field.exists_isStrictOrderedRing_iff_isSemireal"
+}

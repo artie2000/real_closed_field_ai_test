@@ -1,0 +1,9 @@
+{
+  "label": "lem:ext_ord_functional_suff",
+  "kind": "lemma",
+  "title": "lem:ext_ord_functional_suff",
+  "uses": [],
+  "statement": "Let $F$ be an ordered field, and let $K/F$ be a field extension. Suppose that there is an $F$-linear functional $\\pi:K\\to F$ with $\\pi(1)=1$ and, for all $x\\in K$, $\\pi(x^2)\\geq0$. Then there is a field ordering on $K$ making $K/F$ ordered.",
+  "proof": "\\leanok\n  Consider the sum $\\sum_i x_i\\alpha_i^2$ for some $\\alpha_i\\in K$ and $x_i\\in F_{\\geq0}$. By $F$-linearity, we compute\n  \\[\\pi\\left(\\sum_i x_i\\alpha_i^2\\right)=\\sum_i x_i\\pi(\\alpha_i^2)\\geq0.\\]\n  Since $\\pi(-1)=-1<0$, we are done by Theorem \\ref{thm:ext_ord_cond}.",
+  "leanDeclaration": "IsRealClosed.exists_isOrderedAlgebra_of_linearFunctional"
+}

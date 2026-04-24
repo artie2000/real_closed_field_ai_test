@@ -1,0 +1,9 @@
+{
+  "label": "def:RCF",
+  "kind": "definition",
+  "title": "def:RCF",
+  "uses": [],
+  "statement": "\\mathlibok\n  A real closed field $F$ is a real field such that\n  \\begin{enumerate}\n    \\item for all $x$ in $F$, either $x$ or $-x$ is a square in $F$, and\n    \\item every odd-degree polynomial over $F$ has a root in $F$.\n  \\end{enumerate}",
+  "proof": null,
+  "leanDeclaration": "IsRealClosed"
+}
