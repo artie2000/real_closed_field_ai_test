@@ -296,11 +296,14 @@ In particular, $F$ as in the last lemma is real.
 
 \begin{lemma}
   \label{lem:FTAlg_converse}
+  \lean{IsRealClosed.of_unique_finite_ext_adjoinRoot_X_sq_add_one}
+  \leanok
   \uses{def:RCF}
   Suppose $R$ is a field with unique nontrivial finite extension $R(i)$. Then $R$ is real closed.
 \end{lemma}
 \begin{proof}
-  \uses{lem:sumsq_is_sq}
+  \leanok
+  \uses{lem:sumsq_is_sq, lem:FTAlg_converse_alg_closure}
   Since $R(i)$ has no quadratic extensions, we can apply Lemma \ref{lem:sumsq_is_sq}: sums of squares in $R$ are squares in $R$, and $R$ is real.
 
   Take a non-square $a\in R$; then $R(\sqrt{a})\cong R(i)$. Suppose $i$ maps to $x+y\sqrt{a}$ for some $x,y\in R$. Then $-1=x^2+ay^2+2xy\sqrt{a}$; comparing coefficients, we get $-1=x^2+ay^2$. Since $-1$ is not a square, $y$ must be nonzero, and so $-a=(x/y)^2+(1/y)^2$ is a square.
@@ -310,11 +313,14 @@ In particular, $F$ as in the last lemma is real.
 
 \begin{corollary}
   \label{lem:FTAlg_converse_alg_closure}
+  \lean{IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one}
+  \leanok
   \uses{def:RCF}
   Suppose $R$ is a field with nontrivial algebraic closure $R(i)$. Then $R$ is real closed.
 \end{corollary}
 \begin{proof}
-  \uses{lem:FTAlg_converse}
+  \leanok
+  \uses{lem:sumsq_is_sq}
 \end{proof}
 
 As before, let $R$ be a real closed field. Theorem \ref{thm:FTAlg} is a powerful tool for deriving more of its properties.
