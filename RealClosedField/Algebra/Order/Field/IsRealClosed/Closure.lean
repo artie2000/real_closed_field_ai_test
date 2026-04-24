@@ -1092,8 +1092,7 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
   · -- Case K ≃ₐ[F] F: algebraMap F K is bijective
     haveI : Module.Finite F K := Module.Finite.equiv φ.toLinearEquiv.symm
     have hfinrank_K : Module.finrank F K = 1 := by
-      have := φ.toLinearEquiv.finrank_eq
-      simpa using this
+      rw [φ.toLinearEquiv.finrank_eq, Module.finrank_self]
     exact Module.Free.bijective_algebraMap_of_finrank_eq_one hfinrank_K
   · -- Case K ≃ₐ[F] Fi: K is not semireal (since -1 is a square in Fi, hence in K)
     exfalso
