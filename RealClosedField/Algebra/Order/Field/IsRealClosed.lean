@@ -939,3 +939,79 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
       simpa using this
     -- But K is semireal, so -1 is not a sum of squares, contradicting that it's a square
     exact IsSemireal.not_isSumSq_neg_one K hK_sq.isSumSq
+
+/-- If a field `F` has `¬ IsSquare (-1)` and every nontrivial finite extension of `F` is either
+`F` itself or `AdjoinRoot (X^2 + 1 : F[X])`, then there is a `LinearOrder` on `F` making
+it real closed. -/
+theorem IsRealClosed.of_unique_finite_ext_adjoinRoot_X_sq_add_one
+    {F : Type u} [Field F]
+    (h_neg_one : ¬ IsSquare (-1 : F))
+    (h_uniq : ∀ (K : Type u) [Field K] [Algebra F K] [Module.Finite F K] [Nontrivial K],
+      Function.Bijective (algebraMap F K) ∨
+        Nonempty (K ≃ₐ[F] AdjoinRoot (X ^ 2 + 1 : F[X]))) :
+    ∃ _ : LinearOrder F, IsRealClosed F := by
+  -- Set up notation for F(i)
+  set Fi : Type u := AdjoinRoot (X ^ 2 + 1 : F[X])
+  -- X^2 + 1 is irreducible, so Fi is a field
+  have hirred : Irreducible (X ^ 2 + 1 : F[X]) :=
+    Polynomial.irreducible_X_sq_add_one_of_not_isSquare_neg_one h_neg_one
+  haveI : Fact (Irreducible (X ^ 2 + 1 : F[X])) := ⟨hirred⟩
+  have hdeg2 : (X ^ 2 + 1 : F[X]).natDegree = 2 := by
+    have heq : (X ^ 2 + 1 : F[X]) = X ^ 2 - C (-1 : F) := by simp [sub_neg_eq_add]
+    rw [heq]; exact natDegree_X_pow_sub_C
+  have hne : (X ^ 2 + 1 : F[X]) ≠ 0 := hirred.ne_zero
+  -- Fi is finite of dim 2 over F
+  haveI : Module.Finite F Fi :=
+    Module.Finite.of_basis (AdjoinRoot.powerBasis hne).basis
+  have hfinrank_Fi : Module.finrank F Fi = 2 := by
+    have h1 := (AdjoinRoot.powerBasis hne).finrank
+    rw [AdjoinRoot.powerBasis_dim hne] at h1
+    rw [h1, hdeg2]
+  -- Goal: show Fi is an algebraic closure of F, then apply Phase 2.
+  haveI : IsAlgClosure F Fi := by
+    refine ⟨?_, Algebra.IsAlgebraic.of_finite F Fi⟩
+    -- IsAlgClosed Fi: every monic irreducible p ∈ Fi[X] has a root in Fi
+    refine IsAlgClosed.of_exists_root _ ?_
+    intro p hmonic hirred_p
+    have hp_ne : p ≠ 0 := hirred_p.ne_zero
+    have hp_deg_ne : p.degree ≠ 0 := by
+      intro h0
+      have h1 : p.natDegree = 0 := natDegree_eq_zero_iff_degree_le_zero.mpr (by rw [h0])
+      have hp1 : p = 1 := Polynomial.eq_one_of_monic_natDegree_zero hmonic h1
+      exact hirred_p.not_isUnit (by rw [hp1]; exact isUnit_one)
+    haveI : Fact (Irreducible p) := ⟨hirred_p⟩
+    haveI : Nontrivial (AdjoinRoot p) := AdjoinRoot.nontrivial p hp_deg_ne
+    set K : Type u := AdjoinRoot p
+    -- K is finite over Fi
+    haveI : Module.Finite Fi K :=
+      Module.Finite.of_basis (AdjoinRoot.powerBasis hp_ne).basis
+    -- K is finite over F via tower
+    haveI : Module.Finite F K := Module.Finite.trans Fi K
+    -- Compute dimensions
+    have hfinrank_K_Fi : Module.finrank Fi K = p.natDegree := by
+      have h1 := (AdjoinRoot.powerBasis hp_ne).finrank
+      rw [AdjoinRoot.powerBasis_dim hp_ne] at h1
+      exact h1
+    have htower : Module.finrank F Fi * Module.finrank Fi K =
+        Module.finrank F K := Module.finrank_mul_finrank F Fi K
+    -- Apply h_uniq to K
+    rcases h_uniq K with hbij | ⟨φ⟩
+    · -- algebraMap F K bijective: finrank F K = 1, but finrank F Fi = 2 and Fi ⊆ K
+      exfalso
+      have hfinrank_K_F : Module.finrank F K = 1 :=
+        Module.finrank_of_bijective_algebraMap hbij
+      rw [hfinrank_K_F, hfinrank_Fi] at htower
+      -- 2 * finrank Fi K = 1, but finrank Fi K = p.natDegree ≥ 1 (p nonzero, deg ≠ 0)
+      -- So 2 * something = 1, impossible since LHS is even or zero.
+      omega
+    · -- K ≃ₐ[F] Fi: finrank F K = 2, so finrank Fi K = 1, so deg p = 1
+      have hfinrank_K_F : Module.finrank F K = 2 := by
+        rw [φ.toLinearEquiv.finrank_eq, hfinrank_Fi]
+      rw [hfinrank_K_F, hfinrank_Fi] at htower
+      have hfinrank_one : Module.finrank Fi K = 1 := by omega
+      rw [hfinrank_K_Fi] at hfinrank_one
+      have hdeg1 : p.degree = 1 := by
+        rw [degree_eq_natDegree hp_ne, hfinrank_one]; rfl
+      exact Polynomial.exists_root_of_degree_eq_one hdeg1
+  -- Now apply Phase 2
+  exact IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one h_neg_one
