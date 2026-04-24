@@ -1018,3 +1018,27 @@ instance isAlgClosure_adjoinRoot_X_sq_add_one [IsRealClosed R] :
   exact Algebra.IsAlgebraic.of_finite R (AdjoinRoot (X ^ 2 + 1 : R[X]))
 
 end IsRealClosed
+
+universe u
+
+/-- **lem:FTAlg_converse.** A field with a unique nontrivial finite extension `F(i)` is real
+closed (for some ordering). The hypothesis `h_uniq` states that every finite extension of
+`F` is either trivial (i.e. `algebraMap F K` is bijective) or isomorphic to
+`AdjoinRoot (X^2 + 1)`. -/
+theorem IsRealClosed.isRealClosed_of_unique_finite_ext
+    {F : Type u} [Field F]
+    (h_neg_one : ¬ IsSquare (-1 : F))
+    (h_uniq : ∀ (K : Type u) [Field K] [Algebra F K] [Module.Finite F K] [Nontrivial K],
+      Function.Bijective (algebraMap F K) ∨
+        Nonempty (K ≃ₐ[F] AdjoinRoot (X ^ 2 + 1 : F[X]))) :
+    ∃ _ : LinearOrder F, IsRealClosed F := by
+  sorry
+
+/-- **lem:FTAlg_converse_alg_closure.** A field whose algebraic closure is (nontrivially)
+`F(i) = AdjoinRoot (X^2 + 1)` is real closed (for some ordering). -/
+theorem IsRealClosed.isRealClosed_of_isAlgClosure_adjoinRoot_X_sq_add_one
+    {F : Type u} [Field F]
+    (h_neg_one : ¬ IsSquare (-1 : F))
+    [IsAlgClosure F (AdjoinRoot (X ^ 2 + 1 : F[X]))] :
+    ∃ _ : LinearOrder F, IsRealClosed F := by
+  sorry
