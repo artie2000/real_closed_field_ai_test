@@ -1072,8 +1072,7 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
   -- Every element of Fi is a square (since Fi is algebraically closed)
   have hFi_isSquare : ∀ z : Fi, IsSquare z := by
     intro z
-    obtain ⟨w, hw⟩ := IsAlgClosed.exists_eq_mul_self z
-    exact ⟨w, hw⟩
+    exact IsAlgClosed.exists_eq_mul_self z
   -- Every sum of squares in F is a square in F
   have hsumSq_isSquare : ∀ {s : F}, IsSumSq s → IsSquare s := fun hs =>
     IsSquare.of_isSumSq_of_forall_isSquare_adjoinRoot h_neg_one hFi_isSquare hs
@@ -1103,11 +1102,11 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
       have hroot_sq : (AdjoinRoot.root (X ^ 2 + 1 : F[X])) ^ 2 = (-1 : Fi) := by
         have h0 : aeval (AdjoinRoot.root (X ^ 2 + 1 : F[X])) (X ^ 2 + 1 : F[X]) = 0 :=
           AdjoinRoot.eval₂_root _
-        have : (AdjoinRoot.root (X ^ 2 + 1 : F[X])) ^ 2 + 1 = (0 : Fi) := by
+        have hsum : (AdjoinRoot.root (X ^ 2 + 1 : F[X])) ^ 2 + 1 = (0 : Fi) := by
           simpa [aeval_def, eval₂_add, eval₂_pow, eval₂_X, eval₂_one] using h0
-        linear_combination this
-      exact ⟨AdjoinRoot.root (X ^ 2 + 1 : F[X]),
-             by rw [← sq]; exact hroot_sq.symm⟩
+        linear_combination hsum
+      refine ⟨AdjoinRoot.root (X ^ 2 + 1 : F[X]), ?_⟩
+      rw [← sq]; exact hroot_sq.symm
     -- Via φ.symm, -1 is a square in K
     have hK_sq : IsSquare (-1 : K) := by
       have := hFi_sq.map φ.symm.toRingHom
