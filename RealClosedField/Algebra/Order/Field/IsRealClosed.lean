@@ -938,7 +938,7 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
       have := hFi_sq.map φ.symm.toRingHom
       simpa using this
     -- But K is semireal, so -1 is not a sum of squares, contradicting that it's a square
-    exact IsSemireal.not_isSumSq_neg_one K hK_sq.isSumSq
+    exact IsSemireal.not_isSumSq_neg_one (R := K) hK_sq.isSumSq
 
 /-- If a field `F` has `¬ IsSquare (-1)` and every nontrivial finite extension of `F` is either
 `F` itself or `AdjoinRoot (X^2 + 1 : F[X])`, then there is a `LinearOrder` on `F` making
