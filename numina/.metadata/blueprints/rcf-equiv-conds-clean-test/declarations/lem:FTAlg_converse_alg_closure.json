@@ -6,5 +6,6 @@
     "def:RCF"
   ],
   "statement": "Suppose $R$ is a field with nontrivial algebraic closure $R(i)$. Then $R$ is real closed.",
-  "proof": ""
+  "proof": "",
+  "leanDeclaration": "IsRealClosed.isRealClosed_of_isAlgClosure_adjoinRoot_X_sq_add_one"
 }
