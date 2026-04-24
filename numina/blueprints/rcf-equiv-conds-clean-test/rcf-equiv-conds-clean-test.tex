@@ -293,13 +293,10 @@ In particular, $F$ as in the last lemma is real.
 
 \begin{lemma}
   \label{lem:FTAlg_converse}
-  \lean{IsRealClosed.of_unique_finite_ext_adjoinRoot_X_sq_add_one}
-  \leanok
   \uses{def:RCF}
   Suppose $R$ is a field with unique nontrivial finite extension $R(i)$. Then $R$ is real closed.
 \end{lemma}
 \begin{proof}
-  \leanok
   \uses{lem:sumsq_is_sq, lem:FTAlg_converse_alg_closure}
   Since $R(i)$ has no quadratic extensions, we can apply Lemma \ref{lem:sumsq_is_sq}: sums of squares in $R$ are squares in $R$, and $R$ is real.
 
@@ -310,13 +307,10 @@ In particular, $F$ as in the last lemma is real.
 
 \begin{corollary}
   \label{lem:FTAlg_converse_alg_closure}
-  \lean{IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one}
-  \leanok
   \uses{def:RCF}
   Suppose $R$ is a field with nontrivial algebraic closure $R(i)$. Then $R$ is real closed.
 \end{corollary}
 \begin{proof}
-  \leanok
   \uses{lem:sumsq_is_sq}
 \end{proof}
 
@@ -339,10 +333,12 @@ As before, let $R$ be a real closed field. Theorem \ref{thm:FTAlg} is a powerful
   \label{lem:RCF_max_ord}
   \uses{def:RCF,lem:RCF_ord_unique}
   \lean{IsRealClosed.bijective_algebraMap_of_isOrderedAlgebra}
+  \leanok
   $R$ has no nontrivial ordered algebraic extensions (with respect to the unique order).
 \end{corollary}
 \begin{proof}
   \uses{lem:RCF_max,thm:ord_iff_real}
+  \leanok
   Since ordered fields are real, we are done by Lemma \ref{lem:RCF_max}.
 \end{proof}
 
@@ -367,10 +363,12 @@ The next property is a little less obvious.
   \label{lem:IVP_poly}
   \uses{def:RCF, lem:RCF_ord_unique}
   \lean{IsRealClosed.exists_isRoot_of_nonpos_of_nonneg}
+  \leanok
   Polynomials over $R$ satisfy the intermediate value property (with respect to the unique order).
 \end{lemma}
 \begin{proof}
   \uses{lem:irreds_class}
+  \leanok
   We will prove that, for all $f\in R[X]$ and all $a,b\in R$ with $a\leq b$, if $f(a)\leq 0\leq f(b)$, then there is some $c\in[a,b]$ such that $f(c)=0$.
 
   Fix $a,b\in R$ with $a\leq b$, and proceed by induction on $\deg f$. If $\deg f=0$, then $f$ is constant and the result is clear. Otherwise, take a monic irreducible factor $g$ of $f$; then $g$ is classified by Lemma \ref{lem:irreds_class}.
@@ -384,10 +382,12 @@ In fact, the converses to Lemmas \ref{lem:RCF_max} and \ref{lem:IVP_poly} also h
   \label{thm:IVP_poly_imp_RCF}
   \uses{def:RCF}
   \lean{IsRealClosed.of_ivp}
+  \leanok
   Let $R$ be an ordered field whose polynomials satisfy the intermediate value property. Then $R$ is real closed.
 \end{theorem}
 \begin{proof}
   \uses{lem:RCF_ord_ax}
+  \leanok
   We use Lemma \ref{lem:RCF_ord_ax}. Let $a\in R$ be non-negative, and consider the polynomial $f=X^2-a$. Then $f(0)=-a\leq0$, but $f(a+1)=a^2+a+1>0$. By the intermediate value property, $f$ has a root in $R$, and so $a$ is a square in $R$.
 
   Let $f$ be an odd-degree polynomial over $R$. Write $f=a_nX^n+\cdots+a_0$. We will show $f$ has a root in $R$. Replacing $f$ by $-f$ if necessary, we may assume $a_n>0$. For $x>1$, we compute
