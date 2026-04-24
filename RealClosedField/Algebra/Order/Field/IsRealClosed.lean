@@ -938,7 +938,7 @@ theorem IsRealClosed.of_isAlgClosure_adjoinRoot_X_sq_add_one
       have := hFi_sq.map φ.symm.toRingHom
       simpa using this
     -- But K is semireal, so -1 is not a sum of squares, contradicting that it's a square
-    exact IsSemireal.not_isSumSq_neg_one (R := K) hK_sq.isSumSq
+    exact IsSemireal.not_isSumSq_neg_one K hK_sq.isSumSq
 
 /-- If a field `F` has `¬ IsSquare (-1)` and every nontrivial finite extension of `F` is either
 `F` itself or `AdjoinRoot (X^2 + 1 : F[X])`, then there is a `LinearOrder` on `F` making
@@ -999,7 +999,7 @@ theorem IsRealClosed.of_unique_finite_ext_adjoinRoot_X_sq_add_one
     · -- algebraMap F K bijective: finrank F K = 1, but finrank F Fi = 2 and Fi ⊆ K
       exfalso
       have hfinrank_K_F : Module.finrank F K = 1 :=
-        finrank_of_bijective_algebraMap hbij
+        Module.finrank_of_bijective_algebraMap hbij
       rw [hfinrank_K_F, hfinrank_Fi] at htower
       -- 2 * finrank Fi K = 1, but finrank Fi K = p.natDegree ≥ 1 (p nonzero, deg ≠ 0)
       -- So 2 * something = 1, impossible since LHS is even or zero.
