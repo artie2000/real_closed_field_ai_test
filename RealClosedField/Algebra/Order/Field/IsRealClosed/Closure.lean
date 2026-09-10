@@ -1017,4 +1017,37 @@ instance isAlgClosure_adjoinRoot_X_sq_add_one [IsRealClosed R] :
   refine IsAlgClosure.mk inferInstance ?_
   exact Algebra.IsAlgebraic.of_finite R (AdjoinRoot (X ^ 2 + 1 : R[X]))
 
+/-- **lem:RCF_max.** A real closed field has no nontrivial real algebraic extension:
+every semireal algebraic extension is equal to `R` via the structure map. -/
+theorem bijective_algebraMap_of_isSemireal_of_isAlgebraic [IsRealClosed R]
+    (K : Type u) [Field K] [Algebra R K] [Algebra.IsAlgebraic R K] [IsSemireal K] :
+    Function.Bijective (algebraMap R K) := by
+  haveI : Module.Finite R K := finite_of_isAlgebraic K
+  rcases finrank_eq_one_or_two_of_finite (R := R) K with h1 | h2
+  · exact Module.Free.bijective_algebraMap_of_finrank_eq_one h1
+  · exfalso
+    obtain ⟨φ⟩ := nonempty_algEquiv_Ri_of_finrank_eq_two K h2
+    set i : K := φ.symm (AdjoinRoot.root (X ^ 2 + 1 : R[X])) with hi_def
+    have hroot_sum : (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 =
+        (0 : AdjoinRoot (X ^ 2 + 1 : R[X])) := by
+      have hms : AdjoinRoot.mk (X ^ 2 + 1 : R[X]) (X ^ 2 + 1) = 0 :=
+        AdjoinRoot.mk_self
+      have heq : AdjoinRoot.mk (X ^ 2 + 1 : R[X]) (X ^ 2 + 1 : R[X]) =
+          (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 + 1 := by
+        rw [← AdjoinRoot.aeval_eq]
+        simp [map_add, map_pow, map_one]
+      rw [heq] at hms
+      exact hms
+    have hroot_sq : (AdjoinRoot.root (X ^ 2 + 1 : R[X])) ^ 2 =
+        (-1 : AdjoinRoot (X ^ 2 + 1 : R[X])) := by
+      have := hroot_sum
+      linear_combination this
+    have hi_sq : i ^ 2 = (-1 : K) := by
+      rw [hi_def, ← map_pow, hroot_sq, map_neg, map_one]
+    have hsumsq_neg_one : IsSumSq (-1 : K) := by
+      have : (-1 : K) = i * i + 0 := by rw [← sq, hi_sq, add_zero]
+      rw [this]
+      exact IsSumSq.sq_add i IsSumSq.zero
+    exact IsSemireal.not_isSumSq_neg_one K hsumsq_neg_one
+
 end IsRealClosed
