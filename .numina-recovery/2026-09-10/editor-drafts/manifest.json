@@ -1,0 +1,27 @@
+{
+  "note": "Preserved Fuse editor snapshots. Some are older than the current branch; compare before restoring. Original branch contents were not overwritten.",
+  "drafts": [
+    {
+      "workspace_id": "60ad94fc-9512-41fc-b9b5-a194c95cf0f4",
+      "original_branch": "refs/heads/numina/rcf-equiv-conds-clean-test",
+      "original_blueprint_file": null,
+      "blueprint_name": "rcf-equiv-conds-clean-test",
+      "project_subdir": "",
+      "saved_at": "2026-04-24 15:38:47.389241+00:00",
+      "revision": 36,
+      "audit_status": "differs_remote",
+      "recovery_file": ".numina-recovery/2026-09-10/editor-drafts/60ad94fc-9512-41fc-b9b5-a194c95cf0f4.tex"
+    },
+    {
+      "workspace_id": "2791f8b8-36a4-41a5-a429-f9a6922900ba",
+      "original_branch": "refs/heads/numina/rcf-equiv-conds",
+      "original_blueprint_file": null,
+      "blueprint_name": "rcf-equiv-conds",
+      "project_subdir": "",
+      "saved_at": "2026-04-23 10:19:50.717592+00:00",
+      "revision": 1,
+      "audit_status": "differs_remote",
+      "recovery_file": ".numina-recovery/2026-09-10/editor-drafts/2791f8b8-36a4-41a5-a429-f9a6922900ba.tex"
+    }
+  ]
+}
